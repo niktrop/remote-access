@@ -1,10 +1,8 @@
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.WatchService;
+import java.nio.file.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -18,13 +16,8 @@ import static org.fest.assertions.api.Assertions.assertThat;
 public class FileTreeBuilderTest {
   @Test
   public void varMaxDepth() throws Exception {
-    Path tempDir = Files.createTempDirectory("temp");
+    Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
-    Path a_b_c_d = a.resolve("b").resolve("c").resolve("d");
-    Path a_f = tempDir.resolve("a").resolve("f");
-
-    Files.createDirectories(a_b_c_d);
-    Files.createFile(a_f);
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
     DirectoryWatcher watcher = new DirectoryWatcher(watchService);
@@ -67,6 +60,50 @@ public class FileTreeBuilderTest {
     deleteTempDir(tempDir, 20);
   }
 
+  @Test
+  public void testWatchingDepthZero() throws Exception {
+    Path tempDir = createTempDir();
+    Path a = tempDir.resolve("a");
+
+    WatchService watchService = FileSystems.getDefault().newWatchService();
+    DirectoryWatcher watcher = new DirectoryWatcher(watchService);
+    FSImages.getFromDirectory(a, 0, watcher);
+
+    Path a_g = a.resolve("g");
+    Files.createFile(a_g);
+    WatchKey key = watcher.take();
+    assertThat(watcher.getPath(key)).isEqualTo(a);
+
+    Path a_b_h = a.resolve("b").resolve("h");
+    Files.createDirectory(a_b_h);
+    key = watcher.poll(10, TimeUnit.MILLISECONDS);
+    assertThat(key).isNull();
+
+    deleteTempDir(tempDir, 20);
+  }
+
+  @Test
+  public void testWatchingDepthOne() throws Exception {
+    Path tempDir = createTempDir();
+    Path a = tempDir.resolve("a");
+
+    WatchService watchService = FileSystems.getDefault().newWatchService();
+    DirectoryWatcher watcher = new DirectoryWatcher(watchService);
+    FSImages.getFromDirectory(a, 1, watcher);
+
+    Path a_g = a.resolve("g");
+    Files.createFile(a_g);
+    WatchKey key = watcher.take();
+    assertThat(watcher.getPath(key)).isEqualTo(a);
+
+    Path a_b_h = a.resolve("b").resolve("h");
+    Files.createDirectory(a_b_h);
+    key = watcher.take();
+    assertThat(watcher.getPath(key)).isEqualTo(a.resolve("b"));
+
+    deleteTempDir(tempDir, 20);
+  }
+
   //Sometimes it is not deleted at the first time.
   private void deleteTempDir(Path tempDir, int times) {
     for (int i = 0; i<times; i++) {
@@ -78,6 +115,23 @@ public class FileTreeBuilderTest {
       }
     }
   }
+
+  /*Creates temp directory with following structure:
+  temp/a/b/c/d/
+  temp/a/f
+  */
+  private Path createTempDir() throws IOException {
+    Path tempDir = Files.createTempDirectory("temp");
+    Path a = tempDir.resolve("a");
+    Path a_b_c_d = a.resolve("b").resolve("c").resolve("d");
+    Path a_f = tempDir.resolve("a").resolve("f");
+
+    Files.createDirectories(a_b_c_d);
+    Files.createFile(a_f);
+    return tempDir;
+  }
+
+
 
 
 }
