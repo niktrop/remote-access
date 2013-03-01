@@ -52,6 +52,15 @@ public class PseudoPath {
     return new PseudoPath(newNames);
   }
 
+  public PseudoPath getParent() {
+    if (this.names.size() == 0) {
+      throw new IllegalArgumentException("Empty pseudopath has no parent.");
+    }
+    List<String> newNames = new ArrayList<>(names);
+    newNames.remove(newNames.size() - 1);
+    return new PseudoPath(newNames);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

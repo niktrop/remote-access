@@ -1,6 +1,7 @@
 import nu.xom.Attribute;
 import nu.xom.Element;
 import nu.xom.Elements;
+import nu.xom.ParentNode;
 
 /**
  * Created with IntelliJ IDEA.
@@ -9,7 +10,7 @@ import nu.xom.Elements;
  * Time: 10:28
  */
 public class FSImage {
-  private Element fileTree;
+  private final Element fileTree;
 
   FSImage(Element fileTree) {
     this.fileTree = fileTree;
@@ -22,7 +23,11 @@ public class FSImage {
 
   String getType(PseudoPath path) {
     Element element = getElement(path);
-    return element.getLocalName();
+    if (element != null) {
+      return element.getLocalName();
+    } else {
+      return null;
+    }
   }
 
   Element getChildByName(Element element, String name) {
@@ -52,6 +57,42 @@ public class FSImage {
 
   public void setRootAlias(String rootAlias) {
     fileTree.addAttribute(new Attribute("alias", rootAlias));
+  }
+
+  public FSImage addToDirectory(PseudoPath dir, FSImage child) {
+    if (!getType(dir).equals(FileType.DIR.getName())) {
+      throw new IllegalArgumentException("Can add files only to directories.");
+    }
+    Element newFileTree = new Element(fileTree);
+    FSImage result = new FSImage(newFileTree);
+    Element parent = result.getElement(dir);
+    Element newChild = new Element(child.fileTree);
+
+    String nameOfChildRoot = child.fileTree.getAttributeValue("name");
+    PseudoPath pathToChild = dir.resolve(nameOfChildRoot);
+    Element oldChild = result.getElement(pathToChild);
+    if (oldChild != null) {
+      parent.replaceChild(oldChild, newChild);
+    } else {
+      parent.appendChild(newChild);
+    }
+    return result;
+  }
+
+  public FSImage deletePath(PseudoPath path) {
+    if (path.getNameCount() == 0) {
+      throw new IllegalArgumentException("Empty path can not be deleted.");
+    }
+    Element newFileTree = new Element(fileTree);
+    FSImage result = new FSImage(newFileTree);
+
+    Element toBeDeleted = result.getElement(path);
+    if (toBeDeleted != null) {
+      ParentNode parent = toBeDeleted.getParent();
+      parent.removeChild(toBeDeleted);
+    }
+
+    return result;
   }
 
   @Override
