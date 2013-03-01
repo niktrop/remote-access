@@ -15,15 +15,20 @@ import java.nio.file.Path;
  */
 public class FSImages {
 
-  public static FSImage getFromDirectory(Path path, int maxDepth, DirectoryWatcher watcher)
+  public static FSImage getFromDirectory(Path dir, int maxDepth, DirectoryWatcher watcher)
           throws IOException {
-    Element root = new Element("root");
+    if (!Files.isDirectory(dir)) {
+      throw new IllegalArgumentException("Path should be directory.");
+    }
+    else {
+      Element rootDir = new Element("directory");
 
-    FileTreeBuilder fileTreeBuilder = new FileTreeBuilder(root, watcher, maxDepth);
-    Files.walkFileTree(path, fileTreeBuilder);
+      FileTreeBuilder fileTreeBuilder = new FileTreeBuilder(rootDir, watcher, maxDepth);
+      Files.walkFileTree(dir, fileTreeBuilder);
 
-    Element fileTree = root;
-    return new FSImage(fileTree);
+      Element fileTree = rootDir;
+      return new FSImage(fileTree);
+    }
   }
 
   public static FSImage getFromXml(String xmlFileTree) throws ParsingException, IOException {

@@ -14,20 +14,20 @@ public class PseudoPath {
 
   public PseudoPath(List<String> names) {
     if (names == null)
-      this.names = new ArrayList<String>();
+      this.names = new ArrayList<>();
     else
       this.names = names;
   }
 
   public PseudoPath(String... names) {
-    this.names = new ArrayList<String>();
+    this.names = new ArrayList<>();
     for(String name:names) {
       this.names.add(name);
     }
   }
 
   public PseudoPath(Path path) {
-    this.names = new ArrayList<String>();
+    this.names = new ArrayList<>();
     for(int i = 0; i < path.getNameCount(); i++) {
       this.names.add(path.getName(i).toString());
     }

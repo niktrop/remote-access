@@ -53,4 +53,24 @@ public class FSImage {
   public void setRootAlias(String rootAlias) {
     fileTree.addAttribute(new Attribute("alias", rootAlias));
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    FSImage fsImage = (FSImage) o;
+
+    String thisXml = this.toXml();
+    String thatXml = fsImage.toXml();
+
+    if (!thisXml.equals(thatXml)) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return fileTree.toXML().hashCode();
+  }
 }

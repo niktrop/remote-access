@@ -17,13 +17,13 @@ import java.util.HashMap;
  */
 public class FileTreeBuilder extends SimpleFileVisitor<Path> {
   private HashMap<Path, Element> map = new HashMap<>();
-  private final Element root;
+  private final Element rootDirElement;
   private final DirectoryWatcher watcher;
   private int currentDepth = 0;
   private final int maxDepth;
 
-  public FileTreeBuilder(Element root, DirectoryWatcher watcher, int maxDepth) {
-    this.root = root;
+  public FileTreeBuilder(Element rootDirElement, DirectoryWatcher watcher, int maxDepth) {
+    this.rootDirElement = rootDirElement;
     this.watcher = watcher;
     this.maxDepth = maxDepth;
   }
@@ -31,7 +31,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   @Override
   public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attr) {
-    if (currentDepth < maxDepth) {
+    if (currentDepth <= maxDepth) {
       if (!Files.isReadable(dir) || Files.isSymbolicLink(dir))
         return FileVisitResult.SKIP_SUBTREE;
       try {
@@ -49,7 +49,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   @Override
   public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
-    if (currentDepth < maxDepth) {
+    if (currentDepth <= maxDepth) {
       if (!Files.isReadable(file) || Files.isSymbolicLink(file))
         return FileVisitResult.CONTINUE;
       try {
@@ -77,13 +77,14 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   private void addPathToTree(Path path) throws IOException {
     Element element = getElement(path);
-    map.put(path, element);
     Element parent = map.get(path.getParent());
     if (parent != null) {
+      map.put(path, element);
       parent.appendChild(element);
     }
     else {
-      root.appendChild(element);
+      map.put(path, rootDirElement);
+      setName(rootDirElement, path);
     }
   }
 
@@ -118,7 +119,6 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
             path.getFileName().toString(): null;
     Attribute name =  new Attribute("name", fileName);
     element.addAttribute(name);
-
   }
 
 
