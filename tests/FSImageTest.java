@@ -19,13 +19,13 @@ public class FSImageTest {
                   "</directory>";
   private static String testXmlB =
                   "<directory name=\"b\">" +
-                  "<file name=\"z\" />" +
+                    "<file name=\"z\" />" +
                   "</directory>";
   private static String testXmlC =
                   "<directory name=\"c\" />";
 
   @Test
-  public void addToNotADirectory() throws Exception {
+  public void addToNotADirectoryCausesException() throws Exception {
     FSImage fsi = FSImages.getFromXml(testXmlA);
     PseudoPath f = new PseudoPath("f");
     FSImage childB = FSImages.getFromXml(testXmlB);
@@ -43,14 +43,14 @@ public class FSImageTest {
 
     FSImage childC = FSImages.getFromXml(testXmlC);
     PseudoPath pathForB = new PseudoPath();
-    FSImage result = fsi.addToDirectory(pathForB, childC);
+    fsi.addToDirectory(pathForB, childC);
     String xmlResult =
             "<directory name=\"b\">" +
-            "<file name=\"z\" />" +
-            "<directory name=\"c\" />" +
+              "<file name=\"z\" />" +
+              "<directory name=\"c\" />" +
             "</directory>";
 
-    assertThat(result.toXml()).isEqualTo(xmlResult);
+    assertThat(fsi.toXml()).isEqualTo(xmlResult);
   }
 
   @Test
@@ -60,28 +60,16 @@ public class FSImageTest {
     FSImage childB = FSImages.getFromXml(testXmlB);
     //empty path corresponds to root directory "a"
     PseudoPath pathForB = new PseudoPath();
-    FSImage resultB = fsi.addToDirectory(pathForB, childB);
+    fsi.addToDirectory(pathForB, childB);
     String xmlResultB =
             "<directory name=\"a\">" +
-            "<directory name=\"b\">" +
-            "<file name=\"z\" />" +
-            "</directory>" +
-            "<file name=\"f\" />" +
+              "<directory name=\"b\">" +
+                "<file name=\"z\" />" +
+              "</directory>" +
+              "<file name=\"f\" />" +
             "</directory>";
 
-    FSImage childC = FSImages.getFromXml(testXmlC);
-    PseudoPath pathForC = new PseudoPath("b");
-    FSImage resultC = fsi.addToDirectory(pathForC, childC);
-    String xmlResultC =
-            "<directory name=\"a\">" +
-            "<directory name=\"b\">" +
-            "<directory name=\"c\" />" +
-            "</directory>" +
-            "<file name=\"f\" />" +
-            "</directory>";
-
-    assertThat(resultB.toXml()).isEqualTo(xmlResultB);
-    assertThat(resultC.toXml()).isEqualTo(xmlResultC);
+    assertThat(fsi.toXml()).isEqualTo(xmlResultB);
   }
 
   @Test
@@ -90,23 +78,21 @@ public class FSImageTest {
     PseudoPath b_c = new PseudoPath("b", "c");
     PseudoPath f = new PseudoPath("f");
 
-    FSImage withoutB_C = fsi.deletePath(b_c);
-    FSImage withoutF = fsi.deletePath(f);
-
-    String xmlWithoutB_C =
+    fsi.deletePath(b_c);
+    String xmlWithoutC =
             "<directory name=\"a\">" +
-            "<directory name=\"b\" />" +
-            "<file name=\"f\" />" +
+              "<directory name=\"b\" />" +
+              "<file name=\"f\" />" +
             "</directory>";
-    String xmlWithoutF =
-            "<directory name=\"a\">" +
-            "<directory name=\"b\">" +
-            "<directory name=\"c\" />" +
-            "</directory>" +
-            "</directory>";
+    assertThat(fsi.toXml()).isEqualTo(xmlWithoutC);
 
-    assertThat(withoutB_C.toXml()).isEqualTo(xmlWithoutB_C);
-    assertThat(withoutF.toXml()).isEqualTo(xmlWithoutF);
+    String xmlWithoutCandF =
+            "<directory name=\"a\">" +
+              "<directory name=\"b\" />" +
+            "</directory>";
+    fsi.deletePath(f);
+
+    assertThat(fsi.toXml()).isEqualTo(xmlWithoutCandF);
 
   }
 

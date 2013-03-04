@@ -59,40 +59,33 @@ public class FSImage {
     fileTree.addAttribute(new Attribute("alias", rootAlias));
   }
 
-  public FSImage addToDirectory(PseudoPath dir, FSImage child) {
+  public synchronized void addToDirectory(PseudoPath dir, FSImage child) {
     if (!getType(dir).equals(FileType.DIR.getName())) {
       throw new IllegalArgumentException("Can add files only to directories.");
     }
-    Element newFileTree = new Element(fileTree);
-    FSImage result = new FSImage(newFileTree);
-    Element parent = result.getElement(dir);
+    Element parent = getElement(dir);
     Element newChild = new Element(child.fileTree);
 
     String nameOfChildRoot = child.fileTree.getAttributeValue("name");
     PseudoPath pathToChild = dir.resolve(nameOfChildRoot);
-    Element oldChild = result.getElement(pathToChild);
+    Element oldChild = getElement(pathToChild);
     if (oldChild != null) {
       parent.replaceChild(oldChild, newChild);
     } else {
       parent.appendChild(newChild);
     }
-    return result;
   }
 
-  public FSImage deletePath(PseudoPath path) {
+  public synchronized void deletePath(PseudoPath path) {
     if (path.getNameCount() == 0) {
       throw new IllegalArgumentException("Empty path can not be deleted.");
     }
-    Element newFileTree = new Element(fileTree);
-    FSImage result = new FSImage(newFileTree);
 
-    Element toBeDeleted = result.getElement(path);
+    Element toBeDeleted = getElement(path);
     if (toBeDeleted != null) {
       ParentNode parent = toBeDeleted.getParent();
       parent.removeChild(toBeDeleted);
     }
-
-    return result;
   }
 
   @Override
