@@ -2,12 +2,12 @@ import nu.xom.Attribute;
 import nu.xom.Element;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
+
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,11 +18,11 @@ import java.util.HashMap;
 public class FileTreeBuilder extends SimpleFileVisitor<Path> {
   private HashMap<Path, Element> map = new HashMap<>();
   private final Element rootDirElement;
-  private final DirectoryWatcher watcher;
+  private final WatchService watcher;
   private int currentDepth = 0;
   private final int maxDepth;
 
-  public FileTreeBuilder(Element rootDirElement, DirectoryWatcher watcher, int maxDepth) {
+  public FileTreeBuilder(Element rootDirElement, WatchService watcher, int maxDepth) {
     this.rootDirElement = rootDirElement;
     this.watcher = watcher;
     this.maxDepth = maxDepth;
@@ -36,7 +36,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
         return FileVisitResult.SKIP_SUBTREE;
       try {
         addPathToTree(dir);
-        watcher.register(dir);
+        dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE);
         currentDepth++;
         return FileVisitResult.CONTINUE;
       } catch (IOException e) {

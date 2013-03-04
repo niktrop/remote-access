@@ -19,8 +19,7 @@ public class FileTreeBuilderTest {
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
 
-    WatchService watchService = FileSystems.getDefault().newWatchService();
-    DirectoryWatcher watcher = new DirectoryWatcher(watchService);
+    WatchService watcher = FileSystems.getDefault().newWatchService();
 
     FSImage fsi_0 = FSImages.getFromDirectory(a, 0, watcher);
     String xml_0 = "<directory name=\"a\" />";
@@ -65,14 +64,13 @@ public class FileTreeBuilderTest {
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
 
-    WatchService watchService = FileSystems.getDefault().newWatchService();
-    DirectoryWatcher watcher = new DirectoryWatcher(watchService);
+    WatchService watcher = FileSystems.getDefault().newWatchService();
     FSImages.getFromDirectory(a, 0, watcher);
 
     Path a_g = a.resolve("g");
     Files.createFile(a_g);
     WatchKey key = watcher.take();
-    assertThat(watcher.getPath(key)).isEqualTo(a);
+    assertThat(key.watchable()).isEqualTo(a);
 
     Path a_b_h = a.resolve("b").resolve("h");
     Files.createDirectory(a_b_h);
@@ -87,19 +85,18 @@ public class FileTreeBuilderTest {
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
 
-    WatchService watchService = FileSystems.getDefault().newWatchService();
-    DirectoryWatcher watcher = new DirectoryWatcher(watchService);
+    WatchService watcher = FileSystems.getDefault().newWatchService();
     FSImages.getFromDirectory(a, 1, watcher);
 
     Path a_g = a.resolve("g");
     Files.createFile(a_g);
     WatchKey key = watcher.take();
-    assertThat(watcher.getPath(key)).isEqualTo(a);
+    assertThat(key.watchable()).isEqualTo(a);
 
     Path a_b_h = a.resolve("b").resolve("h");
     Files.createDirectory(a_b_h);
     key = watcher.take();
-    assertThat(watcher.getPath(key)).isEqualTo(a.resolve("b"));
+    assertThat(key.watchable()).isEqualTo(a.resolve("b"));
 
     deleteTempDir(tempDir, 20);
   }

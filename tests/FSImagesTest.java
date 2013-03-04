@@ -46,8 +46,7 @@ public class FSImagesTest {
   public void testPathToRoot() throws Exception {
     Path tempDir = FileTreeBuilderTest.createTempDir();
     Path a = tempDir.resolve("a");
-    WatchService watchService = FileSystems.getDefault().newWatchService();
-    DirectoryWatcher watcher = new DirectoryWatcher(watchService);
+    WatchService watcher = FileSystems.getDefault().newWatchService();
     FSImage fsi = FSImages.getFromDirectory(a, 1, watcher);
 
     assertThat(fsi.getPathToRoot().isAbsolute());

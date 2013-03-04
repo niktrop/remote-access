@@ -6,6 +6,7 @@ import nu.xom.ParsingException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.WatchService;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,7 +16,7 @@ import java.nio.file.Path;
  */
 public class FSImages {
 
-  public static FSImage getFromDirectory(Path dir, int maxDepth, DirectoryWatcher watcher)
+  public static FSImage getFromDirectory(Path dir, int maxDepth, WatchService watcher)
           throws IOException {
     if (!Files.isDirectory(dir)) {
       throw new IllegalArgumentException("Path should be directory.");
