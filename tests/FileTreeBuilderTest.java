@@ -105,7 +105,7 @@ public class FileTreeBuilderTest {
   }
 
   //Sometimes it is not deleted at the first time.
-  private void deleteTempDir(Path tempDir, int times) {
+  static void deleteTempDir(Path tempDir, int times) {
     for (int i = 0; i<times; i++) {
       try {
         deleteDirectory(tempDir.toFile());
@@ -120,7 +120,7 @@ public class FileTreeBuilderTest {
   temp/a/b/c/d/
   temp/a/f
   */
-  private Path createTempDir() throws IOException {
+  static Path createTempDir() throws IOException {
     Path tempDir = Files.createTempDirectory("temp");
     Path a = tempDir.resolve("a");
     Path a_b_c_d = a.resolve("b").resolve("c").resolve("d");
@@ -130,8 +130,5 @@ public class FileTreeBuilderTest {
     Files.createFile(a_f);
     return tempDir;
   }
-
-
-
 
 }

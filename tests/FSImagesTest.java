@@ -2,6 +2,9 @@ import nu.xom.ParsingException;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.WatchService;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -37,5 +40,19 @@ public class FSImagesTest {
     FSImage fsi = FSImages.getFromXml(testXml);
 
     assertThat(fsi.getRootAlias()).isEqualTo("test");
+  }
+
+  @Test
+  public void testPathToRoot() throws Exception {
+    Path tempDir = FileTreeBuilderTest.createTempDir();
+    Path a = tempDir.resolve("a");
+    WatchService watchService = FileSystems.getDefault().newWatchService();
+    DirectoryWatcher watcher = new DirectoryWatcher(watchService);
+    FSImage fsi = FSImages.getFromDirectory(a, 1, watcher);
+
+    assertThat(fsi.getPathToRoot().isAbsolute());
+    assertThat(fsi.getPathToRoot().getFileName().toString()).isEqualTo("a");
+
+    FileTreeBuilderTest.deleteTempDir(tempDir, 20);
   }
 }
