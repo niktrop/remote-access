@@ -21,19 +21,18 @@ public class FSImages {
       throw new IllegalArgumentException("Path should be directory.");
     }
     else {
-      Element rootDir = new Element("directory");
+      Element fileTree = new Element("directory");
 
-      FileTreeBuilder fileTreeBuilder = new FileTreeBuilder(rootDir, watcher, maxDepth);
+      FileTreeBuilder fileTreeBuilder = new FileTreeBuilder(fileTree, watcher, maxDepth);
       Files.walkFileTree(dir, fileTreeBuilder);
 
-      Element fileTree = rootDir;
-      return new FSImage(fileTree);
+      return new FSImage(fileTree, dir);
     }
   }
 
   public static FSImage getFromXml(String xmlFileTree) throws ParsingException, IOException {
     Builder builder = new Builder();
     Document fileTreeDoc = builder.build(xmlFileTree, null);
-    return new FSImage(fileTreeDoc.getRootElement());
+    return new FSImage(fileTreeDoc.getRootElement(), null);
   }
 }

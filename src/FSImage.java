@@ -3,6 +3,8 @@ import nu.xom.Element;
 import nu.xom.Elements;
 import nu.xom.ParentNode;
 
+import java.nio.file.Path;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
@@ -11,15 +13,20 @@ import nu.xom.ParentNode;
  */
 public class FSImage {
   private final Element fileTree;
+  private final Path pathToRoot;
 
-  FSImage(Element fileTree) {
+  FSImage(Element fileTree, Path pathToRoot) {
     this.fileTree = fileTree;
+    this.pathToRoot = pathToRoot;
   }
 
   public String toXml() {
     return fileTree.toXML();
   }
 
+  public Path getPathToRoot() {
+    return pathToRoot;
+  }
 
   String getType(PseudoPath path) {
     Element element = getElement(path);
