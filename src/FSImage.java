@@ -38,7 +38,7 @@ public class FSImage {
     return pathToRoot;
   }
 
-  String getType(PseudoPath path) {
+  public String getType(PseudoPath path) {
     Element element = getElement(path);
     if (element != null) {
       return element.getLocalName();
@@ -103,6 +103,11 @@ public class FSImage {
       ParentNode parent = toBeDeleted.getParent();
       parent.removeChild(toBeDeleted);
     }
+  }
+
+  public boolean contains(PseudoPath path) {
+    Element element = getElement(path);
+    return element != null;
   }
 
   @Override

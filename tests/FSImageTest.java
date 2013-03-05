@@ -108,4 +108,22 @@ public class FSImageTest {
       assertThat(e.getMessage()).isEqualTo("Empty path can not be deleted.");
     }
   }
+
+  @Test
+  public void testContains() throws Exception {
+    FSImage fsi = FSImages.getFromXml(testXmlA);
+    PseudoPath b_c = new PseudoPath("b", "c");
+    PseudoPath b_c_d = b_c.resolve("d");
+    PseudoPath f = new PseudoPath("f");
+    PseudoPath empty = new PseudoPath();
+    PseudoPath x = new PseudoPath("x");
+
+    assertThat(fsi.contains(b_c));
+    assertThat(fsi.contains(b_c_d)).isFalse();
+    assertThat(fsi.contains(f));
+    assertThat(fsi.contains(empty));
+    assertThat(fsi.contains(x)).isFalse();
+
+  }
+
 }
