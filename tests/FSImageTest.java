@@ -126,4 +126,37 @@ public class FSImageTest {
 
   }
 
+  @Test
+  public void testAddFile() throws Exception {
+    FSImage fsi = FSImages.getFromXml(testXmlA);
+    PseudoPath b_f = new PseudoPath("b", "f");
+    PseudoPath g = new PseudoPath("g");
+    PseudoPath empty = new PseudoPath();
+    PseudoPath c_f = new PseudoPath("c", "f");
+
+    assertThat(fsi.contains(b_f)).isFalse();
+    assertThat(fsi.contains(g)).isFalse();
+    assertThat(fsi.contains(c_f)).isFalse();
+
+    fsi.addFile(b_f);
+    assertThat(fsi.contains(b_f));
+
+    fsi.addFile(g);
+    assertThat(fsi.contains(g));
+
+
+    try {
+      fsi.addFile(empty);
+      fail("Parent directory must exist");
+    } catch (Exception e) {
+      assertThat(e.getMessage()).isEqualTo("Empty pseudopath has no parent.");
+    }
+
+    try {
+      fsi.addFile(c_f);
+      fail("Parent directory must exist");
+    } catch (Exception e) {
+      assertThat(e.getMessage()).isEqualTo("Parent directory does not exist.");
+    }
+  }
 }

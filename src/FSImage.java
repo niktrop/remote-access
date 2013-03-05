@@ -64,6 +64,8 @@ public class FSImage {
     Element currentElement = fileTree;
     for(int i = 0; i < path.getNameCount(); i++) {
       currentElement = getChildByName(currentElement, path.getName(i));
+      if (currentElement == null)
+        return null;
     }
     return currentElement;
   }
@@ -90,6 +92,20 @@ public class FSImage {
       parent.replaceChild(oldChild, newChild);
     } else {
       parent.appendChild(newChild);
+    }
+  }
+
+  public synchronized void addFile(PseudoPath path) {
+    PseudoPath parent = path.getParent();
+    Element parentElement = getElement(parent);
+    if (parentElement == null ) {
+      throw new IllegalArgumentException("Parent directory does not exist.");
+    }
+    else {
+      Element childElement = new Element(FileType.FILE.getName());
+      String filename = path.getName(path.getNameCount() - 1);
+      childElement.addAttribute(new Attribute("name", filename));
+      parentElement.appendChild(childElement);
     }
   }
 
