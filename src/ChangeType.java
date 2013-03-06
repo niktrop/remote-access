@@ -1,3 +1,8 @@
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
@@ -8,4 +13,16 @@ public enum ChangeType {
   CREATE_DIR,
   CREATE_FILE,
   DELETE;
+
+  public static ChangeType getChangeType(WatchEvent<Path> event, Path fullPath) {
+    if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+      return ChangeType.DELETE;
+    }
+    if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+      if (Files.isDirectory(fullPath))
+        return ChangeType.CREATE_DIR;
+      else
+        return ChangeType.CREATE_FILE;
+    } else throw new IllegalStateException("Non standard WatchEvent or wrong Path.");
+  }
 }

@@ -28,6 +28,12 @@ public class PseudoPath {
 
   public PseudoPath(Path path) {
     this.names = new ArrayList<>();
+    //empty Path represented by path with one empty filename
+    int count = path.getNameCount();
+    String name = path.getFileName().toString();
+    if (path.getNameCount() == 1 && path.getFileName().toString().equals("")) {
+      return;
+    }
     for(int i = 0; i < path.getNameCount(); i++) {
       this.names.add(path.getName(i).toString());
     }

@@ -14,6 +14,8 @@ import static org.fest.assertions.api.Assertions.assertThat;
  * Time: 15:25
  */
 public class FileTreeBuilderTest {
+  private final int MAX_TRIES = 20;
+
   @Test
   public void varMaxDepth() throws Exception {
     Path tempDir = createTempDir();
@@ -56,7 +58,7 @@ public class FileTreeBuilderTest {
     assertThat(fsi_2.toXml()).isEqualTo(xml_2);
     assertThat(fsi_3.toXml()).isEqualTo(xml_3);
 
-    deleteTempDir(tempDir, 20);
+    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   @Test
@@ -76,8 +78,7 @@ public class FileTreeBuilderTest {
     Files.createDirectory(a_b_h);
     key = watcher.poll(10, TimeUnit.MILLISECONDS);
     assertThat(key).isNull();
-
-    deleteTempDir(tempDir, 20);
+    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   @Test
@@ -98,7 +99,7 @@ public class FileTreeBuilderTest {
     key = watcher.take();
     assertThat(key.watchable()).isEqualTo(a.resolve("b"));
 
-    deleteTempDir(tempDir, 20);
+    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   //Sometimes it is not deleted at the first time.
