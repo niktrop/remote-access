@@ -71,7 +71,6 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
   @Override
   public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
     //TODO добавить логирование
-    //System.out.println(file.toString() + " visiting fails");
     return FileVisitResult.CONTINUE;
   }
 

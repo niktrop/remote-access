@@ -3,6 +3,8 @@ import nu.xom.Elements;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -30,7 +32,7 @@ public class PseudoFile {
     return fsi.getType(path);
   }
 
-  public PseudoPath getPath() {
+  public PseudoPath getPseudoPath() {
     return path;
   }
 
@@ -59,6 +61,40 @@ public class PseudoFile {
       return path.getName(count - 1);
     else
       return null;
+  }
+
+  public String serializeToString() {
+    StringBuilder builder = new StringBuilder();
+    char groupSeparator = '\u001E';
+    char unitSeparator = '\u001F';
+
+    builder.append(fsi.getUuid());
+    builder.append(groupSeparator);
+    for (int i = 0; i < path.getNameCount(); i++) {
+      builder.append(path.getName(i));
+      builder.append(unitSeparator);
+    }
+    return builder.toString();
+  }
+
+
+  public static PseudoFile fromSerializedString(String serialized, Map<String, FSImage> fsImageMap) {
+    String groupSeparator = "\u001E";
+    String unitSeparator = "\u001F";
+
+    StringTokenizer st = new StringTokenizer(serialized, groupSeparator, false);
+    String fsiUuid = st.nextToken();
+    FSImage fsi = fsImageMap.get(fsiUuid);
+    if (fsi == null)
+      return null;
+
+    String pathAsString = st.nextToken();
+    st = new StringTokenizer(pathAsString, unitSeparator, false);
+    PseudoPath path = new PseudoPath();
+    while (st.hasMoreTokens()) {
+      path = path.resolve(st.nextToken());
+    }
+    return new PseudoFile(fsi, path);
   }
 
   @Override

@@ -44,8 +44,7 @@ public class FSChange {
     return xmlFSImage;
   }
 
-  @Override
-  public String toString() {
+  public String serializeToString() {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';
     char unitSeparator = '\u001F';

@@ -16,8 +16,8 @@ public class FSChangeTest {
     FSChange change2 =
             new FSChange(ChangeType.CREATE_DIR, "test", new PseudoPath("a", "b"), "<test xml />");
 
-    String changeAsString = change.toString();
-    String change2AsString = change2.toString();
+    String changeAsString = change.serializeToString();
+    String change2AsString = change2.serializeToString();
 
     FSChange changeFromString = FSChange.fromString(changeAsString);
     FSChange change2FromString = FSChange.fromString(change2AsString);

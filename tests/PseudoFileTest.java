@@ -2,7 +2,9 @@ import nu.xom.ParsingException;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -85,5 +87,24 @@ public class PseudoFileTest {
     assertThat(new PseudoFile(fsi, a).getName()).isEqualTo("a");
     assertThat(new PseudoFile(fsi, f).getName()).isEqualTo("f.txt");
     assertThat(new PseudoFile(fsi, c_d).getName()).isEqualTo("d");
+  }
+
+  @Test
+  public void testAsStringAndBack() throws Exception {
+    FSImage fsi = FSImages.getFromXml(testXml);
+    PseudoPath a_b = new PseudoPath("a", "b");
+    PseudoFile pseudoFile = new PseudoFile(fsi, a_b);
+
+    String serialized = pseudoFile.serializeToString();
+    Map<String,FSImage> fsImageMap = new HashMap<>();
+    PseudoFile fromString = PseudoFile.fromSerializedString(serialized, fsImageMap);
+
+    assertThat(fromString).isNull();
+
+    fsImageMap.put(fsi.getUuid(), fsi);
+    fromString = PseudoFile.fromSerializedString(serialized, fsImageMap);
+
+    assertThat(fromString).isEqualTo(pseudoFile);
+
   }
 }
