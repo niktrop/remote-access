@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.apache.commons.io.FileUtils.*;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -30,8 +32,8 @@ public class ControllerTestChanges {
 
     Path b_c = a.resolve("b").resolve("c");
     deleteTempDir(b_c, MAX_TRIES);
-    controller.enqueueChanges();
-    controller.applyChanges();
+
+    listenAndReflectChanges(controller);
 
     String xmlResult =
             "<directory name=\"a\">" +
@@ -42,8 +44,8 @@ public class ControllerTestChanges {
 
     Path f = a.resolve("f");
     Files.delete(f);
-    controller.enqueueChanges();
-    controller.applyChanges();
+
+    listenAndReflectChanges(controller);
 
     xmlResult =
             "<directory name=\"a\">" +
@@ -67,17 +69,15 @@ public class ControllerTestChanges {
 
     Path tempDir_2 = createTempDir();
     deleteTempDir(tempDir_2, MAX_TRIES);
-    Thread.sleep(10);
-    controller.enqueueChanges();
-    controller.applyChanges();
+
+    listenAndReflectChanges(controller);
 
     assertThat(fsi.toXml().equals(xmlBefore));
 
     Path a_b_c_d = a.resolve("b").resolve("c").resolve("d");
     Files.delete(a_b_c_d);
-    Thread.sleep(10);
-    controller.enqueueChanges();
-    controller.applyChanges();
+
+    listenAndReflectChanges(controller);
 
     assertThat(fsi.toXml().equals(xmlBefore));
 
@@ -101,10 +101,7 @@ public class ControllerTestChanges {
     Files.createFile(a_g);
     Files.createFile(a_b_c_d_e);
 
-    Thread.sleep(10);
-
-    controller.enqueueChanges();
-    controller.applyChanges();
+    listenAndReflectChanges(controller);
 
     PseudoPath g = new PseudoPath("g");
     PseudoPath b_c_d_e = new PseudoPath("b", "c", "d", "e");
@@ -134,10 +131,7 @@ public class ControllerTestChanges {
     Files.createFile(a_g_h);
     Files.createDirectory(a_b_c_d_e);
 
-    Thread.sleep(10);
-
-    controller.enqueueChanges();
-    controller.applyChanges();
+    listenAndReflectChanges(controller);
 
     PseudoPath g = new PseudoPath("g");
     PseudoPath g_h = new PseudoPath("g", "h");
@@ -166,9 +160,7 @@ public class ControllerTestChanges {
     boolean createDestinationDir = true;
     moveDirectoryToDirectory(a_b_c.toFile(), a.toFile(), createDestinationDir);
 
-    Thread.sleep(10);
-    controller.enqueueChanges();
-    controller.applyChanges();
+    listenAndReflectChanges(controller);
 
     PseudoPath c = new PseudoPath("c");
     PseudoPath c_d = new PseudoPath("c", "d");
@@ -196,9 +188,7 @@ public class ControllerTestChanges {
     Path a_b_c = a.resolve("b").resolve("c");
     copyDirectoryToDirectory(a_b_c.toFile(), a.toFile());
 
-    Thread.sleep(10);
-    controller.enqueueChanges();
-    controller.applyChanges();
+    listenAndReflectChanges(controller);
 
     PseudoPath c = new PseudoPath("c");
     PseudoPath c_d = new PseudoPath("c", "d");
@@ -231,9 +221,7 @@ public class ControllerTestChanges {
     boolean createDestinationDir = true;
     moveDirectoryToDirectory(source_a.toFile(), a_b.toFile(), createDestinationDir);
 
-    Thread.sleep(10);
-    controller.enqueueChanges();
-    controller.applyChanges();
+    listenAndReflectChanges(controller);
 
     PseudoPath b_a = new PseudoPath("b","a");
     PseudoPath b_a_b = b_a.resolve("b");
@@ -256,7 +244,7 @@ public class ControllerTestChanges {
           temp/a/b/c/d/
           temp/a/f
           */
-  static Path createTempDir() throws IOException {
+  private static Path createTempDir() throws IOException {
     Path tempDir = Files.createTempDirectory("temp");
     Path a = tempDir.resolve("a");
     Path a_b_c_d = a.resolve("b").resolve("c").resolve("d");
@@ -268,7 +256,7 @@ public class ControllerTestChanges {
   }
 
   //Sometimes it is not deleted at the first time.
-  static void deleteTempDir(Path tempDir, int times) {
+  private static void deleteTempDir(Path tempDir, int times) {
     for (int i = 0; i<times; i++) {
       try {
         deleteDirectory(tempDir.toFile());
@@ -276,6 +264,16 @@ public class ControllerTestChanges {
       } catch (IOException e) {
         //System.out.println("Let's try once more...");
       }
+    }
+  }
+
+  private static void listenAndReflectChanges(Controller controller) throws InterruptedException {
+    Thread.sleep(10L);
+
+    BlockingQueue<FSChange> fsChanges = new LinkedBlockingQueue<>();
+    controller.enqueueChanges(fsChanges);
+    while (!fsChanges.isEmpty()) {
+      controller.applyChange(fsChanges.poll());
     }
   }
 

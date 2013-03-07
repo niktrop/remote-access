@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
@@ -17,18 +16,15 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 public class Controller {
   private final Map<String, FSImage> fsImageMap;
   private final WatchService watcher;
-  private final BlockingQueue<FSChange> fsChangeQueue;
   private final int MAX_DEPTH = 2;
 
   public Controller() throws IOException {
     this.fsImageMap = new HashMap<>();
-    this.fsChangeQueue = new LinkedBlockingQueue<>();
     this.watcher = FileSystems.getDefault().newWatchService();
   }
 
   public Controller(Iterable<FSImage> fsImages, WatchService watcher) {
     this.fsImageMap = new HashMap<>();
-    this.fsChangeQueue = new LinkedBlockingQueue<>();
     for(FSImage fsi : fsImages) {
       addFSImage(fsi);
     }
@@ -48,7 +44,7 @@ public class Controller {
    * adds them to the internal queue of the Controller.
    * Should be invoked from separate thread in an infinite loop.
    */
-  public void enqueueChanges() {
+  public void enqueueChanges(BlockingQueue<FSChange> fsChangeQueue) {
     while(true) {
       WatchKey key = watcher.poll();
       if (key == null)
@@ -81,40 +77,36 @@ public class Controller {
   /**
    * Applies all changes from the internal queue if it is not empty, or waits.
    */
-  public void applyChanges() {
-    while(true) {
-      FSChange fsChange = fsChangeQueue.poll();
-      if (fsChange == null)
+  public void applyChange(FSChange fsChange) {
+    if (fsChange == null)
+      return;
+
+    FSImage fsi = fsImageMap.get(fsChange.getFsiUuid());
+    PseudoPath pseudoPath = fsChange.getPath();
+    switch (fsChange.getType()) {
+      case CREATE_DIR:
+        FSImage createdDirFsi = null;
+        try {
+          createdDirFsi = FSImages.getFromXml(fsChange.getXmlFSImage());
+        } catch (ParsingException e) {
+          e.printStackTrace();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+        fsi.addToDirectory(pseudoPath.getParent(), createdDirFsi);
         break;
-
-      FSImage fsi = fsImageMap.get(fsChange.getFsiUuid());
-      PseudoPath pseudoPath = fsChange.getPath();
-      switch (fsChange.getType()) {
-        case CREATE_DIR:
-          FSImage createdDirFsi = null;
-          try {
-            createdDirFsi = FSImages.getFromXml(fsChange.getXmlFSImage());
-          } catch (ParsingException e) {
-            e.printStackTrace();
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-          fsi.addToDirectory(pseudoPath.getParent(), createdDirFsi);
-          break;
-        case CREATE_FILE:
-          try {
-            fsi.addFile(pseudoPath);
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-          break;
-        case DELETE:
-          fsi.deletePath(pseudoPath);
-          break;
-        default:
-          break;
-      }
-
+      case CREATE_FILE:
+        try {
+          fsi.addFile(pseudoPath);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        break;
+      case DELETE:
+        fsi.deletePath(pseudoPath);
+        break;
+      default:
+        break;
     }
   }
 
