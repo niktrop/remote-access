@@ -87,6 +87,7 @@ public class PseudoFileTest {
     assertThat(new PseudoFile(fsi, a).getName()).isEqualTo("a");
     assertThat(new PseudoFile(fsi, f).getName()).isEqualTo("f.txt");
     assertThat(new PseudoFile(fsi, c_d).getName()).isEqualTo("d");
+
   }
 
   @Test

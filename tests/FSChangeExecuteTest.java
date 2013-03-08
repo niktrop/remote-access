@@ -17,7 +17,7 @@ import static org.fest.assertions.api.Assertions.assertThat;
  * Date: 05.03.13
  * Time: 16:43
  */
-public class ControllerTestChanges {
+public class FSChangeExecuteTest {
   private final int MAX_TRIES = 20;
 
   @Test
@@ -272,8 +272,9 @@ public class ControllerTestChanges {
 
     BlockingQueue<FSChange> fsChanges = new LinkedBlockingQueue<>();
     controller.enqueueChanges(fsChanges);
+    CommandContext context = controller.getContext();
     while (!fsChanges.isEmpty()) {
-      controller.applyChange(fsChanges.poll());
+      fsChanges.poll().execute(context);
     }
   }
 

@@ -16,17 +16,18 @@ public class FSChangeTest {
     FSChange change2 =
             new FSChange(ChangeType.CREATE_DIR, "test", new PseudoPath("a", "b"), "<test xml />");
 
-    String changeAsString = change.serializeToString();
-    String change2AsString = change2.serializeToString();
+    String changeAsString = change.getStringRepresentation();
+    String change2AsString = change2.getStringRepresentation();
 
-    FSChange changeFromString = FSChange.fromString(changeAsString);
-    FSChange change2FromString = FSChange.fromString(change2AsString);
+    FSChange instance = new FSChange();
+    FSChange changeFromString = instance.fromString(changeAsString);
+    FSChange change2FromString = instance.fromString(change2AsString);
 
-    assertThat(changeFromString.getType()).isEqualTo(ChangeType.CREATE_DIR);
+    assertThat(changeFromString.getChangeType()).isEqualTo(ChangeType.CREATE_DIR);
     assertThat(changeFromString.getFsiUuid()).isEqualTo("test");
     assertThat(changeFromString.getPath()).isEqualTo(path);
 
-    assertThat(change2FromString.getType()).isEqualTo(ChangeType.CREATE_DIR);
+    assertThat(change2FromString.getChangeType()).isEqualTo(ChangeType.CREATE_DIR);
     assertThat(change2FromString.getFsiUuid()).isEqualTo("test");
     assertThat(change2FromString.getPath()).isEqualTo(path);
     assertThat(change2FromString.getXmlFSImage()).isEqualTo("<test xml />");

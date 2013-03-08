@@ -18,9 +18,12 @@ public class Controller {
   private final WatchService watcher;
   private final int MAX_DEPTH = 2;
 
+  private final CommandContext context;
+
   public Controller() throws IOException {
     this.fsImageMap = new HashMap<>();
     this.watcher = FileSystems.getDefault().newWatchService();
+    context = new CommandContext(fsImageMap, watcher);
   }
 
   public Controller(Iterable<FSImage> fsImages, WatchService watcher) {
@@ -29,6 +32,11 @@ public class Controller {
       addFSImage(fsi);
     }
     this.watcher = watcher;
+    context = new CommandContext(fsImageMap, this.watcher);
+  }
+
+  public CommandContext getContext() {
+    return context;
   }
 
   public WatchService getWatcher() {
@@ -83,7 +91,7 @@ public class Controller {
 
     FSImage fsi = fsImageMap.get(fsChange.getFsiUuid());
     PseudoPath pseudoPath = fsChange.getPath();
-    switch (fsChange.getType()) {
+    switch (fsChange.getChangeType()) {
       case CREATE_DIR:
         FSImage createdDirFsi = null;
         try {

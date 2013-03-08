@@ -16,7 +16,7 @@ public class FSImage {
   private final Element fileTree;
 
   /*Should not be saved to xml serialization,
-  for local use only.*/
+    for local use only.*/
   private final Path pathToRoot;
 
 
