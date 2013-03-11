@@ -1,5 +1,3 @@
-import nu.xom.ParsingException;
-
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
@@ -18,12 +16,9 @@ public class Controller {
   private final WatchService watcher;
   private final int MAX_DEPTH = 2;
 
-  private final CommandContext context;
-
   public Controller() throws IOException {
     this.fsImageMap = new HashMap<>();
     this.watcher = FileSystems.getDefault().newWatchService();
-    context = new CommandContext(fsImageMap, watcher);
   }
 
   public Controller(Iterable<FSImage> fsImages, WatchService watcher) {
@@ -32,15 +27,14 @@ public class Controller {
       addFSImage(fsi);
     }
     this.watcher = watcher;
-    context = new CommandContext(fsImageMap, this.watcher);
-  }
-
-  public CommandContext getContext() {
-    return context;
   }
 
   public WatchService getWatcher() {
     return watcher;
+  }
+
+  public Map<String, FSImage> getFsImageMap() {
+    return fsImageMap;
   }
 
   public void addFSImage(FSImage fsi) {
@@ -79,42 +73,6 @@ public class Controller {
           break;
         }
       }
-    }
-  }
-
-  /**
-   * Applies all changes from the internal queue if it is not empty, or waits.
-   */
-  public void applyChange(FSChange fsChange) {
-    if (fsChange == null)
-      return;
-
-    FSImage fsi = fsImageMap.get(fsChange.getFsiUuid());
-    PseudoPath pseudoPath = fsChange.getPath();
-    switch (fsChange.getChangeType()) {
-      case CREATE_DIR:
-        FSImage createdDirFsi = null;
-        try {
-          createdDirFsi = FSImages.getFromXml(fsChange.getXmlFSImage());
-        } catch (ParsingException e) {
-          e.printStackTrace();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-        fsi.addToDirectory(pseudoPath.getParent(), createdDirFsi);
-        break;
-      case CREATE_FILE:
-        try {
-          fsi.addFile(pseudoPath);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-        break;
-      case DELETE:
-        fsi.deletePath(pseudoPath);
-        break;
-      default:
-        break;
     }
   }
 

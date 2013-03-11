@@ -1,7 +1,11 @@
 import nu.xom.ParsingException;
+import org.jboss.netty.channel.ChannelHandlerContext;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,15 +14,17 @@ import java.util.StringTokenizer;
  * Time: 12:39
  */
 public class FSChange implements SerializableCommand {
+  private static final Logger LOG = Logger.getLogger(FSChange.class.getName());
+
   private final ChangeType changeType;
   private final String fsiUuid;
   private final PseudoPath path;
 
-  //only for changeType CREATE_DIR
+  //only for changeType CREATE_DIR and NEW_IMAGE
   private final String xmlFSImage;
 
   //Only for deserialization purposes.
-  public FSChange() {
+  FSChange() {
     changeType = null;
     fsiUuid = null;
     path = null;
@@ -83,9 +89,10 @@ public class FSChange implements SerializableCommand {
   }
 
   @Override
-  public void execute(CommandContext context) {
+  public void execute(Controller controller, ChannelHandlerContext ctx) {
     String fsiUuid = getFsiUuid();
-    FSImage fsi = context.getFsImageMap().get(fsiUuid);
+    Map<String,FSImage> fsImageMap = controller.getFsImageMap();
+    FSImage fsi = fsImageMap.get(fsiUuid);
     PseudoPath pseudoPath = getPath();
     switch (getChangeType()) {
       case CREATE_DIR:
@@ -93,21 +100,28 @@ public class FSChange implements SerializableCommand {
         try {
           createdDirFsi = FSImages.getFromXml(getXmlFSImage());
         } catch (ParsingException e) {
-          e.printStackTrace();
+          LOG.log(Level.WARNING, null, e.getCause());
         } catch (IOException e) {
-          e.printStackTrace();
+          LOG.log(Level.WARNING, null, e.getCause());
         }
         fsi.addToDirectory(pseudoPath.getParent(), createdDirFsi);
         break;
       case CREATE_FILE:
-        try {
-          fsi.addFile(pseudoPath);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
+        fsi.addFile(pseudoPath);
         break;
       case DELETE:
         fsi.deletePath(pseudoPath);
+        break;
+      case NEW_IMAGE:
+        FSImage newFsi = null;
+        try {
+          newFsi = FSImages.getFromXml(getXmlFSImage());
+          fsImageMap.put(newFsi.getUuid(), newFsi);
+        } catch (ParsingException e) {
+          LOG.log(Level.WARNING, null, e.getCause());
+        } catch (IOException e) {
+          LOG.log(Level.WARNING, null, e.getCause());
+        }
         break;
       default:
         break;

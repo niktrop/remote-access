@@ -12,7 +12,8 @@ import java.nio.file.WatchEvent;
 public enum ChangeType {
   CREATE_DIR,
   CREATE_FILE,
-  DELETE;
+  DELETE,
+  NEW_IMAGE;
 
   public static ChangeType getChangeType(WatchEvent<Path> event, Path fullPath) {
     if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {

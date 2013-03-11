@@ -1,3 +1,5 @@
+import org.jboss.netty.channel.ChannelHandlerContext;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
@@ -5,7 +7,7 @@
  * Time: 21:45
  */
 public interface SerializableCommand {
-  public void execute(CommandContext context);
+  public void execute(Controller controller, ChannelHandlerContext ctx);
   String getStringRepresentation();
   SerializableCommand fromString(String string);
 }

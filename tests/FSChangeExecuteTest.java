@@ -272,9 +272,8 @@ public class FSChangeExecuteTest {
 
     BlockingQueue<FSChange> fsChanges = new LinkedBlockingQueue<>();
     controller.enqueueChanges(fsChanges);
-    CommandContext context = controller.getContext();
     while (!fsChanges.isEmpty()) {
-      fsChanges.poll().execute(context);
+      fsChanges.poll().execute(controller, null);
     }
   }
 
