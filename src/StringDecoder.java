@@ -1,9 +1,12 @@
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
 
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,6 +15,7 @@ import java.nio.charset.StandardCharsets;
  * Time: 12:58
  */
 public class StringDecoder extends FrameDecoder{
+  private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
 
   @Override
   protected String decode(ChannelHandlerContext ctx,
@@ -34,5 +38,9 @@ public class StringDecoder extends FrameDecoder{
     return frame.toString(StandardCharsets.UTF_8);
   }
 
-
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+    LOG.log(Level.WARNING, null, e.getCause());
+    e.getChannel().close();
+  }
 }
