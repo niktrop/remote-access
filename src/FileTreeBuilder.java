@@ -114,10 +114,11 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   //Set file name to one of the attributes of the elements
   private void setName(Element element, Path path) {
-    String fileName = (path.getNameCount() > 0) ?
-            path.getFileName().toString(): null;
-    Attribute name =  new Attribute("name", fileName);
-    element.addAttribute(name);
+    if (path.getNameCount() > 0) {
+      String fileName = path.getFileName().toString();
+      Attribute name =  new Attribute("name", fileName);
+      element.addAttribute(name);
+    }
   }
 
 
