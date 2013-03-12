@@ -2,15 +2,13 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
 
-import java.util.Map;
-
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
  * Date: 11.03.13
  * Time: 11:17
  */
-public class RefreshFSImagesQuery implements SerializableCommand {
+public class QueryRefreshFSImages implements SerializableCommand {
 
   /**
    * Results in sending all local FSImages to the other side of the channel.
@@ -18,9 +16,9 @@ public class RefreshFSImagesQuery implements SerializableCommand {
    * */
   @Override
   public void execute(Controller controller, ChannelHandlerContext ctx) {
-    Map<String,FSImage> fsImageMap = controller.getFsImageMap();
+    Iterable<FSImage> fsImages = controller.getFSImages();
     Channel channel = ctx.getChannel();
-    for (FSImage fsi : fsImageMap.values()) {
+    for (FSImage fsi : fsImages) {
       String uuid = fsi.getUuid();
       String xml = fsi.toXml();
       FSChange fsChange = new FSChange(ChangeType.NEW_IMAGE, uuid, null, xml);
@@ -35,6 +33,6 @@ public class RefreshFSImagesQuery implements SerializableCommand {
 
   @Override
   public SerializableCommand fromString(String string) {
-    return new RefreshFSImagesQuery();
+    return new QueryRefreshFSImages();
   }
 }

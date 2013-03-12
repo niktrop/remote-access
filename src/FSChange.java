@@ -2,7 +2,6 @@ import nu.xom.ParsingException;
 import org.jboss.netty.channel.ChannelHandlerContext;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,8 +90,7 @@ public class FSChange implements SerializableCommand {
   @Override
   public void execute(Controller controller, ChannelHandlerContext ctx) {
     String fsiUuid = getFsiUuid();
-    Map<String,FSImage> fsImageMap = controller.getFsImageMap();
-    FSImage fsi = fsImageMap.get(fsiUuid);
+    FSImage fsi = controller.getFSImage(fsiUuid);
     PseudoPath pseudoPath = getPath();
     switch (getChangeType()) {
       case CREATE_DIR:
@@ -116,7 +114,7 @@ public class FSChange implements SerializableCommand {
         FSImage newFsi = null;
         try {
           newFsi = FSImages.getFromXml(getXmlFSImage());
-          fsImageMap.put(newFsi.getUuid(), newFsi);
+          controller.addFSImage(newFsi);
         } catch (ParsingException e) {
           LOG.log(Level.WARNING, null, e.getCause());
         } catch (IOException e) {

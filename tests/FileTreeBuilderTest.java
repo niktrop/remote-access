@@ -29,28 +29,28 @@ public class FileTreeBuilderTest {
     FSImage fsi_1 = FSImages.getFromDirectory(a, 1, watcher);
     String xml_1 =
             "<directory name=\"a\">" +
-              "<directory name=\"b\" />" +
-              "<file name=\"f\" />" +
+              "<directory name=\"b\" depth=\"1\" />" +
+              "<file name=\"f\" depth=\"1\" />" +
             "</directory>";
 
     FSImage fsi_2 = FSImages.getFromDirectory(a, 2, watcher);
     String xml_2 =
             "<directory name=\"a\">" +
-              "<directory name=\"b\">" +
-                "<directory name=\"c\" />" +
+              "<directory name=\"b\" depth=\"1\">" +
+                "<directory name=\"c\" depth=\"2\" />" +
               "</directory>" +
-              "<file name=\"f\" />" +
+              "<file name=\"f\" depth=\"1\" />" +
             "</directory>";
 
     FSImage fsi_3 = FSImages.getFromDirectory(a, 3, watcher);
     String xml_3 =
             "<directory name=\"a\">" +
-              "<directory name=\"b\">" +
-                "<directory name=\"c\">" +
-                  "<directory name=\"d\" />" +
+              "<directory name=\"b\" depth=\"1\">" +
+                "<directory name=\"c\" depth=\"2\">" +
+                  "<directory name=\"d\" depth=\"3\" />" +
                 "</directory>" +
               "</directory>" +
-              "<file name=\"f\" />" +
+              "<file name=\"f\" depth=\"1\" />" +
             "</directory>";
 
     assertThat(fsi_0.toXml()).isEqualTo(xml_0);

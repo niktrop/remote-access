@@ -58,5 +58,6 @@ public class Server {
 
     // Bind and start to accept incoming connections.
     bootstrap.bind(new InetSocketAddress(host, port));
+    System.out.println("Listening...");
   }
 }

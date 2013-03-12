@@ -63,6 +63,11 @@ public class PseudoFile {
       return null;
   }
 
+  public String getFsiUuid() {
+    return fsi.getUuid();
+  }
+
+
   public String serializeToString() {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';

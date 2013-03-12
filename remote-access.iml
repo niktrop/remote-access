@@ -8,8 +8,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="org.easytesting:fest-assert-core:2.0M8" level="application" />
+    <orderEntry type="library" name="io.netty:netty:3.6.2.Final" level="application" />
     <orderEntry type="library" name="org.apache.directory.studio:org.apache.commons.io:2.1" level="application" />
+    <orderEntry type="library" name="org.easytesting:fest-assert-core:2.0M8" level="application" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -19,15 +20,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../remote_access/lib/com.springsource.nu.xom-1.2.5.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="junit-4.10" level="application" />
+    <orderEntry type="library" name="nu.xom:com.springsource.nu.xom:1.2.5" level="application" />
   </component>
 </module>
 

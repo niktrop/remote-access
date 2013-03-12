@@ -126,6 +126,19 @@ public class FSImage {
     return element != null;
   }
 
+  public boolean containsPath(Path path) {
+    Path pathToRoot = getPathToRoot();
+    if (pathToRoot == null)
+      return false;
+    if (path.startsWith(pathToRoot)) {
+      PseudoPath pseudoPath = new PseudoPath(pathToRoot.relativize(path));
+      if (this.contains(pseudoPath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

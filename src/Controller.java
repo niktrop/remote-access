@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
@@ -12,9 +14,11 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
  * Time: 18:34
  */
 public class Controller {
+  private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
+
   private final Map<String, FSImage> fsImageMap;
   private final WatchService watcher;
-  private final int MAX_DEPTH = 2;
+  public final int MAX_DEPTH = 2;
 
   public Controller() throws IOException {
     this.fsImageMap = new HashMap<>();
@@ -33,8 +37,12 @@ public class Controller {
     return watcher;
   }
 
-  public Map<String, FSImage> getFsImageMap() {
-    return fsImageMap;
+  public FSImage getFSImage(String fsiUuid) {
+    return fsImageMap.get(fsiUuid);
+  }
+
+  public Iterable<FSImage> getFSImages() {
+    return fsImageMap.values();
   }
 
   public void addFSImage(FSImage fsi) {
@@ -57,6 +65,7 @@ public class Controller {
         WatchEvent.Kind<?> kind = event.kind();
 
         if (kind == OVERFLOW) {
+          LOG.warning("File system change caused StandardWatchEventKinds.OVERFLOW");
           continue;
         }
 
@@ -103,7 +112,7 @@ public class Controller {
             result.add(fsChange);
 
           } catch (IOException e) {
-            e.printStackTrace();
+            LOG.log(Level.WARNING, null, e.getCause());
           }
         }
       }

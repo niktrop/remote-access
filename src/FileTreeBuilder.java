@@ -35,7 +35,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
       if (!Files.isReadable(dir) || Files.isSymbolicLink(dir))
         return FileVisitResult.SKIP_SUBTREE;
       try {
-        addPathToTree(dir);
+        addPathToTree(dir, currentDepth);
         dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE);
         currentDepth++;
         return FileVisitResult.CONTINUE;
@@ -53,7 +53,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
       if (!Files.isReadable(file) || Files.isSymbolicLink(file))
         return FileVisitResult.CONTINUE;
       try {
-        addPathToTree(file);
+        addPathToTree(file, currentDepth);
         return FileVisitResult.CONTINUE;
       } catch (IOException e) {
         e.printStackTrace();
@@ -76,6 +76,21 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   private void addPathToTree(Path path) throws IOException {
     Element element = getElement(path);
+    Element parent = map.get(path.getParent());
+    if (parent != null) {
+      map.put(path, element);
+      parent.appendChild(element);
+    }
+    else {
+      map.put(path, rootDirElement);
+      setName(rootDirElement, path);
+    }
+  }
+
+  private void addPathToTree(Path path, Integer currentDepth) throws IOException {
+    Element element = getElement(path);
+    Attribute depth = new Attribute("depth", currentDepth.toString());
+    element.addAttribute(depth);
     Element parent = map.get(path.getParent());
     if (parent != null) {
       map.put(path, element);
