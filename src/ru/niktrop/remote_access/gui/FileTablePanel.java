@@ -1,4 +1,5 @@
-import ru.niktrop.remote_access.FileTableModel;
+package ru.niktrop.remote_access.gui;
+
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
@@ -6,12 +7,12 @@ import javax.swing.*;
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
- * Date: 11.03.13
- * Time: 9:33
+ * Date: 12.03.13
+ * Time: 15:36
  */
 public enum FileTablePanel {
-  ON_CLIENT,
-  ON_SERVER;
+  LEFT,
+  RIGHT;
   JPanel pnlFiles;
   private JScrollPane scrlFiles;
   private JTable tblFiles;
@@ -27,9 +28,15 @@ public enum FileTablePanel {
     pnlFiles.add(scrlFiles);
   }
 
-  void populateTable(PseudoFile directory) {
+  public void populateTable(PseudoFile directory) {
     this.directory = directory;
     FileTableModel fileTableModel = new FileTableModel(directory);
     tblFiles.setModel(fileTableModel);
   }
+
+  public JPanel getPanel() {
+    return pnlFiles;
+  }
 }
+
+
