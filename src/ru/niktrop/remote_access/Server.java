@@ -13,8 +13,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 
 /**
@@ -30,17 +28,16 @@ public class Server {
   private static final int MAX_DEPTH = 2;
 
   public static void main(String[] args) throws Exception {
-    WatchService watcther = FileSystems.getDefault().newWatchService();
-    List<FSImage> fsImages = new ArrayList<>();
+    final Controller controller = Controllers.getServerController();
+    WatchService watcher = controller.getWatcher();
     for (Path dir : dirs) {
       if (!Files.isDirectory(dir)) {
         continue;
       }
-      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watcther);
-      fsImages.add(fsi);
+      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watcher);
+      controller.addFSImage(fsi);
       System.out.println(dir.toString());
     }
-    final Controller controller = new Controller(fsImages, watcther);
 
     // Configure the server.
     ServerBootstrap bootstrap = new ServerBootstrap(

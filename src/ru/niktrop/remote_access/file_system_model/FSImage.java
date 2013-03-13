@@ -5,6 +5,7 @@ import nu.xom.Element;
 import nu.xom.Elements;
 import nu.xom.ParentNode;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -38,6 +39,10 @@ public class FSImage {
 
   public Path getPathToRoot() {
     return pathToRoot;
+  }
+
+  public boolean isLocal() {
+    return (Files.exists(pathToRoot));
   }
 
   public String getType(PseudoPath path) {
@@ -98,6 +103,9 @@ public class FSImage {
   }
 
   public synchronized void addFile(PseudoPath path) {
+    if (path.equals(new PseudoPath())) {
+      throw new IllegalArgumentException("Adding empty path does not allowed.");
+    }
     PseudoPath parent = path.getParent();
     Element parentElement = getElement(parent);
     if (parentElement == null ) {

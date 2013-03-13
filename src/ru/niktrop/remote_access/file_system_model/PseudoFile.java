@@ -38,6 +38,10 @@ public class PseudoFile {
     return path;
   }
 
+  public boolean isDirectory() {
+    return getType().equals(FileType.DIR.getName());
+  }
+
   public List<PseudoFile> getContent() {
     Element parent = fsi.getElement(path);
     List<PseudoFile> content = new ArrayList<>();
@@ -57,6 +61,18 @@ public class PseudoFile {
     return names;
   }
 
+  public PseudoFile getParent() {
+    PseudoPath path = getPseudoPath();
+
+    //empty pseudopath has no parent
+    if (path.getNameCount() == 0) {
+      return null;
+    }
+
+    PseudoPath parent = path.getParent();
+    return new PseudoFile(fsi, parent);
+  }
+
   public String getName() {
     int count = path.getNameCount();
     if (count > 0)
@@ -67,6 +83,15 @@ public class PseudoFile {
 
   public String getFsiUuid() {
     return fsi.getUuid();
+  }
+
+  public int getDepth() {
+    Element element = fsi.getElement(path);
+    String depth = element.getAttributeValue("depth");
+    if (depth == null) {
+      return -1;
+    }
+    else return Integer.parseInt(depth);
   }
 
 

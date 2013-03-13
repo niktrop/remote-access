@@ -12,8 +12,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 
 /**
@@ -31,17 +29,18 @@ public class Client {
 
   public static void main(String[] args) throws IOException, InterruptedException {
 
-    WatchService watcther = FileSystems.getDefault().newWatchService();
-    List<FSImage> fsImages = new ArrayList<>();
+    final Controller controller = Controllers.getClientController();
+    WatchService watcher = controller.getWatcher();
+
     for (Path dir : dirs) {
       if (!Files.isDirectory(dir)) {
         continue;
       }
-      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watcther);
-      fsImages.add(fsi);
+      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watcher);
+      controller.addFSImage(fsi);
       System.out.println(dir.toString());
     }
-    final Controller controller = new Controller(fsImages, watcther);
+
 
     ChannelFactory factory = new NioClientSocketChannelFactory(
             Executors.newCachedThreadPool(),

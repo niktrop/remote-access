@@ -16,7 +16,7 @@ public class FileTableModel extends AbstractTableModel{
   private PseudoFile directory;
   private List<String> columns = new ArrayList<>();
   {
-    columns.add("Type");
+    columns.add("ControllerType");
     columns.add("Name");
   }
 
@@ -24,6 +24,9 @@ public class FileTableModel extends AbstractTableModel{
     this.directory = directory;
   }
 
+  public PseudoFile getPseudoFile(int index) {
+    return directory.getContent().get(index);
+  }
 
   @Override
   public int getRowCount() {
@@ -43,7 +46,7 @@ public class FileTableModel extends AbstractTableModel{
   @Override
   public Object getValueAt(int rowIndex, int columnIndex) {
     PseudoFile file = directory.getContent().get(rowIndex);
-    //First two attributes are obligatory.
+
     if (columnIndex == 0) return file.getType();
     if (columnIndex == 1) return file.getName();
     return null;

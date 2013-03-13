@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -34,7 +35,7 @@ public class QueryReloadDirectory implements SerializableCommand {
 
   public QueryReloadDirectory(PseudoFile pseudoFile) {
     if (pseudoFile.getType() != FileType.DIR.getName()) {
-      throw new IllegalArgumentException("Attempt to create ru.niktrop.remote_access.commands.QueryReloadDirectory not on a directory");
+      throw new IllegalArgumentException("Attempt to create QueryReloadDirectory not on a directory");
     }
     this.dir = pseudoFile.getPseudoPath();
     this.fsiUuid = pseudoFile.getFsiUuid();
@@ -83,9 +84,18 @@ public class QueryReloadDirectory implements SerializableCommand {
   }
 
   private List<FSChange> getApplicableFSChanges(Controller controller) {
+    int maxDepth = controller.getMaxDepth();
     FSImage fsi = controller.getFSImage(fsiUuid);
-    Path fullPath = fsi.getPathToRoot().resolve(dir.toPath());
-    int maxDepth = controller.MAX_DEPTH;
+    int depth = new PseudoFile(fsi, dir).getDepth();
+
+    //reload only directories with small depth
+    if (depth >= maxDepth) {
+      return Collections.emptyList();
+    }
+
+    Path pathToRoot1 = fsi.getPathToRoot();
+    Path fullPath = pathToRoot1.resolve(dir.toPath());
+    
     WatchService watcher = controller.getWatcher();
     ChangeType type = ChangeType.CREATE_DIR;
 

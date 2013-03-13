@@ -1,7 +1,9 @@
 package ru.niktrop.remote_access;
 
+import org.jboss.netty.channel.Channel;
 import ru.niktrop.remote_access.commands.ChangeType;
 import ru.niktrop.remote_access.commands.FSChange;
+import ru.niktrop.remote_access.commands.SerializableCommand;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,23 +25,39 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
  * Time: 18:34
  */
 public class Controller {
-  private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
 
-  private final Map<String, FSImage> fsImageMap;
-  private final WatchService watcher;
-  public final int MAX_DEPTH = 2;
-
-  public Controller() throws IOException {
-    this.fsImageMap = new HashMap<>();
-    this.watcher = FileSystems.getDefault().newWatchService();
+  static enum ControllerType {
+    CLIENT,
+    SERVER;
   }
 
-  public Controller(Iterable<FSImage> fsImages, WatchService watcher) {
-    this.fsImageMap = new HashMap<>();
-    for(FSImage fsi : fsImages) {
-      addFSImage(fsi);
+  private final ControllerType type;
+  private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
+  private final Map<String, FSImage> fsImageMap = new HashMap<>();
+
+  private final BlockingQueue<FSChange> fsChangeQueue = new LinkedBlockingQueue<>();
+  private final WatchService watcher;
+  private int maxDepth = 2;
+  private Channel channel;
+  public void setChannel(Channel channel) {
+    this.channel = channel;
+  }
+
+  Controller(ControllerType type) throws IOException {
+    watcher = FileSystems.getDefault().newWatchService();
+    this.type = type;
+  }
+
+  public void sendCommand(SerializableCommand command) {
+    if (channel == null) {
+      LOG.warning("Attempt to send command while channel is null.");
+      return;
     }
-    this.watcher = watcher;
+    channel.write(command);
+  }
+
+  public void executeCommand(SerializableCommand command) {
+    command.execute(this, null);
   }
 
   public WatchService getWatcher() {
@@ -57,12 +76,46 @@ public class Controller {
     fsImageMap.put(fsi.getUuid(), fsi);
   }
 
+  public void listenAndHandleFileChanges() {
+    Thread listener = new Thread() {
+      @Override
+      public void run() {
+        while(true) {
+          enqueueChanges(fsChangeQueue);
+        }
+      }
+    };
+
+    Thread handler = new Thread() {
+      @Override
+      public void run() {
+        while(true) {
+          try {
+            FSChange fsChange = fsChangeQueue.take();
+            executeCommand(fsChange);
+            if (type == ControllerType.SERVER) {
+              sendCommand(fsChange);
+            }
+          } catch (InterruptedException e) {
+            LOG.warning("Waiting file system change was interrupted.");
+          }
+        }
+      }
+    };
+
+    listener.setDaemon(true);
+    handler.setDaemon(true);
+
+    listener.start();
+    handler.start();
+  }
+
   /**
    * Builds ru.niktrop.remote_access.commands.FSChange objects from WatchService and
-   * adds them to the internal queue of the ru.niktrop.remote_access.Controller.
+   * adds them to the internal queue of the Controller.
    * Should be invoked from separate thread in an infinite loop.
    */
-  public void enqueueChanges(BlockingQueue<FSChange> fsChangeQueue) {
+  public void enqueueChanges(Queue<FSChange> fsChangeQueue) {
     while(true) {
       WatchKey key = watcher.poll();
       if (key == null)
@@ -84,7 +137,6 @@ public class Controller {
         for (FSChange fsChange : applicableFSChanges) {
           fsChangeQueue.offer(fsChange);
         }
-        //TODO Send these changes to another side of application
         boolean valid = key.reset();
         if (!valid) {
           break;
@@ -113,7 +165,7 @@ public class Controller {
           try {
             String xmlFsi = null;
             if (type == ChangeType.CREATE_DIR) {
-              FSImage addedFsi = FSImages.getFromDirectory(fullPath, MAX_DEPTH, watcher);
+              FSImage addedFsi = FSImages.getFromDirectory(fullPath, getMaxDepth(), watcher);
               xmlFsi = addedFsi.toXml();
             }
             FSChange fsChange = new FSChange(type, fsi.getUuid(), relFullPath, xmlFsi);
@@ -129,7 +181,11 @@ public class Controller {
     return result;
   }
 
+  public int getMaxDepth() {
+    return maxDepth;
+  }
 
-
-
+  public void setMaxDepth(int maxDepth) {
+    this.maxDepth = maxDepth;
+  }
 }

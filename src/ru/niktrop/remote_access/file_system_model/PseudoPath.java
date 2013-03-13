@@ -42,8 +42,14 @@ public class PseudoPath {
   }
 
   public Path toPath() {
-    String[] arrayNames = this.names.toArray(new String[]{});
-    return Paths.get(null, arrayNames);
+    int size = names.size();
+    if (size == 0) {
+      return Paths.get(null);
+    }
+    String firstName = names.get(0);
+    String[] otherNames = names.subList(1, size).toArray(new String[]{});
+
+    return Paths.get(firstName, otherNames);
   }
 
   public String getName(int i) {
@@ -62,7 +68,7 @@ public class PseudoPath {
 
   public PseudoPath getParent() {
     if (this.names.size() == 0) {
-      throw new IllegalArgumentException("Empty pseudopath has no parent.");
+      return null;
     }
     List<String> newNames = new ArrayList<>(names);
     newNames.remove(newNames.size() - 1);

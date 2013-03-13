@@ -12,7 +12,7 @@ import ru.niktrop.remote_access.file_system_model.FSImage;
  * Date: 11.03.13
  * Time: 11:17
  */
-public class QueryRefreshFSImages implements SerializableCommand {
+public class QueryUpdateFSImages implements SerializableCommand {
 
   /**
    * Results in sending all local ru.niktrop.remote_access.file_system_model.FSImages to the other side of the channel.
@@ -37,6 +37,6 @@ public class QueryRefreshFSImages implements SerializableCommand {
 
   @Override
   public SerializableCommand fromString(String string) {
-    return new QueryRefreshFSImages();
+    return new QueryUpdateFSImages();
   }
 }
