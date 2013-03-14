@@ -1,11 +1,11 @@
 package ru.niktrop.remote_access;
 
+import nu.xom.ParsingException;
 import org.jboss.netty.channel.Channel;
 import ru.niktrop.remote_access.commands.ChangeType;
 import ru.niktrop.remote_access.commands.FSChange;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 import ru.niktrop.remote_access.file_system_model.FSImage;
-import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+import static ru.niktrop.remote_access.file_system_model.FSImages.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -26,6 +27,7 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
  * Time: 18:34
  */
 public class Controller {
+  private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
 
   static enum ControllerType {
     CLIENT,
@@ -35,7 +37,6 @@ public class Controller {
   private List<ControllerListener> listeners = new LinkedList<>();
 
   private final ControllerType type;
-  private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
   private final Map<String, FSImage> fsImageMap = new HashMap<>();
 
   private final BlockingQueue<FSChange> fsChangeQueue = new LinkedBlockingQueue<>();
@@ -57,7 +58,8 @@ public class Controller {
   }
 
   public void executeCommand(SerializableCommand command) {
-    command.execute(this, null);
+    command.execute(this);
+    LOG.info("Command executed: " + command.getClass().getSimpleName());
     fireControllerChange();
   }
 
@@ -73,6 +75,10 @@ public class Controller {
     return fsImageMap.values();
   }
 
+  public Channel getChannel() {
+    return channel;
+  }
+
   public void setChannel(Channel channel) {
     this.channel = channel;
   }
@@ -86,7 +92,7 @@ public class Controller {
         result.add(fsImage);
       }
     }
-    Collections.sort(result, Controllers.byAlias);
+    Collections.sort(result, byAlias);
     return result;
   }
 
@@ -100,15 +106,26 @@ public class Controller {
         result.add(fsImage);
       }
     }
-    Collections.sort(result, Controllers.byAlias);
+    Collections.sort(result, byAlias);
     return result;
   }
 
   public PseudoFile getDefaultDirectory() {
     List<FSImage> fsImages = getLocalFSImages();
     fsImages.addAll(getRemoteFSImages());
-    if (fsImages.isEmpty())
-      return null;
+    if (fsImages.isEmpty()) {
+      String xmlEmpty = "<directory alias=\"empty\" />";
+      try {
+        FSImage empty = getFromXml(xmlEmpty);
+        return new PseudoFile(empty, new PseudoPath());
+      } catch (ParsingException e) {
+        LOG.warning("Couldn't create empty FSImage from xml");
+        return null;
+      } catch (IOException e) {
+        LOG.warning("Couldn't create empty FSImage from xml");
+        return null;
+      }
+    }
     FSImage fsi = fsImages.get(0);
     return new PseudoFile(fsi, new PseudoPath());
   }
@@ -219,7 +236,7 @@ public class Controller {
           try {
             String xmlFsi = null;
             if (type == ChangeType.CREATE_DIR) {
-              FSImage addedFsi = FSImages.getFromDirectory(fullPath, getMaxDepth(), watcher);
+              FSImage addedFsi = getFromDirectory(fullPath, getMaxDepth(), watcher);
               xmlFsi = addedFsi.toXml();
             }
             FSChange fsChange = new FSChange(type, fsi.getUuid(), relFullPath, xmlFsi);

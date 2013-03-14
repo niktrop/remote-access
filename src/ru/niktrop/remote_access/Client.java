@@ -3,6 +3,7 @@ package ru.niktrop.remote_access;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import ru.niktrop.remote_access.commands.QueryUpdateFSImages;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.gui.FileTable;
@@ -56,13 +57,18 @@ public class Client {
         ChannelPipeline pipeline = Channels.pipeline();
         pipeline.addLast("decoder", new StringDecoder());
         pipeline.addLast("encoder", new StringEncoder());
-        pipeline.addLast("commandHandler", new CommandHandler(controller));
+        pipeline.addLast("string-command", new CommandDecoderHandler());
+        pipeline.addLast("logger", new LoggingHandler());
+        pipeline.addLast("executor", new CommandExecutorHandler(controller));
 
         return pipeline;
       }
     });
 
     ChannelFuture future = bootstrap.connect(new InetSocketAddress(host, port));
+    controller.setChannel(future.getChannel());
+
+    controller.sendCommand(new QueryUpdateFSImages());
 
     controller.listenAndHandleFileChanges();
 

@@ -1,6 +1,7 @@
 package ru.niktrop.remote_access;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
@@ -51,14 +52,18 @@ public class Server {
         ChannelPipeline pipeline = Channels.pipeline();
         pipeline.addLast("decoder", new StringDecoder());
         pipeline.addLast("encoder", new StringEncoder());
-        pipeline.addLast("commandHandler", new CommandHandler(controller));
+        pipeline.addLast("string-command", new CommandDecoderHandler());
+        pipeline.addLast("logger", new LoggingHandler());
+        pipeline.addLast("executor", new CommandExecutorHandler(controller));
 
         return pipeline;
       }
     });
 
     // Bind and start to accept incoming connections.
-    bootstrap.bind(new InetSocketAddress(host, port));
+    Channel channel = bootstrap.bind(new InetSocketAddress(host, port));
+    controller.setChannel(channel);
+
     System.out.println("Listening...");
   }
 }

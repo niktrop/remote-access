@@ -13,17 +13,11 @@ import java.util.logging.Logger;
  * Date: 07.03.13
  * Time: 19:04
  */
-public class CommandHandler extends SimpleChannelHandler {
+public class CommandDecoderHandler extends SimpleChannelHandler {
   private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
 
-  private final Controller controller;
-
-  public CommandHandler(Controller controller) {
-    this.controller = controller;
-  }
-
   /**
-   * Produces String representation of written ru.niktrop.remote_access.commands.SerializableCommand object.
+   * Produces String representation of written SerializableCommand object.
    * Beginning of the String encodes type of the object.
    */
   @Override
@@ -35,14 +29,15 @@ public class CommandHandler extends SimpleChannelHandler {
   }
 
   /**
-   * Transforms String message to a ru.niktrop.remote_access.commands.SerializableCommand instance.
+   * Transforms String message to a SerializableCommand instance.
    *
    */
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     String serialized = (String) e.getMessage();
 
-    Commands.getFromString(serialized).execute(controller, ctx);
+    SerializableCommand command = Commands.getFromString(serialized);
+    Channels.write(ctx, e.getFuture(), command);
   }
 
   @Override
