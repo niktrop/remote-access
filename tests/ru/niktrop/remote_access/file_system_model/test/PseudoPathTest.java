@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.fail;
 
 /**
  * Created with IntelliJ IDEA.
@@ -94,12 +93,7 @@ public class PseudoPathTest {
     assertThat(a_b.getParent()).isEqualTo(a);
     assertThat(a.getParent()).isEqualTo(empty);
 
-    try {
-      empty.getParent();
-      fail("IllegalArgumentException expected on empty path");
-    } catch (Exception e) {
-      assertThat(e.getMessage()).isEqualTo("Empty pseudopath has no parent.");
-    }
+    assertThat(empty.getParent()).isNull();
 
   }
 }

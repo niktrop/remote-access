@@ -6,6 +6,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.FileSystems;
@@ -60,7 +61,25 @@ public class Client {
     });
 
     ChannelFuture future = bootstrap.connect(new InetSocketAddress(host, port));
-    future.sync();
-    System.out.println("Connection established");
+
+    controller.listenAndHandleFileChanges();
+
+    SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        JFrame f = new JFrame("Test");
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //FileTable fileTable = new FileTable(dir);
+        //OneSidePanel client = new OneSidePanel(fileTable, controller);
+
+        //f.setContentPane(client);
+
+        f.pack();
+        f.setLocationByPlatform(true);
+        f.setMinimumSize(f.getSize());
+        f.setVisible(true);
+
+      }
+    });
   }
 }

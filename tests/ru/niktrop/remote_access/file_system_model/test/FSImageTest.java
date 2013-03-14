@@ -152,9 +152,9 @@ public class FSImageTest {
 
     try {
       fsi.addFile(empty);
-      fail("Parent directory must exist");
+      fail("Adding empty path.");
     } catch (Exception e) {
-      assertThat(e.getMessage()).isEqualTo("Empty pseudopath has no parent.");
+      assertThat(e.getMessage()).isEqualTo("Adding empty path does not allowed.");
     }
 
     try {
