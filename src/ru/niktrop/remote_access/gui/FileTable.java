@@ -1,5 +1,6 @@
 package ru.niktrop.remote_access.gui;
 
+import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
@@ -14,6 +15,10 @@ import javax.swing.table.TableModel;
 public class FileTable extends JTable {
 
   private PseudoFile directory;
+
+  public FileTable(Controller controller) {
+    this(controller.getDefaultDirectory());
+  }
 
   public FileTable(PseudoFile directory) {
     TableModel fileTableModel = new FileTableModel(directory);

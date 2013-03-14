@@ -6,6 +6,7 @@ import ru.niktrop.remote_access.commands.FSChange;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
+import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
@@ -71,6 +72,44 @@ public class Controller {
   public Iterable<FSImage> getFSImages() {
     return fsImageMap.values();
   }
+
+  /**
+   * Returns list of local FSImages, sorted by root alias.
+   * */
+  public List<FSImage> getLocalFSImages() {
+    List<FSImage> result = new ArrayList<>();
+    for (FSImage fsImage : getFSImages()) {
+      if (fsImage.isLocal()) {
+        result.add(fsImage);
+      }
+    }
+    Collections.sort(result, Controllers.byAlias);
+    return result;
+  }
+
+  /**
+   * Returns list of remote FSImages, sorted by root alias.
+   * */
+  public List<FSImage> getRemoteFSImages() {
+    List<FSImage> result = new ArrayList<>();
+    for (FSImage fsImage : getFSImages()) {
+      if (!fsImage.isLocal()) {
+        result.add(fsImage);
+      }
+    }
+    Collections.sort(result, Controllers.byAlias);
+    return result;
+  }
+
+  public PseudoFile getDefaultDirectory() {
+    List<FSImage> fsImages = getLocalFSImages();
+    fsImages.addAll(getRemoteFSImages());
+    if (fsImages.isEmpty())
+      return null;
+    FSImage fsi = fsImages.get(0);
+    return new PseudoFile(fsi, new PseudoPath());
+  }
+
 
   public void addFSImage(FSImage fsi) {
     fsImageMap.put(fsi.getUuid(), fsi);

@@ -3,8 +3,6 @@ import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.Controllers;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
-import ru.niktrop.remote_access.file_system_model.PseudoFile;
-import ru.niktrop.remote_access.file_system_model.PseudoPath;
 import ru.niktrop.remote_access.gui.FileTable;
 import ru.niktrop.remote_access.gui.OneSidePanel;
 
@@ -54,9 +52,6 @@ public class FileTableTest {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
 
-    FSImage defaultFSImage = controller.getFSImages().iterator().next();
-    final PseudoFile dir = new PseudoFile(defaultFSImage, new PseudoPath());
-
     controller.listenAndHandleFileChanges();
 
     SwingUtilities.invokeLater(new Runnable() {
@@ -64,7 +59,7 @@ public class FileTableTest {
       public void run() {
         JFrame f = new JFrame("Test");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        FileTable fileTable = new FileTable(dir);
+        FileTable fileTable = new FileTable(controller);
         OneSidePanel client = new OneSidePanel(fileTable, controller);
 
         f.setContentPane(client);

@@ -36,16 +36,8 @@ public class FSImageChooser extends JComboBox<FSImage> {
 
     FSImageChooserModel(Controller controller) {
       this.controller = controller;
-      local = new ArrayList<>();
-      remote = new ArrayList<>();
-      Iterable<FSImage> fsImages = controller.getFSImages();
-      for (FSImage fsImage : fsImages) {
-        if (fsImage.isLocal()) {
-          local.add(fsImage);
-        } else {
-          remote.add(fsImage);
-        }
-      }
+      local = controller.getLocalFSImages();
+      remote = controller.getRemoteFSImages();
       setSelectedItem(local.get(0));
     }
 
