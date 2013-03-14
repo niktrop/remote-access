@@ -32,6 +32,8 @@ public class Controller {
     SERVER;
   }
 
+  private List<ControllerListener> listeners = new LinkedList<>();
+
   private final ControllerType type;
   private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
   private final Map<String, FSImage> fsImageMap = new HashMap<>();
@@ -40,9 +42,6 @@ public class Controller {
   private final WatchService watcher;
   private int maxDepth = 2;
   private Channel channel;
-  public void setChannel(Channel channel) {
-    this.channel = channel;
-  }
 
   Controller(ControllerType type) throws IOException {
     watcher = FileSystems.getDefault().newWatchService();
@@ -59,6 +58,7 @@ public class Controller {
 
   public void executeCommand(SerializableCommand command) {
     command.execute(this, null);
+    fireControllerChange();
   }
 
   public WatchService getWatcher() {
@@ -73,6 +73,9 @@ public class Controller {
     return fsImageMap.values();
   }
 
+  public void setChannel(Channel channel) {
+    this.channel = channel;
+  }
   /**
    * Returns list of local FSImages, sorted by root alias.
    * */
@@ -110,9 +113,13 @@ public class Controller {
     return new PseudoFile(fsi, new PseudoPath());
   }
 
+  public void addListener(ControllerListener listener) {
+    listeners.add(listener);
+  }
 
   public void addFSImage(FSImage fsi) {
     fsImageMap.put(fsi.getUuid(), fsi);
+    fireControllerChange();
   }
 
   public void listenAndHandleFileChanges() {
@@ -184,6 +191,14 @@ public class Controller {
     }
   }
 
+  public int getMaxDepth() {
+    return maxDepth;
+  }
+
+  public void setMaxDepth(int maxDepth) {
+    this.maxDepth = maxDepth;
+  }
+
   //Filters all ru.niktrop.remote_access.file_system_model.FSImages that store changing directory.
   //If new directory is added, register it in WatchService.
   private List<FSChange> getApplicableFSChanges(Collection<FSImage> fsImages, Path dir, WatchEvent<Path> event) {
@@ -220,11 +235,8 @@ public class Controller {
     return result;
   }
 
-  public int getMaxDepth() {
-    return maxDepth;
-  }
-
-  public void setMaxDepth(int maxDepth) {
-    this.maxDepth = maxDepth;
+  private void fireControllerChange() {
+    for (ControllerListener listener : listeners)
+      listener.controllerChanged();
   }
 }

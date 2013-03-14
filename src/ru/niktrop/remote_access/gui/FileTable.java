@@ -1,9 +1,11 @@
 package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.ControllerListener;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 
 /**
@@ -12,7 +14,7 @@ import javax.swing.table.TableModel;
  * Date: 12.03.13
  * Time: 16:52
  */
-public class FileTable extends JTable {
+public class FileTable extends JTable implements ControllerListener {
 
   private PseudoFile directory;
 
@@ -42,5 +44,11 @@ public class FileTable extends JTable {
   public void update() {
     FileTableModel fileTableModel = new FileTableModel(directory);
     this.setModel(fileTableModel);
+  }
+
+  @Override
+  public void controllerChanged() {
+    AbstractTableModel tm = (AbstractTableModel)getModel();
+    tm.fireTableDataChanged();
   }
 }

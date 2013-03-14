@@ -5,14 +5,16 @@ import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
+import ru.niktrop.remote_access.gui.FileTable;
+import ru.niktrop.remote_access.gui.OneSidePanel;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 
 /**
@@ -25,7 +27,7 @@ public class Client {
 
   private static int port = 11111;
   private static String host = "localhost";
-  private static Iterable<Path> dirs = FileSystems.getDefault().getRootDirectories();
+  private static Iterable<Path> dirs = new ArrayList<>();
   private static final int MAX_DEPTH = 2;
 
   public static void main(String[] args) throws IOException, InterruptedException {
@@ -69,10 +71,10 @@ public class Client {
       public void run() {
         JFrame f = new JFrame("Test");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //FileTable fileTable = new FileTable(dir);
-        //OneSidePanel client = new OneSidePanel(fileTable, controller);
+        FileTable fileTable = new FileTable(controller);
+        OneSidePanel client = new OneSidePanel(fileTable, controller);
 
-        //f.setContentPane(client);
+        f.setContentPane(client);
 
         f.pack();
         f.setLocationByPlatform(true);

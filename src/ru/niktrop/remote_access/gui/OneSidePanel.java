@@ -89,6 +89,8 @@ public class OneSidePanel extends JPanel{
         tblFiles.load(dir);
       }
     });
+
+    controller.addListener(tblFiles);
   }
 
 
@@ -101,7 +103,7 @@ public class OneSidePanel extends JPanel{
         FileTableModel model = (FileTableModel) tblFiles.getModel();
         final PseudoFile childDir = model.getPseudoFile(selectedRows[0]);
         if (childDir.isDirectory()) {
-          final boolean needWait = (childDir.getDepth() == 1);
+          final boolean needWait = (childDir.getDepth() == 0);
           if (!needWait) {
             tblFiles.load(childDir);
           }
