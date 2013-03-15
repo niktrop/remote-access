@@ -7,7 +7,6 @@ import nu.xom.ParentNode;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,10 +21,10 @@ public class FSImage {
     for local use only.*/
   private final Path pathToRoot;
 
+  //private final String uuid;
 
-  private final String uuid = UUID.randomUUID().toString();
   public String getUuid() {
-    return uuid;
+    return fileTree.getAttributeValue("uuid");
   }
 
   FSImage(Element fileTree, Path pathToRoot) {

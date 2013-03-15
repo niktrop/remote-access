@@ -5,8 +5,6 @@ import nu.xom.Elements;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,9 +17,7 @@ public class PseudoFile {
   private final FSImage fsi;
 
   public PseudoFile(FSImage fsi, PseudoPath path) {
-    if (fsi == null) {
-      throw new NullPointerException("ru.niktrop.remote_access.file_system_model.FSImage should not be null");
-    }
+
     this.fsi = fsi;
 
     if (path == null)
@@ -109,25 +105,6 @@ public class PseudoFile {
     return builder.toString();
   }
 
-
-  public static PseudoFile fromSerializedString(String serialized, Map<String, FSImage> fsImageMap) {
-    String groupSeparator = "\u001E";
-    String unitSeparator = "\u001F";
-
-    StringTokenizer st = new StringTokenizer(serialized, groupSeparator, false);
-    String fsiUuid = st.nextToken();
-    FSImage fsi = fsImageMap.get(fsiUuid);
-    if (fsi == null)
-      return null;
-
-    String pathAsString = st.nextToken();
-    st = new StringTokenizer(pathAsString, unitSeparator, false);
-    PseudoPath path = new PseudoPath();
-    while (st.hasMoreTokens()) {
-      path = path.resolve(st.nextToken());
-    }
-    return new PseudoFile(fsi, path);
-  }
 
   @Override
   public boolean equals(Object o) {

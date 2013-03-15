@@ -1,15 +1,13 @@
 package ru.niktrop.remote_access.file_system_model;
 
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Element;
-import nu.xom.ParsingException;
+import nu.xom.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
 import java.util.Comparator;
+import java.util.UUID;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,6 +27,11 @@ public class FSImages {
 
       FileTreeBuilder fileTreeBuilder = new FileTreeBuilder(fileTree, watcher, maxDepth);
       Files.walkFileTree(dir, fileTreeBuilder);
+
+      fileTree.addAttribute(new Attribute("alias", dir.toString()));
+
+      String uuid = UUID.randomUUID().toString();
+      fileTree.addAttribute(new Attribute("uuid", uuid));
 
       return new FSImage(fileTree, dir);
     }
