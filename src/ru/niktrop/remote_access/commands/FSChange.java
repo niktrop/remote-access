@@ -37,10 +37,6 @@ public class FSChange implements SerializableCommand {
     xmlFSImage = null;
   }
 
-  public static FSChange getEmptyInstance() {
-    return new FSChange();
-  }
-
   public FSChange(ChangeType changeType, String fsiUuid, PseudoPath path) {
     this.changeType = changeType;
     this.fsiUuid = fsiUuid;

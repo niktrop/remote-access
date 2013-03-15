@@ -25,10 +25,7 @@ public class Commands {
     return instance.fromString(stringRepresentation);
   }
 
-  /**
-   * Builds string, which begins with full class name of ru.niktrop.remote_access.commands.FSChange.
-   * The rest of the string contains all information for command execution.
-   */
+
   public static String serializeToString(SerializableCommand command) {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';

@@ -22,6 +22,12 @@ public class ReloadDirectory implements SerializableCommand {
   private final String fsiUuid;
   private final PseudoPath dir;
 
+  //For deserialization
+  ReloadDirectory() {
+    fsiUuid = null;
+    dir = null;
+  }
+
   private ReloadDirectory(String fsiUuid, PseudoPath dir) {
     this.fsiUuid = fsiUuid;
     this.dir = dir;
@@ -37,17 +43,13 @@ public class ReloadDirectory implements SerializableCommand {
 
   @Override
   public List<SerializableCommand> execute(Controller controller) {
-    FSImage fsImage = controller.getFSImage(fsiUuid);
 
-    if (fsImage == null)
-      return Collections.emptyList();
+    if (controller.isClient())
+      return executeOnClient(controller);
 
-    if (fsImage.isLocal()) {
-      executeWithoutResponse(controller);
-      return Collections.emptyList();
-    } else {
-      return executeWithResponse(controller);
-    }
+    else
+      return executeOnServer(controller);
+
   }
 
   @Override
@@ -85,6 +87,9 @@ public class ReloadDirectory implements SerializableCommand {
   private List<FSChange> getApplicableFSChanges(Controller controller) {
     int maxDepth = controller.getMaxDepth();
     FSImage fsi = controller.getFSImage(fsiUuid);
+    if (fsi == null)
+      return Collections.emptyList();
+
     int depth = new PseudoFile(fsi, dir).getDepth();
 
     //reload only directories with small depth
@@ -118,7 +123,7 @@ public class ReloadDirectory implements SerializableCommand {
     return result;
   }
 
-  private List<SerializableCommand> executeWithResponse(Controller controller) {
+  private List<SerializableCommand> executeOnServer(Controller controller) {
     List<SerializableCommand> response = new LinkedList<>();
     for (FSChange fsChange : getApplicableFSChanges(controller)) {
       controller.executeCommand(fsChange);
@@ -127,10 +132,11 @@ public class ReloadDirectory implements SerializableCommand {
     return response;
   }
 
-  private void executeWithoutResponse(Controller controller) {
+  private List<SerializableCommand> executeOnClient(Controller controller) {
     for (FSChange fsChange : getApplicableFSChanges(controller)) {
       controller.executeCommand(fsChange);
     }
+    return Collections.emptyList();
   }
 
 }
