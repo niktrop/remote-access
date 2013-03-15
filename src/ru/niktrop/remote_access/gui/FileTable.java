@@ -5,7 +5,6 @@ import ru.niktrop.remote_access.ControllerListener;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 
 /**
@@ -17,12 +16,14 @@ import javax.swing.table.TableModel;
 public class FileTable extends JTable implements ControllerListener {
 
   private PseudoFile directory;
+  private final Controller controller;
 
   public FileTable(Controller controller) {
-    this(controller.getDefaultDirectory());
+    this(controller, controller.getDefaultDirectory());
   }
 
-  public FileTable(PseudoFile directory) {
+  public FileTable(Controller controller, PseudoFile directory) {
+    this.controller = controller;
     TableModel fileTableModel = new FileTableModel(directory);
     this.directory = directory;
     setModel(fileTableModel);
@@ -48,7 +49,11 @@ public class FileTable extends JTable implements ControllerListener {
 
   @Override
   public void controllerChanged() {
-    AbstractTableModel tm = (AbstractTableModel)getModel();
+    FileTableModel tm = (FileTableModel)getModel();
+    PseudoFile dir = getDirectory();
+    if (dir.getName() == null) {
+      setModel(new FileTableModel(controller.getDefaultDirectory()));
+    }
     tm.fireTableDataChanged();
   }
 }

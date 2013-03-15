@@ -1,14 +1,13 @@
 package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.ControllerListener;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -17,28 +16,38 @@ import java.util.List;
  * Date: 13.03.13
  * Time: 21:37
  */
-public class FSImageChooser extends JComboBox<FSImage> {
+public class FSImageChooser extends JComboBox<FSImage> implements ControllerListener{
 
   final String SEPARATOR = "SEPARATOR";
+  final Controller controller;
 
   public FSImageChooser(Controller controller) {
+    this.controller = controller;
     setModel(new FSImageChooserModel(controller));
     setRenderer(new FSImageChooserRenderer());
+  }
+
+  @Override
+  public void controllerChanged() {
+    this.setModel(new FSImageChooserModel(controller));
   }
 
 
   class FSImageChooserModel extends AbstractListModel<FSImage> implements ComboBoxModel<FSImage> {
 
-    private final Controller controller;
     private final List<FSImage> local;
     private final List<FSImage> remote;
     private FSImage selection = null;
 
     FSImageChooserModel(Controller controller) {
-      this.controller = controller;
       local = controller.getLocalFSImages();
       remote = controller.getRemoteFSImages();
-      setSelectedItem(local.get(0));
+      List<FSImage> fsImages = new ArrayList<>();
+      fsImages.addAll(local);
+      fsImages.addAll(remote);
+
+      if (!fsImages.isEmpty())
+        setSelectedItem(fsImages.get(0));
     }
 
     @Override
@@ -58,23 +67,12 @@ public class FSImageChooser extends JComboBox<FSImage> {
 
     @Override
     public FSImage getElementAt(int index) {
-      Collections.sort(local, byAlias);
-      Collections.sort(remote, byAlias);
-
       List<FSImage> allFSImages = new ArrayList<>(local);
       allFSImages.add(null);
       allFSImages.addAll(remote);
       return allFSImages.get(index);
     }
 
-    Comparator<FSImage> byAlias = new Comparator<FSImage>() {
-      @Override
-      public int compare(FSImage o1, FSImage o2) {
-        String alias1 = o1.getRootAlias();
-        String alias2 = o2.getRootAlias();
-        return alias1.compareTo(alias2);
-      }
-    };
   }
 
   class FSImageChooserRenderer extends JLabel implements ListCellRenderer {

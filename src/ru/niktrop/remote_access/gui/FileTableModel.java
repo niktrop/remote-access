@@ -12,7 +12,7 @@ import java.util.List;
  * Date: 12.03.13
  * Time: 15:37
  */
-public class FileTableModel extends AbstractTableModel{
+public class FileTableModel extends AbstractTableModel {
   private PseudoFile directory;
   private List<String> columns = new ArrayList<>();
   {

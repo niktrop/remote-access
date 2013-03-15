@@ -1,7 +1,7 @@
 package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.commands.QueryReloadDirectory;
+import ru.niktrop.remote_access.commands.ReloadDirectory;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
@@ -31,7 +31,7 @@ public class OneSidePanel extends JPanel{
   private JButton btnParent;
   private JButton btnOpen;
   private JButton btnReload;
-  private JComboBox fsImageChooser;
+  private FSImageChooser fsImageChooser;
 
   public OneSidePanel(FileTable table, Controller controller) {
     this.controller = controller;
@@ -91,6 +91,7 @@ public class OneSidePanel extends JPanel{
     });
 
     controller.addListener(tblFiles);
+    controller.addListener(fsImageChooser);
   }
 
 
@@ -111,7 +112,7 @@ public class OneSidePanel extends JPanel{
           SwingWorker worker = new SwingWorker<Void, Void>() {
             @Override
             public Void doInBackground() {
-              SerializableCommand command = new QueryReloadDirectory(childDir);
+              SerializableCommand command = new ReloadDirectory(childDir);
               FSImage fsi = controller.getFSImage(childDir.getFsiUuid());
               if (fsi.isLocal())
               {
