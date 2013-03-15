@@ -2,12 +2,15 @@ package ru.niktrop.remote_access;
 
 import nu.xom.ParsingException;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.Channels;
 import ru.niktrop.remote_access.commands.ChangeType;
 import ru.niktrop.remote_access.commands.FSChange;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
+import ru.niktrop.remote_access.handlers.StringDecoder;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -54,13 +57,21 @@ public class Controller {
       LOG.warning("Attempt to send command while channel is null.");
       return;
     }
+    //channel.write(command, new InetSocketAddress("localhost", 11111));
     channel.write(command);
   }
 
-  public void executeCommand(SerializableCommand command) {
-    command.execute(this);
+  public List<SerializableCommand> executeCommand(SerializableCommand command) {
+    List<SerializableCommand> response = command.execute(this);
     LOG.info("Command executed: " + command.getClass().getSimpleName());
     fireControllerChange();
+    return response;
+  }
+
+  public void sendResponseBack(List<SerializableCommand> response, ChannelHandlerContext ctx) {
+    for (SerializableCommand command : response) {
+      Channels.write(ctx.getChannel(), command);
+    }
   }
 
   public WatchService getWatcher() {
@@ -174,7 +185,7 @@ public class Controller {
   }
 
   /**
-   * Builds ru.niktrop.remote_access.commands.FSChange objects from WatchService and
+   * Builds FSChange objects from WatchService and
    * adds them to the internal queue of the Controller.
    * Should be invoked from separate thread in an infinite loop.
    */

@@ -6,26 +6,32 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.logging.LoggingHandler;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
+import ru.niktrop.remote_access.handlers.*;
 
 import java.net.InetSocketAddress;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.WatchService;
 import java.util.concurrent.Executors;
+
+import static org.jboss.netty.logging.InternalLogLevel.INFO;
 
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
- * Date: 07.03.13
- * Time: 12:50
+ * Date: 15.03.13
+ * Time: 9:46
  */
 public class Server {
-  private static int port = 11111;
+  private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Server.class.getName());
+
+  private static int port = 12345;
   private static String host = "localhost";
-  private static Iterable<Path> dirs = FileSystems.getDefault().getRootDirectories();
+  private static Path[] dirs = {Paths.get("C:\\\\", "Test"), Paths.get("D:\\\\")};
   private static final int MAX_DEPTH = 2;
 
   public static void main(String[] args) throws Exception {
@@ -37,7 +43,7 @@ public class Server {
       }
       FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watcher);
       controller.addFSImage(fsi);
-      System.out.println(dir.toString());
+      LOG.info(dir.toString() + " added to server controller");
     }
 
     // Configure the server.
@@ -50,11 +56,13 @@ public class Server {
     bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
-        pipeline.addLast("decoder", new StringDecoder());
-        pipeline.addLast("encoder", new StringEncoder());
-        pipeline.addLast("string-command", new CommandDecoderHandler());
-        pipeline.addLast("logger", new LoggingHandler());
-        pipeline.addLast("executor", new CommandExecutorHandler(controller));
+
+        pipeline.addLast("logger", new LoggingHandler(INFO));
+        pipeline.addLast("string decoder", new StringDecoder());
+        pipeline.addLast("string encoder", new StringEncoder());
+        pipeline.addLast("command decoder", new CommandDecoder());
+        pipeline.addLast("command encoder", new CommandEncoder());
+        pipeline.addLast("executor", new CommandExecutor(controller));
 
         return pipeline;
       }
@@ -64,6 +72,7 @@ public class Server {
     Channel channel = bootstrap.bind(new InetSocketAddress(host, port));
     controller.setChannel(channel);
 
-    System.out.println("Listening...");
+    if (channel.isBound())
+      LOG.info("Listening...");
   }
 }
