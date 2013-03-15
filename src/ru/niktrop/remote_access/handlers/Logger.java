@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.handlers;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -6,7 +6,6 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,8 +13,8 @@ import java.util.logging.Logger;
  * Date: 14.03.13
  * Time: 17:03
  */
-public class LoggingHandler extends SimpleChannelHandler {
-  private static final Logger LOG = Logger.getLogger(LoggingHandler.class.getName());
+public class Logger extends SimpleChannelHandler {
+  private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Logger.class.getName());
 
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
