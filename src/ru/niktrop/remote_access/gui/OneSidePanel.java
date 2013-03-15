@@ -8,8 +8,6 @@ import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import javax.swing.*;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -72,13 +70,6 @@ public class OneSidePanel extends JPanel{
     btnOpen.addActionListener(new OpenDirectoryAction());
 
     btnReload.addActionListener(new ReloadDirectoryAction());
-
-    tblFiles.getModel().addTableModelListener(new TableModelListener() {
-      @Override
-      public void tableChanged(TableModelEvent e) {
-        tblFiles.update();
-      }
-    });
 
     fsImageChooser.addActionListener(new ActionListener() {
       @Override

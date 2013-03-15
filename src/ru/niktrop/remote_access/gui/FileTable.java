@@ -5,7 +5,6 @@ import ru.niktrop.remote_access.ControllerListener;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
-import javax.swing.table.TableModel;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,16 +15,25 @@ import javax.swing.table.TableModel;
 public class FileTable extends JTable implements ControllerListener {
 
   private PseudoFile directory;
-  private final Controller controller;
+  private Controller controller;
 
   public FileTable(Controller controller) {
-    this(controller, controller.getDefaultDirectory());
+    PseudoFile defaultDirectory = controller.getDefaultDirectory();
+    if (defaultDirectory != null) {
+      this.directory = defaultDirectory;
+    }
+    setUpFileTable(controller);
   }
 
   public FileTable(Controller controller, PseudoFile directory) {
-    this.controller = controller;
-    TableModel fileTableModel = new FileTableModel(directory);
     this.directory = directory;
+    setUpFileTable(controller);
+  }
+   //TODO Разобраться с инициализацией таблицы, если у контроллера пустой список образов.
+  private void setUpFileTable(Controller controller) {
+    this.controller = controller;
+    FileTableModel fileTableModel = new FileTableModel();
+    fileTableModel.setDirectory(directory);
     setModel(fileTableModel);
     setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     setAutoCreateRowSorter(true);
@@ -37,23 +45,26 @@ public class FileTable extends JTable implements ControllerListener {
   }
 
   public void load(PseudoFile directory) {
-    FileTableModel fileTableModel = new FileTableModel(directory);
     this.directory = directory;
-    this.setModel(fileTableModel);
+    FileTableModel model = (FileTableModel) getModel();
+    model.setDirectory(directory);
+    model.fireTableDataChanged();
   }
 
   public void update() {
-    FileTableModel fileTableModel = new FileTableModel(directory);
-    this.setModel(fileTableModel);
+    FileTableModel model = (FileTableModel) getModel();
+    model.fireTableDataChanged();
   }
 
   @Override
   public void controllerChanged() {
     FileTableModel tm = (FileTableModel)getModel();
     PseudoFile dir = getDirectory();
-    if (dir.getName() == null) {
-      setModel(new FileTableModel(controller.getDefaultDirectory()));
+    if (dir == null) {
+      FileTableModel newModel = new FileTableModel(controller.getDefaultDirectory());
+      setModel(newModel);
+    } else {
+      tm.fireTableDataChanged();
     }
-    tm.fireTableDataChanged();
   }
 }

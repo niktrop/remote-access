@@ -20,6 +20,8 @@ public class FileTableModel extends AbstractTableModel {
     columns.add("Name");
   }
 
+  public FileTableModel() {}
+
   public FileTableModel(PseudoFile directory) {
     this.directory = directory;
   }
@@ -28,8 +30,14 @@ public class FileTableModel extends AbstractTableModel {
     return directory.getContent().get(index);
   }
 
+  public void setDirectory(PseudoFile directory) {
+    this.directory = directory;
+  }
+
   @Override
   public int getRowCount() {
+    if (directory == null)
+      return 0;
     return directory.getContent().size();
   }
 
