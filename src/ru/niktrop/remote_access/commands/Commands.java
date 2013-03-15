@@ -32,7 +32,6 @@ public class Commands {
   public static String serializeToString(SerializableCommand command) {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';
-    char unitSeparator = '\u001F';
 
     String className = command.getClass().getCanonicalName();
 

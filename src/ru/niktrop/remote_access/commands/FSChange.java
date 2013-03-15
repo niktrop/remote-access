@@ -1,13 +1,14 @@
 package ru.niktrop.remote_access.commands;
 
 import nu.xom.ParsingException;
-import org.jboss.netty.channel.ChannelHandlerContext;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,35 +71,9 @@ public class FSChange implements SerializableCommand {
     return xmlFSImage;
   }
 
-  /**
-   * Builds string representation of the ru.niktrop.remote_access.commands.FSChange object.
-   */
-  @Override
-  public String getStringRepresentation() {
-    StringBuilder builder = new StringBuilder();
-    char groupSeparator = '\u001E';
-    char unitSeparator = '\u001F';
-
-    builder.append(changeType.name());
-    builder.append(groupSeparator);
-
-    builder.append(fsiUuid);
-    builder.append(groupSeparator);
-
-    for (int i = 0; i < path.getNameCount(); i++) {
-      builder.append(path.getName(i));
-      builder.append(unitSeparator);
-    }
-
-    if (xmlFSImage != null) {
-      builder.append(groupSeparator);
-      builder.append(xmlFSImage);
-    }
-    return builder.toString();
-  }
 
   @Override
-  public void execute(Controller controller, ChannelHandlerContext ctx) {
+  public List<SerializableCommand> execute(Controller controller) {
     String fsiUuid = getFsiUuid();
     FSImage fsi = controller.getFSImage(fsiUuid);
     PseudoPath pseudoPath = getPath();
@@ -134,17 +109,18 @@ public class FSChange implements SerializableCommand {
       default:
         break;
     }
+    return Collections.emptyList();
   }
 
   /**
-   * Parses object of type ru.niktrop.remote_access.commands.FSChange from String, which results in toString()
+   * Parses object of type FSChange from String, which results in toString()
    * method (without class name prefix).
-   *
    */
   @Override
   public FSChange fromString(String changeAsString) {
     String groupSeparator = "\u001E";
     String unitSeparator = "\u001F";
+    String nul = "\u0000";
 
     StringTokenizer st = new StringTokenizer(changeAsString, groupSeparator, false);
     ChangeType type = ChangeType.valueOf(st.nextToken());
@@ -152,12 +128,47 @@ public class FSChange implements SerializableCommand {
     String pathAsString = st.nextToken();
     String xmlFSImage = st.hasMoreTokens() ? st.nextToken() : null;
 
-    st = new StringTokenizer(pathAsString, unitSeparator, false);
     PseudoPath path = new PseudoPath();
-    while (st.hasMoreTokens()) {
-      path = path.resolve(st.nextToken());
+    if ( !pathAsString.equals(nul)) {
+      st = new StringTokenizer(pathAsString, unitSeparator, false);
+      while (st.hasMoreTokens()) {
+        path = path.resolve(st.nextToken());
+      }
     }
     return new FSChange(type, fsiUuid, path, xmlFSImage);
   }
+
+  /**
+   * Builds string representation of the FSChange object.
+   */
+  @Override
+  public String getStringRepresentation() {
+    StringBuilder builder = new StringBuilder();
+    char groupSeparator = '\u001E';
+    char unitSeparator = '\u001F';
+    char nul = '\u0000';
+
+    builder.append(changeType.name());
+    builder.append(groupSeparator);
+
+    builder.append(fsiUuid);
+    builder.append(groupSeparator);
+
+    if (path.getNameCount() == 0) {
+      builder.append(nul); //represents empty pseudopath
+    }
+
+    for (int i = 0; i < path.getNameCount(); i++) {
+      builder.append(path.getName(i));
+      builder.append(unitSeparator);
+    }
+
+    if (xmlFSImage != null) {
+      builder.append(groupSeparator);
+      builder.append(xmlFSImage);
+    }
+    return builder.toString();
+  }
+
 
 }

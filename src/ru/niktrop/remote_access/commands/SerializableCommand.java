@@ -1,7 +1,8 @@
 package ru.niktrop.remote_access.commands;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
 import ru.niktrop.remote_access.Controller;
+
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,7 +11,11 @@ import ru.niktrop.remote_access.Controller;
  * Time: 21:45
  */
 public interface SerializableCommand {
-  public void execute(Controller controller, ChannelHandlerContext ctx);
+
+  /**
+   * Returns response actions for sending back.
+   */
+  List<SerializableCommand> execute(Controller controller);
   String getStringRepresentation();
   SerializableCommand fromString(String string);
 }
