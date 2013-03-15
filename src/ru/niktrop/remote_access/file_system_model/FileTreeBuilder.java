@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -18,6 +19,8 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
  * Time: 13:27
  */
 public class FileTreeBuilder extends SimpleFileVisitor<Path> {
+  private static final Logger LOG = Logger.getLogger(FileTreeBuilder.class.getName());
+
   private HashMap<Path, Element> map = new HashMap<>();
   private final Element rootDirElement;
   private final WatchService watcher;
@@ -72,7 +75,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   @Override
   public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-    //TODO добавить логирование
+    LOG.fine("Visit file failed: " + file.toString());
     return FileVisitResult.CONTINUE;
   }
 

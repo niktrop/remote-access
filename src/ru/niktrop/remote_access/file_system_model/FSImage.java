@@ -42,7 +42,7 @@ public class FSImage {
   }
 
   public boolean isLocal() {
-    return (Files.exists(pathToRoot));
+    return (pathToRoot != null && Files.exists(pathToRoot));
   }
 
   public String getType(PseudoPath path) {
@@ -78,7 +78,10 @@ public class FSImage {
   }
 
   public String getRootAlias() {
-    return fileTree.getAttributeValue("alias");
+    String alias = isLocal() ? pathToRoot.toString() : fileTree.getAttributeValue("alias");
+    if (alias == null)
+      alias = fileTree.getAttributeValue("name");
+    return alias;
   }
 
   public void setRootAlias(String rootAlias) {

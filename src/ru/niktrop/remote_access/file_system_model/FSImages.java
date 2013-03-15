@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
+import java.util.Comparator;
 
 /**
  * Created with IntelliJ IDEA.
@@ -38,4 +39,18 @@ public class FSImages {
     Document fileTreeDoc = builder.build(xmlFileTree, null);
     return new FSImage(fileTreeDoc.getRootElement(), null);
   }
+
+  public static Comparator<FSImage> byAlias = new Comparator<FSImage>() {
+    @Override
+    public int compare(FSImage o1, FSImage o2) {
+      String alias1 = o1.getRootAlias();
+      String alias2 = o2.getRootAlias();
+      if (alias1 == null)
+        return -1;
+      else if (alias2 == null)
+        return 1;
+      else
+        return alias1.compareTo(alias2);
+    }
+  };
 }
