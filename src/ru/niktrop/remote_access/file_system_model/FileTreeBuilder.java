@@ -24,25 +24,26 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
   private HashMap<Path, Element> map = new HashMap<>();
   private final Element rootDirElement;
   private final WatchService watcher;
-  private int currentDepth = 0;
-  private final int maxDepth;
+  private int currentDepth;
+  private final int MAX_DEPTH;
 
   public FileTreeBuilder(Element rootDirElement, WatchService watcher, int maxDepth) {
     this.rootDirElement = rootDirElement;
     this.watcher = watcher;
-    this.maxDepth = maxDepth;
+    this.MAX_DEPTH = maxDepth;
+    currentDepth = maxDepth;
   }
 
 
   @Override
   public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attr) {
-    if (currentDepth <= maxDepth) {
+    if (currentDepth >= 0) {
       if (!Files.isReadable(dir) || Files.isSymbolicLink(dir))
         return FileVisitResult.SKIP_SUBTREE;
       try {
         addPathToTree(dir, currentDepth);
         dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE);
-        currentDepth++;
+        currentDepth--;
         return FileVisitResult.CONTINUE;
       } catch (IOException e) {
         e.printStackTrace();
@@ -54,7 +55,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   @Override
   public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
-    if (currentDepth <= maxDepth) {
+    if (currentDepth >= 0) {
       if (!Files.isReadable(file) || Files.isSymbolicLink(file))
         return FileVisitResult.CONTINUE;
       try {
@@ -69,7 +70,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   @Override
   public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-    currentDepth--;
+    currentDepth++;
     return FileVisitResult.CONTINUE;
   }
 
@@ -92,9 +93,9 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
     }
   }
 
-  private void addPathToTree(Path path, Integer currentDepth) throws IOException {
+  private void addPathToTree(Path path, int currentDepth) throws IOException {
     Element element = getElement(path);
-    Attribute depth = new Attribute("depth", currentDepth.toString());
+    Attribute depth = new Attribute("depth", String.valueOf(currentDepth));
     element.addAttribute(depth);
     Element parent = map.get(path.getParent());
     if (parent != null) {

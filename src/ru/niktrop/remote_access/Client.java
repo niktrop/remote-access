@@ -4,6 +4,7 @@ import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.logging.LoggingHandler;
+import ru.niktrop.remote_access.commands.CommandManager;
 import ru.niktrop.remote_access.commands.GetFSImages;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
@@ -16,8 +17,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 
 import static org.jboss.netty.logging.InternalLogLevel.INFO;
@@ -34,19 +35,19 @@ public class Client {
 
   private static int port = 12345;
   private static String host = "localhost";
-  private static Iterable<Path> dirs = new ArrayList<>();
+  private static Path[] dirs = {Paths.get("C:\\\\", "TestClient")};
   private static final int MAX_DEPTH = 2;
 
   public static void main(String[] args) throws IOException, InterruptedException {
 
     final Controller controller = Controllers.getClientController();
-    WatchService watcher = controller.getWatcher();
+    WatchService watchService = controller.getWatchService();
 
     for (Path dir : dirs) {
       if (!Files.isDirectory(dir)) {
         continue;
       }
-      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watcher);
+      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watchService);
       controller.addFSImage(fsi);
       LOG.info(fsi.getRootAlias() + " added to client's controller");
     }
@@ -78,9 +79,13 @@ public class Client {
     controller.setChannel(future.getChannel());
     LOG.info("channel is ready");
 
-    controller.sendCommand(new GetFSImages());
+    CommandManager commandManager = CommandManager.instance(controller);
+    commandManager.sendCommand(new GetFSImages(), future.getChannel());
 
-    controller.listenAndHandleFileChanges();
+    FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
+    FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);
+    fsWatcher.runWatcher();
+    fsHandler.runHandler();
 
     SwingUtilities.invokeLater(new Runnable() {
       @Override
