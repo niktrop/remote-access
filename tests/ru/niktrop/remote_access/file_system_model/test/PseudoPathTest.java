@@ -25,29 +25,29 @@ public class PseudoPathTest {
     names.add("b");
     PseudoPath pseudoPath = new PseudoPath(names);
 
-    assertThat(pseudoPath.getName(0).equals("a"));
-    assertThat(pseudoPath.getName(1).equals("b"));
-    assertThat(pseudoPath.getNameCount() == 2);
+    assertThat(pseudoPath.getName(0)).isEqualTo("a");
+    assertThat(pseudoPath.getName(1)).isEqualTo("b");
+    assertThat(pseudoPath.getNameCount()).isEqualTo(2);
   }
 
   @Test
   public void pseudoPathFromEmptyList() {
     PseudoPath emptyPath = new PseudoPath(new ArrayList<String>());
-    assertThat(emptyPath.getNameCount() == 0);
+    assertThat(emptyPath.getNameCount()).isEqualTo(0);
   }
 
   @Test
   public void pseudoPathVarargs() {
     PseudoPath pseudoPath = new PseudoPath("a", "b");
 
-    assertThat(pseudoPath.getName(0).equals("a"));
-    assertThat(pseudoPath.getName(1).equals("b"));
+    assertThat(pseudoPath.getName(0)).isEqualTo("a");
+    assertThat(pseudoPath.getName(1)).isEqualTo("b");
   }
 
   @Test
   public void pseudoPathNoArgs() {
     PseudoPath emptyPath = new PseudoPath();
-    assertThat(emptyPath.getNameCount() == 0);
+    assertThat(emptyPath.getNameCount()).isEqualTo(0);
   }
 
   @Test
@@ -55,8 +55,8 @@ public class PseudoPathTest {
     PseudoPath pseudoPath = new PseudoPath("a", "b");
     Path path = pseudoPath.toPath();
 
-    assertThat(path.getName(0).toString().equals("a"));
-    assertThat(path.getName(1).toString().equals("b"));
+    assertThat(path.getName(0).toString()).isEqualTo("a");
+    assertThat(path.getName(1).toString()).isEqualTo("b");
   }
 
   @Test
@@ -64,9 +64,9 @@ public class PseudoPathTest {
     Path path = Paths.get("a", "b");
     PseudoPath pseudoPath = new PseudoPath(path);
 
-    assertThat(pseudoPath.getName(0).equals("a"));
-    assertThat(pseudoPath.getName(1).equals("b"));
-    assertThat(pseudoPath.getNameCount() == 2);
+    assertThat(pseudoPath.getName(0)).isEqualTo("a");
+    assertThat(pseudoPath.getName(1)).isEqualTo("b");
+    assertThat(pseudoPath.getNameCount()).isEqualTo(2);
   }
 
   @Test
@@ -74,14 +74,14 @@ public class PseudoPathTest {
     PseudoPath pseudoPath = new PseudoPath("a", "b");
     PseudoPath newPath = pseudoPath.resolve("c");
 
-    assertThat(newPath.getNameCount() == 3);
-    assertThat(newPath.getName(2).equals("c"));
+    assertThat(newPath.getNameCount()).isEqualTo(3);
+    assertThat(newPath.getName(2)).isEqualTo("c");
 
     //empty pseudopath
     pseudoPath = new PseudoPath();
     newPath = pseudoPath.resolve("c");
-    assertThat(newPath.getNameCount() == 1);
-    assertThat(newPath.getName(0).equals("c"));
+    assertThat(newPath.getNameCount()).isEqualTo(1);
+    assertThat(newPath.getName(0)).isEqualTo("c");
   }
 
   @Test

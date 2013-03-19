@@ -26,7 +26,7 @@ public class FileTableTest {
 
   public static void main(String[] args) throws IOException {
     final Controller controller = Controllers.getClientController();
-    WatchService watcher = controller.getWatcher();
+    WatchService watcher = controller.getWatchService();
     int maxDepth = controller.getMaxDepth();
 
     for (Path dir : dirs) {
@@ -52,7 +52,7 @@ public class FileTableTest {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
 
-    controller.listenAndHandleFileChanges();
+    //controller.listenAndHandleFileChanges();
 
     SwingUtilities.invokeLater(new Runnable() {
       @Override

@@ -5,9 +5,7 @@ import org.junit.Test;
 import ru.niktrop.remote_access.file_system_model.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -24,7 +22,7 @@ public class PseudoFileTest {
     f.txt
    */
   private final static String testXml =
-          "<root name=\"test\">\n" +
+          "<directory name=\"test\">\n" +
           "\t<directory name=\"a\">\n" +
           "\t\t<directory name=\"b\">\n" +
           "\t\t\t<file name=\"f.txt\"/>\n" +
@@ -34,7 +32,7 @@ public class PseudoFileTest {
           "\t\t<directory name=\"d\"/>\n" +
           "\t</directory>\n" +
           "\t<file name=\"f.txt\"/>" +
-          "</root>";
+          "</directory>";
 
   @Test
   public void testGetType() throws Exception {
@@ -44,7 +42,7 @@ public class PseudoFileTest {
     PseudoPath f = new PseudoPath("f.txt");
     PseudoPath c_d = new PseudoPath("c", "d");
 
-    assertThat(new PseudoFile(fsi, root).getType()).isEqualTo(FileType.ROOT.getName());
+    assertThat(new PseudoFile(fsi, root).getType()).isEqualTo(FileType.DIR.getName());
     assertThat(new PseudoFile(fsi, a).getType()).isEqualTo(FileType.DIR.getName());
     assertThat(new PseudoFile(fsi, f).getType()).isEqualTo(FileType.FILE.getName());
     assertThat(new PseudoFile(fsi, c_d).getType()).isEqualTo(FileType.DIR.getName());
@@ -93,22 +91,4 @@ public class PseudoFileTest {
 
   }
 
-  @Test
-  public void testAsStringAndBack() throws Exception {
-    FSImage fsi = FSImages.getFromXml(testXml);
-    PseudoPath a_b = new PseudoPath("a", "b");
-    PseudoFile pseudoFile = new PseudoFile(fsi, a_b);
-
-    String serialized = pseudoFile.serializeToString();
-    Map<String,FSImage> fsImageMap = new HashMap<>();
-    PseudoFile fromString = PseudoFile.fromSerializedString(serialized, fsImageMap);
-
-    assertThat(fromString).isNull();
-
-    fsImageMap.put(fsi.getUuid(), fsi);
-    fromString = PseudoFile.fromSerializedString(serialized, fsImageMap);
-
-    assertThat(fromString).isEqualTo(pseudoFile);
-
-  }
 }

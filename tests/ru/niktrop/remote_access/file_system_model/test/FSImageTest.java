@@ -123,10 +123,10 @@ public class FSImageTest {
     PseudoPath empty = new PseudoPath();
     PseudoPath x = new PseudoPath("x");
 
-    assertThat(fsi.contains(b_c));
+    assertThat(fsi.contains(b_c)).isTrue();
     assertThat(fsi.contains(b_c_d)).isFalse();
-    assertThat(fsi.contains(f));
-    assertThat(fsi.contains(empty));
+    assertThat(fsi.contains(f)).isTrue();
+    assertThat(fsi.contains(empty)).isTrue();
     assertThat(fsi.contains(x)).isFalse();
 
   }
@@ -144,10 +144,10 @@ public class FSImageTest {
     assertThat(fsi.contains(c_f)).isFalse();
 
     fsi.addFile(b_f);
-    assertThat(fsi.contains(b_f));
+    assertThat(fsi.contains(b_f)).isTrue();
 
     fsi.addFile(g);
-    assertThat(fsi.contains(g));
+    assertThat(fsi.contains(g)).isTrue();
 
 
     try {

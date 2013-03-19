@@ -1,8 +1,10 @@
 package ru.niktrop.remote_access.commands.test;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.commands.FSChange;
+import ru.niktrop.remote_access.Controllers;
+import ru.niktrop.remote_access.FileSystemWatcher;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.FileType;
@@ -12,8 +14,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import static org.apache.commons.io.FileUtils.*;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -26,22 +28,29 @@ import static org.fest.assertions.api.Assertions.assertThat;
  * Time: 16:43
  */
 public class FSChangeExecuteTest {
-  private final int MAX_TRIES = 20;
+  private static final int MAX_TRIES = 20;
+  private static Queue<Path> tempDirs = new LinkedList<>();
+
+  @AfterClass
+  public static void clean() {
+
+    while ( !tempDirs.isEmpty()) {
+      Path tempDir = tempDirs.poll();
+      deleteTempDir(tempDir, MAX_TRIES);
+    }
+  }
 
   @Test
   public void testDelete() throws Exception {
-    Controller controller = new Controller();
-    WatchService watcher = controller.getWatcher();
+    Controller controller = Controllers.getController();
+    WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
     FSImage fsi = FSImages.getFromDirectory(a, 2, watcher);
     controller.addFSImage(fsi);
 
-    Path b_c = a.resolve("b").resolve("c");
-    deleteTempDir(b_c, MAX_TRIES);
-
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     String xmlResult =
             "<directory name=\"a\">" +
@@ -53,21 +62,19 @@ public class FSChangeExecuteTest {
     Path f = a.resolve("f");
     Files.delete(f);
 
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     xmlResult =
             "<directory name=\"a\">" +
               "<directory name=\"b\" />" +
             "</directory>";
     assertThat(fsi.toXml().equals(xmlResult));
-
-    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   @Test
   public void testDeleteSeesWhatNeeded() throws Exception {
-    Controller controller = new Controller();
-    WatchService watcher = controller.getWatcher();
+    Controller controller = Controllers.getController();
+    WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
@@ -78,25 +85,22 @@ public class FSChangeExecuteTest {
     Path tempDir_2 = createTempDir();
     deleteTempDir(tempDir_2, MAX_TRIES);
 
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     assertThat(fsi.toXml().equals(xmlBefore));
 
     Path a_b_c_d = a.resolve("b").resolve("c").resolve("d");
     Files.delete(a_b_c_d);
 
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     assertThat(fsi.toXml().equals(xmlBefore));
-
-    deleteTempDir(tempDir, MAX_TRIES);
-
   }
 
   @Test
   public void testCreateFile() throws Exception {
-    Controller controller = new Controller();
-    WatchService watcher = controller.getWatcher();
+    Controller controller = Controllers.getController();
+    WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
@@ -109,22 +113,20 @@ public class FSChangeExecuteTest {
     Files.createFile(a_g);
     Files.createFile(a_b_c_d_e);
 
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     PseudoPath g = new PseudoPath("g");
     PseudoPath b_c_d_e = new PseudoPath("b", "c", "d", "e");
 
-    assertThat(fsi.contains(g));
+    assertThat(fsi.contains(g)).isTrue();
     assertThat(fsi.getType(g)).isEqualTo(FileType.FILE.getName());
     assertThat(fsi.contains(b_c_d_e)).isFalse();
-
-    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   @Test
   public void testCreateDir() throws Exception {
-    Controller controller = new Controller();
-    WatchService watcher = controller.getWatcher();
+    Controller controller = Controllers.getController();
+    WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
@@ -139,25 +141,23 @@ public class FSChangeExecuteTest {
     Files.createFile(a_g_h);
     Files.createDirectory(a_b_c_d_e);
 
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     PseudoPath g = new PseudoPath("g");
     PseudoPath g_h = new PseudoPath("g", "h");
     PseudoPath b_c_d_e = new PseudoPath("b", "c", "d", "e");
 
-    assertThat(fsi.contains(g));
+    assertThat(fsi.contains(g)).isTrue();
     assertThat(fsi.getType(g)).isEqualTo(FileType.DIR.getName());
-    assertThat(fsi.contains(g_h));
+    assertThat(fsi.contains(g_h)).isTrue();
     assertThat(fsi.getType(g_h)).isEqualTo(FileType.FILE.getName());
     assertThat(fsi.contains(b_c_d_e)).isFalse();
-
-    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   @Test
   public void testMoveDirectoryInside() throws Exception {
-    Controller controller = new Controller();
-    WatchService watcher = controller.getWatcher();
+    Controller controller = Controllers.getController();
+    WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
@@ -167,26 +167,25 @@ public class FSChangeExecuteTest {
     Path a_b_c = a.resolve("b").resolve("c");
     boolean createDestinationDir = true;
     moveDirectoryToDirectory(a_b_c.toFile(), a.toFile(), createDestinationDir);
-
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     PseudoPath c = new PseudoPath("c");
     PseudoPath c_d = new PseudoPath("c", "d");
     PseudoPath b_c = new PseudoPath("b", "c");
 
-    assertThat(fsi.contains(c));
-    assertThat(fsi.contains(c_d));
+
+    assertThat(fsi.contains(c)).isTrue();
+    assertThat(fsi.contains(c_d)).isTrue();
     assertThat(fsi.contains(b_c)).isFalse();
     assertThat(fsi.getType(c)).isEqualTo(FileType.DIR.getName());
     assertThat(fsi.getType(c_d)).isEqualTo(FileType.DIR.getName());
 
-    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   @Test
   public void testCopyDirectoryInside() throws Exception {
-    Controller controller = new Controller();
-    WatchService watcher = controller.getWatcher();
+    Controller controller = Controllers.getController();
+    WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
@@ -196,26 +195,25 @@ public class FSChangeExecuteTest {
     Path a_b_c = a.resolve("b").resolve("c");
     copyDirectoryToDirectory(a_b_c.toFile(), a.toFile());
 
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     PseudoPath c = new PseudoPath("c");
     PseudoPath c_d = new PseudoPath("c", "d");
     PseudoPath b_c = new PseudoPath("b", "c");
 
-    assertThat(fsi.contains(c));
-    assertThat(fsi.contains(c_d));
-    assertThat(fsi.contains(b_c));
+    assertThat(fsi.contains(c)).isTrue();
+    assertThat(fsi.contains(c_d)).isTrue();
+    assertThat(fsi.contains(b_c)).isTrue();
     assertThat(fsi.getType(c)).isEqualTo(FileType.DIR.getName());
     assertThat(fsi.getType(c_d)).isEqualTo(FileType.DIR.getName());
     assertThat(fsi.getType(b_c)).isEqualTo(FileType.DIR.getName());
 
-    deleteTempDir(tempDir, MAX_TRIES);
   }
 
   @Test
   public void testMoveDirectoryFromOutside() throws Exception {
-    Controller controller = new Controller();
-    WatchService watcher = controller.getWatcher();
+    Controller controller = Controllers.getController();
+    WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
     Path a = tempDir.resolve("a");
@@ -229,7 +227,7 @@ public class FSChangeExecuteTest {
     boolean createDestinationDir = true;
     moveDirectoryToDirectory(source_a.toFile(), a_b.toFile(), createDestinationDir);
 
-    listenAndReflectChanges(controller);
+    listenAndHandleChanges(controller);
 
     PseudoPath b_a = new PseudoPath("b","a");
     PseudoPath b_a_b = b_a.resolve("b");
@@ -237,15 +235,14 @@ public class FSChangeExecuteTest {
     PseudoPath b_a_b_c = b_a_b.resolve("c");
     PseudoPath b_a_b_c_d = b_a_b_c.resolve("d");
 
-    assertThat(fsi.contains(b_a));
-    assertThat(fsi.contains(b_a_b));
-    assertThat(fsi.contains(b_a_b_c));
+    System.out.println(fsi.toXml());
+    assertThat(fsi.contains(b_a)).isTrue();
+    assertThat(fsi.contains(b_a_b)).isTrue();
+    assertThat(fsi.contains(b_a_b_c)).isTrue();
     assertThat(fsi.contains(b_a_b_c_d)).isFalse();
     assertThat(fsi.getType(b_a_b_c)).isEqualTo(FileType.DIR.getName());
     assertThat(fsi.getType(b_a_f)).isEqualTo(FileType.FILE.getName());
 
-    deleteTempDir(tempDir, MAX_TRIES);
-    deleteTempDir(tempSource, MAX_TRIES);
   }
 
   /*Creates temp directory with following structure:
@@ -260,29 +257,43 @@ public class FSChangeExecuteTest {
 
     Files.createDirectories(a_b_c_d);
     Files.createFile(a_f);
+
+    tempDirs.offer(tempDir);
     return tempDir;
   }
 
   //Sometimes it is not deleted at the first time.
-  private static void deleteTempDir(Path tempDir, int times) {
+  private static void deleteTempDir(Path tempDir, int times)  {
     for (int i = 0; i<times; i++) {
       try {
+        Thread.sleep(10L);
         deleteDirectory(tempDir.toFile());
         return;
       } catch (IOException e) {
         //System.out.println("Let's try once more...");
+      } catch (InterruptedException e) {
       }
     }
+    System.out.println("Temporary directory " + tempDir.toString() + " was not deleted.");
   }
 
-  private static void listenAndReflectChanges(Controller controller) throws InterruptedException {
-    Thread.sleep(10L);
+  private static void listenAndHandleChanges(Controller controller) throws InterruptedException {
 
-    BlockingQueue<FSChange> fsChanges = new LinkedBlockingQueue<>();
-    controller.enqueueChanges(fsChanges);
-    while (!fsChanges.isEmpty()) {
-      fsChanges.poll().execute(controller, null);
+    FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
+    for (int i = 0; i < 10; i++) {
+      Thread.sleep(1L);
+      fsWatcher.enqueueChanges();
     }
+
+    while(fsWatcher.hasFSChanges()) {
+      fsWatcher.takeFSChange().execute(controller);
+    }
+
+//    BlockingQueue<FSChange> fsChanges = new LinkedBlockingQueue<>();
+//    controller.enqueueChanges(fsChanges);
+//    while (!fsChanges.isEmpty()) {
+//      controller.executeCommand(fsChanges.poll());
+//    }
   }
 
 }

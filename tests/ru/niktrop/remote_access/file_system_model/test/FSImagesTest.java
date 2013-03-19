@@ -10,6 +10,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
 
+import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.fest.assertions.api.Assertions.assertThat;
 
 /**
@@ -20,23 +21,23 @@ import static org.fest.assertions.api.Assertions.assertThat;
  */
 public class FSImagesTest {
   private final static String testXml =
-          "<root alias=\"test\">\n" +
+          "<directory alias=\"test\">\n" +
           "\t<directory name=\"a\">\n" +
           "\t\t<directory name=\"b\">\n" +
-          "\t\t\t<file name=\"f.txt\"/>\n" +
+          "\t\t\t<file name=\"f.txt\" />\n" +
           "\t\t</directory>\n" +
           "\t</directory>\n" +
           "\t<directory name=\"c\">\n" +
-          "\t\t<directory name=\"d\"/>\n" +
+          "\t\t<directory name=\"d\" />\n" +
           "\t</directory>\n" +
-          "\t<file name=\"f.txt\"/>" +
-          "</root>";
+          "\t<file name=\"f.txt\" />" +
+          "</directory>";
 
   @Test
   public void fromXmlAndBack() throws ParsingException, IOException {
     FSImage fsi = FSImages.getFromXml(testXml);
     String xmlBack = fsi.toXml();
-    assertThat(testXml.equals(xmlBack));
+    assertThat(testXml).isEqualTo(xmlBack);
   }
 
   @Test
@@ -53,9 +54,24 @@ public class FSImagesTest {
     WatchService watcher = FileSystems.getDefault().newWatchService();
     FSImage fsi = FSImages.getFromDirectory(a, 1, watcher);
 
-    assertThat(fsi.getPathToRoot().isAbsolute());
+    assertThat(fsi.getPathToRoot().isAbsolute()).isTrue();
     assertThat(fsi.getPathToRoot().getFileName().toString()).isEqualTo("a");
 
-    FileTreeBuilderTest.deleteTempDir(tempDir, 20);
+    deleteTempDir(tempDir, 20);
+  }
+
+  //Sometimes it is not deleted at the first time.
+  private static void deleteTempDir(Path tempDir, int times)  {
+    for (int i = 0; i<times; i++) {
+      try {
+        Thread.sleep(10L);
+        deleteDirectory(tempDir.toFile());
+        return;
+      } catch (IOException e) {
+        //System.out.println("Let's try once more...");
+      } catch (InterruptedException e) {
+      }
+    }
+    System.out.println("Temporary directory " + tempDir.toString() + " was not deleted.");
   }
 }
