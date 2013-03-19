@@ -91,4 +91,14 @@ public class PseudoPath {
   public int hashCode() {
     return names.hashCode();
   }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("/");
+    for(int i = 0; i < getNameCount(); i++) {
+      builder.append("/" + getName(i));
+    }
+    return builder.toString();
+  }
 }

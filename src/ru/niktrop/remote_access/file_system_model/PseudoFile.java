@@ -38,6 +38,10 @@ public class PseudoFile {
     return getType().equals(FileType.DIR.getName());
   }
 
+  public boolean exists() {
+    return fsi.contains(path);
+  }
+
   public List<PseudoFile> getContent() {
     Element parent = fsi.getElement(path);
     List<PseudoFile> content = new ArrayList<>();
