@@ -29,7 +29,10 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
 
   @Override
   public void controllerChanged() {
-    this.setModel(new FSImageChooserModel(controller));
+    //if no FSImages yet
+    if (getModel().getSize() == 1) {
+      this.setModel(new FSImageChooserModel(controller));
+    }
   }
 
 
@@ -39,9 +42,14 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
     private final List<FSImage> remote;
     private FSImage selection = null;
 
+    FSImageChooserModel(Controller controller, FSImage selection) {
+      this(controller);
+      setSelectedItem(selection);
+    }
+
     FSImageChooserModel(Controller controller) {
-      local = controller.getLocalFSImages();
-      remote = controller.getRemoteFSImages();
+      local = controller.fsImages.getLocal();
+      remote = controller.fsImages.getRemote();
       List<FSImage> fsImages = new ArrayList<>();
       fsImages.addAll(local);
       fsImages.addAll(remote);

@@ -8,8 +8,7 @@ import ru.niktrop.remote_access.commands.CommandManager;
 import ru.niktrop.remote_access.commands.GetFSImages;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
-import ru.niktrop.remote_access.gui.FileTable;
-import ru.niktrop.remote_access.gui.OneSidePanel;
+import ru.niktrop.remote_access.gui.ClientGUI;
 import ru.niktrop.remote_access.handlers.*;
 
 import javax.swing.*;
@@ -90,17 +89,9 @@ public class Client {
     SwingUtilities.invokeLater(new Runnable() {
       @Override
       public void run() {
-        JFrame f = new JFrame("Test");
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        FileTable fileTable = new FileTable(controller);
-        OneSidePanel client = new OneSidePanel(fileTable, controller);
 
-        f.setContentPane(client);
-
-        f.pack();
-        f.setLocationByPlatform(true);
-        f.setMinimumSize(f.getSize());
-        f.setVisible(true);
+        ClientGUI clientGUI = ClientGUI.instance();
+        clientGUI.init(controller);
 
       }
     });

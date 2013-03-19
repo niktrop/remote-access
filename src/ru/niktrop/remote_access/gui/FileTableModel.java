@@ -34,6 +34,10 @@ public class FileTableModel extends AbstractTableModel {
     this.directory = directory;
   }
 
+  public PseudoFile getDirectory() {
+    return directory;
+  }
+
   @Override
   public int getRowCount() {
     if (directory == null)

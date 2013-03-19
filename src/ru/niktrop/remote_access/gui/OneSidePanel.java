@@ -1,6 +1,7 @@
 package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.commands.CommandManager;
 import ru.niktrop.remote_access.commands.ReloadDirectory;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 import ru.niktrop.remote_access.file_system_model.FSImage;
@@ -23,17 +24,21 @@ public class OneSidePanel extends JPanel{
   private Controller controller;
 
   private JScrollPane scrlFileTable;
-  private FileTable tblFiles;
+  private FileTable fileTable;
 
   private JToolBar tlbNavigation;
   private JButton btnParent;
   private JButton btnOpen;
-  private JButton btnReload;
+  private JButton btnDelete;
   private FSImageChooser fsImageChooser;
+
+  public FileTable getFileTable() {
+    return fileTable;
+  }
 
   public OneSidePanel(FileTable table, Controller controller) {
     this.controller = controller;
-    tblFiles = table;
+    fileTable = table;
 
     init();
 
@@ -44,7 +49,7 @@ public class OneSidePanel extends JPanel{
   private void init() {
     setLayout(new BorderLayout(3, 3));
 
-    scrlFileTable = new JScrollPane(tblFiles);
+    scrlFileTable = new JScrollPane(fileTable);
     add(scrlFileTable, BorderLayout.CENTER);
 
     tlbNavigation = new JToolBar();
@@ -56,8 +61,8 @@ public class OneSidePanel extends JPanel{
     btnOpen = new JButton("Open");
     tlbNavigation.add(btnOpen);
 
-    btnReload = new JButton("Reload");
-    tlbNavigation.add(btnReload);
+    btnDelete = new JButton("Delete");
+    tlbNavigation.add(btnDelete);
 
     fsImageChooser = new FSImageChooser(controller);
     tlbNavigation.add(fsImageChooser);
@@ -69,7 +74,7 @@ public class OneSidePanel extends JPanel{
 
     btnOpen.addActionListener(new OpenDirectoryAction());
 
-    btnReload.addActionListener(new ReloadDirectoryAction());
+    btnDelete.addActionListener(new DeleteAction());
 
     fsImageChooser.addActionListener(new ActionListener() {
       @Override
@@ -77,11 +82,11 @@ public class OneSidePanel extends JPanel{
         FSImageChooser chooser = (FSImageChooser)e.getSource();
         FSImage fsImage = (FSImage)chooser.getSelectedItem();
         PseudoFile dir = new PseudoFile(fsImage, new PseudoPath());
-        tblFiles.load(dir);
+        fileTable.load(dir);
       }
     });
 
-    controller.addListener(tblFiles);
+    controller.addListener(fileTable);
     controller.addListener(fsImageChooser);
   }
 
@@ -90,28 +95,29 @@ public class OneSidePanel extends JPanel{
   private class OpenDirectoryAction extends AbstractAction{
     @Override
     public void actionPerformed(ActionEvent e) {
-      int[] selectedRows = tblFiles.getSelectedRows();
+      int[] selectedRows = fileTable.getSelectedRows();
       if (selectedRows.length == 1) {
-        FileTableModel model = (FileTableModel) tblFiles.getModel();
+        FileTableModel model = (FileTableModel) fileTable.getModel();
         final PseudoFile childDir = model.getPseudoFile(selectedRows[0]);
         if (childDir.isDirectory()) {
           final boolean needWait = (childDir.getDepth() == 0);
           if (!needWait) {
-            tblFiles.load(childDir);
+            fileTable.load(childDir);
           }
 
           SwingWorker worker = new SwingWorker<Void, Void>() {
             @Override
             public Void doInBackground() {
               SerializableCommand command = new ReloadDirectory(childDir);
-              FSImage fsi = controller.getFSImage(childDir.getFsiUuid());
+              FSImage fsi = controller.fsImages.get(childDir.getFsiUuid());
+              CommandManager cm = CommandManager.instance(controller);
               if (fsi.isLocal())
               {
                 //execute locally
-                controller.executeCommand(command);
+                cm.executeCommand(command);
               } else {
                 //send to server
-                controller.sendCommand(command);
+                cm.sendCommand(command, controller.getChannel());
               }
               return null;
             }
@@ -119,7 +125,7 @@ public class OneSidePanel extends JPanel{
             @Override
             protected void done() {
               if (needWait) {
-                tblFiles.load(childDir);
+                fileTable.load(childDir);
               }
             }
           };
@@ -133,20 +139,20 @@ public class OneSidePanel extends JPanel{
   private class OpenParentAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
-      PseudoFile directory = tblFiles.getDirectory();
+      PseudoFile directory = fileTable.getDirectory();
 
       PseudoFile parent = directory.getParent();
       if (parent == null) {
         return;
       }
-      tblFiles.load(parent);
+      fileTable.load(parent);
     }
   }
 
-  private class ReloadDirectoryAction extends AbstractAction {
+  private class DeleteAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
-      tblFiles.update();
+      fileTable.update();
     }
   }
 

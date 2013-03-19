@@ -14,26 +14,24 @@ import javax.swing.*;
  */
 public class FileTable extends JTable implements ControllerListener {
 
-  private PseudoFile directory;
-  private Controller controller;
+  private final Controller controller;
 
   public FileTable(Controller controller) {
-    PseudoFile defaultDirectory = controller.getDefaultDirectory();
-    if (defaultDirectory != null) {
-      this.directory = defaultDirectory;
-    }
+    this.controller = controller;
     setUpFileTable(controller);
   }
 
   public FileTable(Controller controller, PseudoFile directory) {
-    this.directory = directory;
-    setUpFileTable(controller);
-  }
-   //TODO Разобраться с инициализацией таблицы, если у контроллера пустой список образов.
-  private void setUpFileTable(Controller controller) {
     this.controller = controller;
-    FileTableModel fileTableModel = new FileTableModel();
-    fileTableModel.setDirectory(directory);
+    setUpFileTable(controller);
+    FileTableModel model = (FileTableModel) getModel();
+    model.setDirectory(directory);
+  }
+
+  private void setUpFileTable(Controller controller) {
+    PseudoFile defaultDirectory = controller.getDefaultDirectory();
+    FileTableModel fileTableModel = new FileTableModel(defaultDirectory);
+
     setModel(fileTableModel);
     setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     setAutoCreateRowSorter(true);
@@ -41,11 +39,11 @@ public class FileTable extends JTable implements ControllerListener {
   }
 
   public PseudoFile getDirectory() {
-    return directory;
+    FileTableModel model = (FileTableModel) getModel();
+    return model.getDirectory();
   }
 
   public void load(PseudoFile directory) {
-    this.directory = directory;
     FileTableModel model = (FileTableModel) getModel();
     model.setDirectory(directory);
     model.fireTableDataChanged();
@@ -59,12 +57,25 @@ public class FileTable extends JTable implements ControllerListener {
   @Override
   public void controllerChanged() {
     FileTableModel tm = (FileTableModel)getModel();
-    PseudoFile dir = getDirectory();
-    if (dir == null) {
-      FileTableModel newModel = new FileTableModel(controller.getDefaultDirectory());
-      setModel(newModel);
-    } else {
+    PseudoFile dir = tm.getDirectory();
+
+    if (dir != null && dir.exists()) {
       tm.fireTableDataChanged();
+      return;
     }
+
+    //if directory was deleted, show nearest ancestor
+    if (dir != null && !dir.exists()) {
+      while(!dir.exists()) {
+        dir = dir.getParent();
+      }
+    }
+
+    if (dir == null) {
+      dir = controller.getDefaultDirectory();
+    }
+
+    tm.setDirectory(dir);
+    tm.fireTableDataChanged();
   }
 }
