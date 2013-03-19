@@ -4,6 +4,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.commands.CommandManager;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 
 import java.util.List;
@@ -16,17 +17,18 @@ import java.util.List;
  */
 public class CommandExecutor extends SimpleChannelUpstreamHandler {
 
-  private final Controller controller;
+  private final CommandManager commandManager;
 
   public CommandExecutor(Controller controller) {
-    this.controller = controller;
+    this.commandManager = CommandManager.instance(controller);
   }
 
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     SerializableCommand command = (SerializableCommand) e.getMessage();
-    List<SerializableCommand> response = controller.executeCommand(command);
-    controller.sendResponseBack(response, ctx);
+
+    List<SerializableCommand> response = commandManager.executeCommand(command);
+    commandManager.sendResponseBack(response, ctx);
   }
 
 }
