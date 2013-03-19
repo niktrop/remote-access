@@ -86,11 +86,13 @@ public class Client {
     fsWatcher.runWatcher();
     fsHandler.runHandler();
 
+    final ClientGUI clientGUI = ClientGUI.instance();
+    controller.getNotificationController().setParentFrame(clientGUI);
+
     SwingUtilities.invokeLater(new Runnable() {
       @Override
       public void run() {
 
-        ClientGUI clientGUI = ClientGUI.instance();
         clientGUI.init(controller);
 
       }

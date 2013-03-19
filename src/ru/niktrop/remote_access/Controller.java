@@ -26,11 +26,13 @@ public class Controller {
     CLIENT,
     SERVER;
   }
+
   public final FSImageCollection fsImages = new FSImageCollection();
 
   private final ControllerType type;
   private final List<ControllerListener> listeners = new LinkedList<>();
   private final WatchService watchService;
+  private final NotificationController notificationController = new NotificationController();
 
   private int maxDepth = 2;
   private Channel channel;
@@ -48,27 +50,6 @@ public class Controller {
     return watchService;
   }
 
-//  public void sendCommand(SerializableCommand command) {
-//    if (channel == null) {
-//      LOG.warning("Attempt to send command while channel is null.");
-//      return;
-//    }
-//    //channel.write(command, new InetSocketAddress("localhost", 11111));
-//    channel.write(command);
-//  }
-//
-//  public List<SerializableCommand> executeCommand(SerializableCommand command) {
-//    List<SerializableCommand> response = command.execute(this);
-//    LOG.info("Command executed: " + command.getClass().getSimpleName());
-//    fireControllerChange();
-//    return response;
-//  }
-//
-//  public void sendResponseBack(List<SerializableCommand> response, ChannelHandlerContext ctx) {
-//    for (SerializableCommand command : response) {
-//      Channels.write(ctx.getChannel(), command);
-//    }
-//  }
 
   public Channel getChannel() {
     return channel;
@@ -76,6 +57,10 @@ public class Controller {
 
   public void setChannel(Channel channel) {
     this.channel = channel;
+  }
+
+  public NotificationController getNotificationController() {
+    return notificationController;
   }
 
   public PseudoFile getDefaultDirectory() {
