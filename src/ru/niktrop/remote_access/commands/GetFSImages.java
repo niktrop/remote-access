@@ -22,7 +22,7 @@ public class GetFSImages implements SerializableCommand {
   @Override
   public List<SerializableCommand> execute(Controller controller) {
     List<SerializableCommand> response = new LinkedList<>();
-    for (FSImage fsi : controller.getLocalFSImages()) {
+    for (FSImage fsi : controller.fsImages.getLocal()) {
       String uuid = fsi.getUuid();
       String xml = fsi.toXml();
       FSChange fsChange = new FSChange(ChangeType.NEW_IMAGE, uuid, new PseudoPath(), xml);

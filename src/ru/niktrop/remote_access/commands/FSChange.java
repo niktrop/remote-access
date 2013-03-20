@@ -71,7 +71,7 @@ public class FSChange implements SerializableCommand {
   @Override
   public List<SerializableCommand> execute(Controller controller) {
     String fsiUuid = getFsiUuid();
-    FSImage fsi = controller.getFSImage(fsiUuid);
+    FSImage fsi = controller.fsImages.get(fsiUuid);
     PseudoPath pseudoPath = getPath();
     switch (getChangeType()) {
       case CREATE_DIR:
