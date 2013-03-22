@@ -1,14 +1,9 @@
 package ru.niktrop.remote_access.gui;
 
-import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.commands.CopyFile;
-import ru.niktrop.remote_access.commands.SerializableCommand;
-import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 
 /**
  * Created with IntelliJ IDEA.
@@ -59,35 +54,6 @@ public class ClientGUI extends JFrame {
     setLocationByPlatform(true);
     setMinimumSize(getSize());
     setVisible(true);
-  }
-
-  private class CopyAction extends AbstractAction {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      FileTable leftFileTable = pnlLeft.getFileTable();
-      FileTable rightFileTable = pnlRight.getFileTable();
-      final int[] selectedRows = pnlLeft.getFileTable().getSortedSelectedRows();
-      final PseudoFile targetDir = rightFileTable.getDirectory();
-      final CommandManager cm = controller.getCommandManager();
-      final FileTableModel leftModel = (FileTableModel) leftFileTable.getModel();
-
-      SwingWorker worker = new SwingWorker<Void, Void>() {
-        @Override
-        public Void doInBackground() {
-
-          for (int i : selectedRows) {
-            PseudoFile pseudoFile = leftModel.getPseudoFile(i);
-            if (pseudoFile.isDirectory())
-              continue;
-            SerializableCommand copy = new CopyFile(pseudoFile, targetDir);
-            cm.executeCommand(copy);
-          }
-
-          return null;
-        }
-      };
-      worker.execute();
-    }
   }
 
 }
