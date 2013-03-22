@@ -115,7 +115,6 @@ public class FSChange implements SerializableCommand {
   @Override
   public FSChange fromString(String changeAsString) {
     String groupSeparator = "\u001E";
-    String unitSeparator = "\u001F";
     String nul = "\u0000";
 
     StringTokenizer st = new StringTokenizer(changeAsString, groupSeparator, false);
@@ -126,10 +125,7 @@ public class FSChange implements SerializableCommand {
 
     PseudoPath path = new PseudoPath();
     if ( !pathAsString.equals(nul)) {
-      st = new StringTokenizer(pathAsString, unitSeparator, false);
-      while (st.hasMoreTokens()) {
-        path = path.resolve(st.nextToken());
-      }
+      path = PseudoPath.deserialize(pathAsString);
     }
     return new FSChange(type, fsiUuid, path, xmlFSImage);
   }
@@ -141,7 +137,6 @@ public class FSChange implements SerializableCommand {
   public String getStringRepresentation() {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';
-    char unitSeparator = '\u001F';
     char nul = '\u0000';
 
     builder.append(changeType.name());
@@ -154,10 +149,7 @@ public class FSChange implements SerializableCommand {
       builder.append(nul); //represents empty pseudopath
     }
 
-    for (int i = 0; i < path.getNameCount(); i++) {
-      builder.append(path.getName(i));
-      builder.append(unitSeparator);
-    }
+    builder.append(path.serializeToString());
 
     if (xmlFSImage != null) {
       builder.append(groupSeparator);

@@ -1,6 +1,5 @@
 package ru.niktrop.remote_access.commands;
 
-import org.apache.commons.io.FileUtils;
 import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.FSImage;
@@ -8,48 +7,42 @@ import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
- * Date: 18.03.13
- * Time: 9:48
+ * Date: 20.03.13
+ * Time: 23:36
  */
-public class DeleteFile implements SerializableCommand {
-  private static final Logger LOG = Logger.getLogger(DeleteFile.class.getName());
+public class CreateFile implements SerializableCommand {
+  private static final Logger LOG = Logger.getLogger(CreateFile.class.getName());
 
   private final String fsiUuid;
   private final PseudoPath path;
-  private final String operationUuid;
+  private final boolean isDirectory;
 
-  DeleteFile() {
-    this(null, null, null);
+
+  CreateFile() {
+    this(null, null, false);
   }
 
-  public DeleteFile(String fsiUuid, PseudoPath path) {
+  public CreateFile(PseudoFile pseudoFile, boolean isDirectory) {
+    this(pseudoFile.getFsiUuid(), pseudoFile.getPseudoPath(), isDirectory);
+  }
+
+  public CreateFile(String fsiUuid, PseudoPath path, boolean directory) {
     this.fsiUuid = fsiUuid;
     this.path = path;
-    operationUuid = UUID.randomUUID().toString();
+    isDirectory = directory;
   }
 
-  public DeleteFile(String fsiUuid, PseudoPath path, String operationUuid) {
-    this.fsiUuid = fsiUuid;
-    this.path = path;
-    this.operationUuid = operationUuid;
-  }
-
-  public DeleteFile(PseudoFile pseudoFile) {
-    this.path = pseudoFile.getPseudoPath();
-    this.fsiUuid = pseudoFile.getFsiUuid();
-    operationUuid = UUID.randomUUID().toString();
-  }
 
   @Override
   public List<SerializableCommand> execute(Controller controller) {
@@ -61,25 +54,22 @@ public class DeleteFile implements SerializableCommand {
       return Collections.emptyList();
     }
 
-    Notification start = Notification.operationStarted("Deleting " + path.toString(), operationUuid);
-
     if  (fsi.isLocal()) {
-      cm.executeCommand(start);
       Path pathToRoot = fsi.getPathToRoot();
       Path fullPath = pathToRoot.resolve(path.toPath());
-      Notification response;
       try {
-        FileUtils.forceDelete(fullPath.toFile());
-        response = Notification.operationFinished("Deleted: " + path.toString(), operationUuid);
+        if (isDirectory) {
+          Files.createDirectory(fullPath);
+        } else {
+          Files.createFile(fullPath);
+        }
       } catch (IOException e) {
-        String message = "Deleting failed: " + path.toString();
+        String message = String.format("Creating failed: \r\n %s", e.toString());
         LOG.log(Level.WARNING, message, e.getCause());
-        response = Notification.operationFailed(message, operationUuid);
+        Notification warning = Notification.warning(message);
+        cm.executeCommand(warning);
       }
-
-      cm.executeCommand(response);
     }
-
     return Collections.emptyList();
   }
 
@@ -91,7 +81,7 @@ public class DeleteFile implements SerializableCommand {
     builder.append(fsiUuid);
     builder.append(groupSeparator);
 
-    builder.append(operationUuid);
+    builder.append(isDirectory);
     builder.append(groupSeparator);
 
     builder.append(path.serializeToString());
@@ -105,12 +95,12 @@ public class DeleteFile implements SerializableCommand {
 
     StringTokenizer st = new StringTokenizer(representation, groupSeparator, false);
     String fsiUuid = st.nextToken();
-
-    String operationUuid = st.nextToken();
+    boolean isDirectory = Boolean.parseBoolean(st.nextToken());
 
     String pathAsString = st.nextToken();
+
     PseudoPath path = PseudoPath.deserialize(pathAsString);
 
-    return new DeleteFile(fsiUuid, path, operationUuid);
+    return new CreateFile(fsiUuid, path, isDirectory);
   }
 }

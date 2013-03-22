@@ -20,7 +20,7 @@ public class Commands {
     StringTokenizer st = new StringTokenizer(serialized, groupSeparator, false);
 
     String className = st.nextToken();
-    String stringRepresentation = serialized.substring(className.length());
+    String stringRepresentation = serialized.substring(className.length() + 1);
 
     Class<?> commandClass = null;
     try {

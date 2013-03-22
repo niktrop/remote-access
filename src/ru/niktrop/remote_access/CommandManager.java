@@ -1,11 +1,11 @@
-package ru.niktrop.remote_access.commands;
+package ru.niktrop.remote_access;
 
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.commands.SerializableCommand;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,22 +16,23 @@ import java.util.logging.Logger;
  * Date: 18.03.13
  * Time: 15:01
  */
-public class CommandManager {
+public class CommandManager implements ChannelManager {
   private static final Logger LOG = Logger.getLogger(CommandManager.class.getName());
-  private static HashMap<Controller, CommandManager> commandManagers = new HashMap<>();
   private final Controller controller;
+  private Channel channel;
 
-  private CommandManager(Controller controller) {
+  public CommandManager(Controller controller) {
     this.controller = controller;
   }
 
-  public static CommandManager instance(Controller controller) {
-    CommandManager commandManager = commandManagers.get(controller);
-    if (commandManagers.get(controller) == null) {
-      CommandManager newCommandManager = new CommandManager(controller);
-      return newCommandManager;
-    }
-    else return commandManager;
+  @Override
+  public Channel getChannel() {
+    return channel;
+  }
+
+  @Override
+  public void setChannel(Channel channel) {
+    this.channel = channel;
   }
 
   public void sendCommand(SerializableCommand command, Channel channel) {
@@ -47,10 +48,16 @@ public class CommandManager {
     }
   }
 
-  public List<SerializableCommand> executeCommand(SerializableCommand command) {
-    List<SerializableCommand> response = command.execute(controller);
-    LOG.info("Command executed: " + command.getClass().getSimpleName());
-    controller.fireControllerChange();
+  public List<SerializableCommand> executeCommand(SerializableCommand command){
+    List<SerializableCommand> response = Collections.emptyList();
+    try {
+      response = command.execute(controller);
+      LOG.info("Command executed: " + command.getClass().getSimpleName());
+      controller.fireControllerChange();
+    } catch (Exception e) {
+      String message = String.format("%s occured when executing %s", e.toString(), command.getClass().getSimpleName());
+      LOG.log(Level.WARNING, message, e.getCause());
+    }
     return response;
   }
 

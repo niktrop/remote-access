@@ -3,8 +3,8 @@ package ru.niktrop.remote_access.handlers;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.commands.CommandManager;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 
 import java.util.List;
@@ -20,7 +20,7 @@ public class CommandExecutor extends SimpleChannelUpstreamHandler {
   private final CommandManager commandManager;
 
   public CommandExecutor(Controller controller) {
-    this.commandManager = CommandManager.instance(controller);
+    this.commandManager = controller.getCommandManager();
   }
 
   @Override

@@ -1,6 +1,5 @@
 package ru.niktrop.remote_access;
 
-import ru.niktrop.remote_access.commands.CommandManager;
 import ru.niktrop.remote_access.commands.FSChange;
 
 import java.util.logging.Logger;
@@ -26,7 +25,7 @@ public class FSChangeHandler {
     Thread fsChangeHandler = new Thread("FSChange handler") {
       @Override
       public void run() {
-        CommandManager cm = CommandManager.instance(controller);
+        CommandManager cm = controller.getCommandManager();
         while(true) {
           FSChange fsChange = fsWatcher.takeFSChange();
           if (fsChange == null)
@@ -35,12 +34,11 @@ public class FSChangeHandler {
           cm.executeCommand(fsChange);
 
       if ( !controller.isClient()) {
-        cm.sendCommand(fsChange, controller.getChannel());
+        cm.sendCommand(fsChange, cm.getChannel());
       }
         }
       }
     };
-    fsChangeHandler.setDaemon(true);
     fsChangeHandler.start();
 
   }

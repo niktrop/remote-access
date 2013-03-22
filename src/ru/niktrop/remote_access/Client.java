@@ -3,8 +3,6 @@ package ru.niktrop.remote_access;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.logging.LoggingHandler;
-import ru.niktrop.remote_access.commands.CommandManager;
 import ru.niktrop.remote_access.commands.GetFSImages;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
@@ -19,8 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchService;
 import java.util.concurrent.Executors;
-
-import static org.jboss.netty.logging.InternalLogLevel.INFO;
+import java.util.logging.Level;
 
 
 /**
@@ -32,7 +29,9 @@ import static org.jboss.netty.logging.InternalLogLevel.INFO;
 public class Client {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Client.class.getName());
 
-  private static int port = 12345;
+  private static int commandPort = 12345;
+  private static int filePort = 12346;
+
   private static String host = "localhost";
   private static Path[] dirs = {Paths.get("C:\\\\", "TestClient")};
   private static final int MAX_DEPTH = 2;
@@ -52,42 +51,29 @@ public class Client {
     }
 
 
-    ChannelFactory factory = new NioClientSocketChannelFactory(
-            Executors.newCachedThreadPool(),
-            Executors.newCachedThreadPool());
+    ChannelFuture commandFuture = getCommandChannelFuture(controller);
 
-    ClientBootstrap bootstrap = new ClientBootstrap(factory);
+    commandFuture.sync();
+    Channel commandChannel = commandFuture.getChannel();
 
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-      public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline pipeline = Channels.pipeline();
-
-        pipeline.addLast("logger", new LoggingHandler(INFO));
-        pipeline.addLast("string decoder", new StringDecoder());
-        pipeline.addLast("string encoder", new StringEncoder());
-        pipeline.addLast("command decoder", new CommandDecoder());
-        pipeline.addLast("command encoder", new CommandEncoder());
-        pipeline.addLast("executor", new CommandExecutor(controller));
-
-        return pipeline;
-      }
-    });
-
-    ChannelFuture future = bootstrap.connect(new InetSocketAddress(host, port));
-    future.sync();
-    controller.setChannel(future.getChannel());
+    controller.getCommandManager().setChannel(commandChannel);
     LOG.info("channel is ready");
 
-    CommandManager commandManager = CommandManager.instance(controller);
-    commandManager.sendCommand(new GetFSImages(), future.getChannel());
+    CommandManager commandManager = controller.getCommandManager();
+    commandManager.sendCommand(new GetFSImages(), commandChannel);
 
     FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
     FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);
     fsWatcher.runWatcher();
     fsHandler.runHandler();
 
+    ChannelFuture fileFuture = getFileChannelFuture(controller);
+
+    fileFuture.sync();
+    controller.getFileTransferManager().setChannel(fileFuture.getChannel());
+
     final ClientGUI clientGUI = ClientGUI.instance();
-    controller.getNotificationController().setParentFrame(clientGUI);
+    controller.getNotificationManager().setParentFrame(clientGUI);
 
     SwingUtilities.invokeLater(new Runnable() {
       @Override
@@ -97,5 +83,53 @@ public class Client {
 
       }
     });
+  }
+
+  private static ChannelFuture getFileChannelFuture(final Controller controller) {
+    // Configure the file transfer client.
+    ClientBootstrap fileBootstrap = new ClientBootstrap(
+            new NioClientSocketChannelFactory(
+                    Executors.newFixedThreadPool(1),
+                    Executors.newFixedThreadPool(2)));
+
+    // Set up the pipeline factory.
+    fileBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+      public ChannelPipeline getPipeline() throws Exception {
+        ChannelPipeline pipeline = Channels.pipeline();
+
+        //pipeline.addLast("logger",  new Logger(Level.INFO));
+        pipeline.addLast("file receiver", new FileReceiver(controller));
+
+        return pipeline;
+      }
+    });
+
+    // Bind and start to accept incoming connections.
+    return fileBootstrap.connect(new InetSocketAddress(host, filePort));
+  }
+
+  private static ChannelFuture getCommandChannelFuture(final Controller controller) {
+    ChannelFactory factory = new NioClientSocketChannelFactory(
+            Executors.newFixedThreadPool(1),
+            Executors.newFixedThreadPool(2));
+
+    ClientBootstrap bootstrap = new ClientBootstrap(factory);
+
+    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+      public ChannelPipeline getPipeline() throws Exception {
+        ChannelPipeline pipeline = Channels.pipeline();
+
+        pipeline.addLast("string decoder", new StringDecoder());
+        pipeline.addLast("string encoder", new StringEncoder());
+        pipeline.addLast("command decoder", new CommandDecoder());
+        pipeline.addLast("command encoder", new CommandEncoder());
+        pipeline.addLast("logger", new Logger(Level.INFO));
+        pipeline.addLast("executor", new CommandExecutor(controller));
+
+        return pipeline;
+      }
+    });
+
+    return bootstrap.connect(new InetSocketAddress(host, commandPort));
   }
 }

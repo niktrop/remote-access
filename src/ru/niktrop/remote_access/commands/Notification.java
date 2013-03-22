@@ -1,7 +1,8 @@
 package ru.niktrop.remote_access.commands;
 
+import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.NotificationController;
+import ru.niktrop.remote_access.NotificationManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -57,8 +58,13 @@ public class Notification implements SerializableCommand{
 
   @Override
   public List<SerializableCommand> execute(Controller controller) {
-    NotificationController nc = controller.getNotificationController();
-    nc.show(this);
+    if (controller.isClient()) {
+      NotificationManager nc = controller.getNotificationManager();
+      nc.show(this);
+    } else {
+      CommandManager cm = controller.getCommandManager();
+      cm.sendCommand(this, cm.getChannel());
+    }
     return Collections.emptyList();
   }
 

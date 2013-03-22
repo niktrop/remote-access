@@ -3,7 +3,7 @@ package ru.niktrop.remote_access.handlers;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.ChannelManager;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,14 +12,14 @@ import ru.niktrop.remote_access.Controller;
  * Time: 9:01
  */
 public class ChannelSaver extends SimpleChannelHandler {
-  private final Controller controller;
+  private ChannelManager manager;
 
-  public ChannelSaver(Controller controller) {
-    this.controller = controller;
+  public ChannelSaver(ChannelManager manager) {
+    this.manager = manager;
   }
 
   @Override
   public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    controller.setChannel(ctx.getChannel());
+    manager.setChannel(ctx.getChannel());
   }
 }

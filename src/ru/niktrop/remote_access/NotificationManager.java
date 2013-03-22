@@ -15,9 +15,10 @@ import java.util.Map;
  * Date: 19.03.13
  * Time: 14:47
  */
-public class NotificationController {
+public class NotificationManager {
   private JFrame parentFrame;
   private Map<String, JDialog> dialogs = new HashMap<>();
+  private final long TIME_TO_CLOSE = 100L;
 
   public void show(Notification n) {
     switch (n.getType()) {
@@ -58,9 +59,21 @@ public class NotificationController {
   }
 
   private void showOperationFinished(String message, String uuid) {
-    PendingOperationDialog dialog = (PendingOperationDialog) dialogs.get(uuid);
+    final PendingOperationDialog dialog = (PendingOperationDialog) dialogs.get(uuid);
     dialog.operationFinished(message);
     dialogs.remove(uuid);
+
+    new Thread() {
+      @Override
+      public void run() {
+        try {
+          Thread.sleep(TIME_TO_CLOSE);
+        } catch (InterruptedException e) {
+        }
+        dialog.dispose();
+      }
+    }.start();
+
   }
 
   private void showOperationFailed(String message, String uuid) {
@@ -94,8 +107,9 @@ public class NotificationController {
               null,
               new JButton[] { okButton } );
       setContentPane(optionPane);
-      setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-      setLocationByPlatform(true);
+      setDefaultCloseOperation(HIDE_ON_CLOSE);
+      setLocation(0, 0);
+      //setLocationRelativeTo(null);
       setMinimumSize(getSize());
       pack();
     }

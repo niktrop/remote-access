@@ -1,5 +1,6 @@
 package ru.niktrop.remote_access.commands;
 
+import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.*;
 
@@ -55,31 +56,25 @@ public class ReloadDirectory implements SerializableCommand {
   public String getStringRepresentation() {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';
-    char unitSeparator = '\u001F';
 
     builder.append(fsiUuid);
     builder.append(groupSeparator);
-    for (int i = 0; i < dir.getNameCount(); i++) {
-      builder.append(dir.getName(i));
-      builder.append(unitSeparator);
-    }
+
+    builder.append(dir.serializeToString());
+
     return builder.toString();
   }
 
   @Override
   public SerializableCommand fromString(String serialized) {
     String groupSeparator = "\u001E";
-    String unitSeparator = "\u001F";
 
     StringTokenizer st = new StringTokenizer(serialized, groupSeparator, false);
     String fsiUuid = st.nextToken();
 
     String pathAsString = st.nextToken();
-    st = new StringTokenizer(pathAsString, unitSeparator, false);
-    PseudoPath path = new PseudoPath();
-    while (st.hasMoreTokens()) {
-      path = path.resolve(st.nextToken());
-    }
+    PseudoPath path = PseudoPath.deserialize(pathAsString);
+
     return new ReloadDirectory(fsiUuid, path);
   }
 
@@ -124,7 +119,7 @@ public class ReloadDirectory implements SerializableCommand {
 
   private List<SerializableCommand> executeOnServer(Controller controller) {
     List<SerializableCommand> response = new LinkedList<>();
-    CommandManager cm = CommandManager.instance(controller);
+    CommandManager cm = controller.getCommandManager();
     for (FSChange fsChange : getApplicableFSChanges(controller)) {
       cm.executeCommand(fsChange);
       response.add(fsChange);
@@ -133,9 +128,13 @@ public class ReloadDirectory implements SerializableCommand {
   }
 
   private List<SerializableCommand> executeOnClient(Controller controller) {
-    CommandManager cm = CommandManager.instance(controller);
+    CommandManager cm = controller.getCommandManager();
     for (FSChange fsChange : getApplicableFSChanges(controller)) {
-      cm.executeCommand(fsChange);
+      try {
+        cm.executeCommand(fsChange);
+      } catch (Exception e) {
+        LOG.log(Level.WARNING, null, e.getCause());
+      }
     }
     return Collections.emptyList();
   }

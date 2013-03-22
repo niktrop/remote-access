@@ -1,9 +1,11 @@
 package ru.niktrop.remote_access.file_system_model;
 
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,6 +15,8 @@ import java.util.List;
  */
 public class PseudoPath {
   private List<String> names;
+  private static String unitSeparator = "\u001F";
+  private static String nul = "\u0000";
 
   public PseudoPath(List<String> names) {
     if (names == null)
@@ -46,8 +50,10 @@ public class PseudoPath {
     if (size == 0) {
       return Paths.get(null);
     }
-    String firstName = names.get(0);
-    String[] otherNames = names.subList(1, size).toArray(new String[]{});
+    String firstName = "";
+    String[] otherNames  = names.toArray(new String[]{});
+//    String firstName = names.get(0);
+//    String[] otherNames = names.subList(1, size).toArray(new String[]{});
 
     return Paths.get(firstName, otherNames);
   }
@@ -95,10 +101,38 @@ public class PseudoPath {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("/");
+    String separator = FileSystems.getDefault().getSeparator();
     for(int i = 0; i < getNameCount(); i++) {
-      builder.append("/" + getName(i));
+      builder.append(separator);
+      builder.append(getName(i));
     }
     return builder.toString();
+  }
+
+  public String serializeToString() {
+    StringBuilder builder = new StringBuilder();
+
+    if (getNameCount() == 0) {
+      return nul;
+    }
+
+    for (int i = 0; i < getNameCount(); i++) {
+      builder.append(getName(i));
+      builder.append(unitSeparator);
+    }
+    return builder.toString();
+  }
+
+  public static PseudoPath deserialize(String representation) {
+
+    if (nul.equals(representation)) {
+      return new PseudoPath();
+    }
+    StringTokenizer st = new StringTokenizer(representation, unitSeparator, false);
+    PseudoPath path = new PseudoPath();
+    while (st.hasMoreTokens()) {
+      path = path.resolve(st.nextToken());
+    }
+    return path;
   }
 }

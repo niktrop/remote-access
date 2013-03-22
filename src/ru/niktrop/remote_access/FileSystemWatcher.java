@@ -52,7 +52,6 @@ public class FileSystemWatcher {
         }
       }
     };
-    watcher.setDaemon(true);
     watcher.start();
   }
 

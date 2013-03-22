@@ -1,6 +1,5 @@
 package ru.niktrop.remote_access;
 
-import org.jboss.netty.channel.Channel;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImageCollection;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
@@ -27,40 +26,46 @@ public class Controller {
     SERVER;
   }
 
-  public final FSImageCollection fsImages = new FSImageCollection();
+  private int maxDepth = 2;
 
+  public final FSImageCollection fsImages = new FSImageCollection();
   private final ControllerType type;
   private final List<ControllerListener> listeners = new LinkedList<>();
-  private final WatchService watchService;
-  private final NotificationController notificationController = new NotificationController();
 
-  private int maxDepth = 2;
-  private Channel channel;
+  private final WatchService watchService;
+  private final NotificationManager notificationManager;
+  private final CommandManager commandManager;
+  private final FileTransferManager fileTransferManager;
+
+  {
+    notificationManager = new NotificationManager();
+    commandManager = new CommandManager(this);
+    fileTransferManager = new FileTransferManager(this);
+  }
+
 
   Controller(ControllerType type) throws IOException {
     watchService = FileSystems.getDefault().newWatchService();
     this.type = type;
   }
-
   public boolean isClient() {
     return type.equals(ControllerType.CLIENT);
+  }
+
+  public FileTransferManager getFileTransferManager() {
+    return fileTransferManager;
   }
 
   public WatchService getWatchService() {
     return watchService;
   }
 
-
-  public Channel getChannel() {
-    return channel;
+  public NotificationManager getNotificationManager() {
+    return notificationManager;
   }
 
-  public void setChannel(Channel channel) {
-    this.channel = channel;
-  }
-
-  public NotificationController getNotificationController() {
-    return notificationController;
+  public CommandManager getCommandManager() {
+    return commandManager;
   }
 
   public PseudoFile getDefaultDirectory() {

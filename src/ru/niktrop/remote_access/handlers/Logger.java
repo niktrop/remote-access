@@ -15,22 +15,30 @@ import java.util.logging.Level;
  */
 public class Logger extends SimpleChannelHandler {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Logger.class.getName());
+  private Level level;
+
+  public Logger(Level level) {
+    this.level = level;
+  }
 
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     String typeOfMessage = e.getMessage().getClass().getSimpleName();
-    LOG.info("Received: " + typeOfMessage);
+    LOG.log(level, "Received: " + typeOfMessage);
+    ctx.sendUpstream(e);
   }
 
   @Override
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     String typeOfMessage = e.getMessage().getClass().getSimpleName();
-    LOG.info("Sent: " + typeOfMessage);
+    LOG.log(level, "Sent: " + typeOfMessage);
+    ctx.sendDownstream(e);
   }
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-    LOG.log(Level.WARNING, null, e.getCause());
+    Throwable cause = e.getCause();
+    LOG.log(Level.WARNING, cause.toString(), cause);
     e.getChannel().close();
   }
 }

@@ -35,6 +35,8 @@ public class FileTable extends JTable implements ControllerListener {
     setModel(fileTableModel);
     setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     setAutoCreateRowSorter(true);
+    getRowSorter().toggleSortOrder(0);
+
     setShowGrid(false);
   }
 
@@ -77,5 +79,17 @@ public class FileTable extends JTable implements ControllerListener {
 
     tm.setDirectory(dir);
     tm.fireTableDataChanged();
+  }
+
+  /**
+   * Returns selected rows indexes in terms of view.
+   * */
+  public int[] getSortedSelectedRows() {
+    int[] selectedRows = super.getSelectedRows();
+    for(int i = 0; i < selectedRows.length; i++) {
+      int row = selectedRows[i];
+      selectedRows[i] = convertRowIndexToModel(row);
+    }
+    return selectedRows;
   }
 }
