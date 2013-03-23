@@ -3,7 +3,6 @@ package ru.niktrop.remote_access.commands;
 import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.FSImage;
-import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
@@ -28,14 +27,11 @@ public class CreateFile implements SerializableCommand {
   private final PseudoPath path;
   private final boolean isDirectory;
 
-
+  //Only for deserialization.
   CreateFile() {
     this(null, null, false);
   }
 
-  public CreateFile(PseudoFile pseudoFile, boolean isDirectory) {
-    this(pseudoFile.getFsiUuid(), pseudoFile.getPseudoPath(), isDirectory);
-  }
 
   public CreateFile(String fsiUuid, PseudoPath path, boolean directory) {
     this.fsiUuid = fsiUuid;

@@ -23,9 +23,9 @@ public class ReloadDirectory implements SerializableCommand {
   private final String fsiUuid;
   private final PseudoPath dir;
 
+  //Only for deserialization.
   ReloadDirectory() {
-    fsiUuid = null;
-    dir = null;
+    this(null, null);
   }
 
   private ReloadDirectory(String fsiUuid, PseudoPath dir) {

@@ -8,6 +8,7 @@ import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
 * Created with IntelliJ IDEA.
@@ -15,7 +16,7 @@ import java.awt.event.ActionEvent;
 * Date: 22.03.13
 * Time: 23:27
 */
-class RenameAction extends AbstractAction {
+class RenameAction implements ActionListener {
 
   private FileTable fileTable;
   private Controller controller;

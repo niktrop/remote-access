@@ -2,8 +2,8 @@ package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
-import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
 * Created with IntelliJ IDEA.
@@ -11,7 +11,7 @@ import java.awt.event.ActionEvent;
 * Date: 22.03.13
 * Time: 23:32
 */
-class OpenParentAction extends AbstractAction {
+class OpenParentAction implements ActionListener {
   FileTable fileTable;
 
   OpenParentAction(FileTable fileTable) {

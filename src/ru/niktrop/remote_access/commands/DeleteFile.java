@@ -29,6 +29,7 @@ public class DeleteFile implements SerializableCommand {
   private final PseudoPath path;
   private final String operationUuid;
 
+  //Only for deserialization.
   DeleteFile() {
     this(null, null, null);
   }

@@ -21,6 +21,7 @@ public class QueryDownload implements SerializableCommand {
 
   String operationUuid;
 
+  //Only for deserialization.
   public QueryDownload() {
     this(null);
   }

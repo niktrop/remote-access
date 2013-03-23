@@ -42,6 +42,7 @@ public class AllocateSpace implements SerializableCommand {
     this.operationUuid = operationUuid;
   }
 
+  //Only for deserialization.
   AllocateSpace() {
     this(null, null, 0L, null);
   }

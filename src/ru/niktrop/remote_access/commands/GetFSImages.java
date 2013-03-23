@@ -15,6 +15,10 @@ import java.util.List;
  */
 public class GetFSImages implements SerializableCommand {
 
+  //Only for deserialization.
+  public GetFSImages() {
+  }
+
   /**
    * Represents query from client to server to sent all FSImages from server controller.
    * Should be sent when connected to the server first time.

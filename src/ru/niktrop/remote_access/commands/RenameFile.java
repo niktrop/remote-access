@@ -39,11 +39,9 @@ public class RenameFile implements SerializableCommand {
     this(pseudoFile.getFsiUuid(), pseudoFile.getPseudoPath(), newName, UUID.randomUUID().toString());
   }
 
+  //Only for deserialization.
   public RenameFile() {
-    this.fsiUuid = null;
-    this.path = null;
-    this.newName = null;
-    this.operationUuid = null;
+    this(null, null, null, null);
   }
 
   @Override

@@ -29,12 +29,9 @@ public class FSChange implements SerializableCommand {
   //only for changeType CREATE_DIR and NEW_IMAGE
   private final String xmlFSImage;
 
-  //Only for deserialization purposes.
+  //Only for deserialization.
   FSChange() {
-    changeType = null;
-    fsiUuid = null;
-    path = null;
-    xmlFSImage = null;
+    this(null, null, null, null);
   }
 
   public FSChange(ChangeType changeType, String fsiUuid, PseudoPath path) {

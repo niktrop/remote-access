@@ -8,6 +8,7 @@ import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 * Date: 22.03.13
 * Time: 23:32
 */
-class DeleteAction extends AbstractAction {
+class DeleteAction implements ActionListener {
   private FileTable fileTable;
   private Controller controller;
 

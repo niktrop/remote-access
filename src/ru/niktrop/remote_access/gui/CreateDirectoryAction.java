@@ -9,6 +9,7 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
 * Created with IntelliJ IDEA.
@@ -16,7 +17,7 @@ import java.awt.event.ActionEvent;
 * Date: 22.03.13
 * Time: 23:29
 */
-class CreateDirectoryAction extends AbstractAction {
+class CreateDirectoryAction implements ActionListener {
 
   private FileTable fileTable;
   private Controller controller;

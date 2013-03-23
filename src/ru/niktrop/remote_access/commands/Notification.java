@@ -15,11 +15,13 @@ import java.util.StringTokenizer;
  * Time: 12:29
  */
 public class Notification implements SerializableCommand{
-  private NotificationType type;
-  private String message;
-  private String operationUuid;
+  private final NotificationType type;
+  private final String message;
+  private final String operationUuid;
 
+  //Only for deserialization.
   Notification() {
+    this(null, null, null);
   }
 
   private Notification(NotificationType type, String message, String operationUuid) {
@@ -90,11 +92,12 @@ public class Notification implements SerializableCommand{
     String groupSeparator = "\u001E";
 
     StringTokenizer st = new StringTokenizer(string, groupSeparator, false);
-    type = NotificationType.valueOf(st.nextToken());
-    message = st.nextToken();
+    NotificationType type = NotificationType.valueOf(st.nextToken());
+    String message = st.nextToken();
+    String operationUuid = null;
     if (st.hasMoreTokens()) {
       operationUuid = st.nextToken();
     }
-    return this;
+    return new Notification(type, message, operationUuid);
   }
 }

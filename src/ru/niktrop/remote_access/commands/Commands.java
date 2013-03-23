@@ -26,7 +26,7 @@ public class Commands {
     try {
       commandClass = Class.forName(className);
     } catch (ClassNotFoundException e) {
-      LOG.log(Level.WARNING, "Could not find command class with such name: " + className, e.getCause());
+      LOG.log(Level.WARNING, "Could not find SerializableCommand with such name: " + className, e.getCause());
     }
 
     SerializableCommand instance = null;

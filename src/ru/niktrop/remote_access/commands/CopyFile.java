@@ -41,6 +41,7 @@ public class CopyFile implements SerializableCommand {
     this.operationUuid = operationUuid;
   }
 
+  //Only for deserialization.
   CopyFile() {
     this(null, null, null, null, null);
   }
