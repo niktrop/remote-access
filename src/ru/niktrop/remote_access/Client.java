@@ -60,7 +60,7 @@ public class Client {
     LOG.info("channel is ready");
 
     CommandManager commandManager = controller.getCommandManager();
-    commandManager.sendCommand(new GetFSImages(), commandChannel);
+    commandManager.sendCommand(new GetFSImages());
 
     FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
     FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);

@@ -4,86 +4,53 @@ import nu.xom.Attribute;
 import nu.xom.Element;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
- * Date: 28.02.13
- * Time: 13:27
+ * Date: 23.03.13
+ * Time: 13:51
  */
-public class FileTreeBuilder extends SimpleFileVisitor<Path> {
+
+/**
+ * Builds FSImage, containing only and all subdirectories of a given directory.
+ * */
+public class DirectoryTreeBuilder extends SimpleFileVisitor<Path> {
   private static final Logger LOG = Logger.getLogger(FileTreeBuilder.class.getName());
 
   private HashMap<Path, Element> map = new HashMap<>();
   private final Element rootDirElement;
-  private final WatchService watcher;
-  private int currentDepth;
 
-  public FileTreeBuilder(Element rootDirElement, WatchService watcher, int maxDepth) {
+  public DirectoryTreeBuilder (Element rootDirElement) {
     this.rootDirElement = rootDirElement;
-    this.watcher = watcher;
-    currentDepth = maxDepth;
   }
-
 
   @Override
   public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attr) {
-    if (currentDepth >= 0) {
-      if (!Files.isReadable(dir) || Files.isSymbolicLink(dir)){
-        return FileVisitResult.SKIP_SUBTREE;
-      }
-
-      try {
-        addPathToTree(dir, currentDepth);
-        dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE);
-        currentDepth--;
-        return FileVisitResult.CONTINUE;
-      } catch (IOException e) {
-        e.printStackTrace();
-        return FileVisitResult.SKIP_SUBTREE;
-      }
-    } else return FileVisitResult.SKIP_SIBLINGS;
-
-  }
-
-  @Override
-  public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
-    if (currentDepth >= 0) {
-      if (!Files.isReadable(file) || Files.isSymbolicLink(file))
-        return FileVisitResult.CONTINUE;
-      try {
-        addPathToTree(file, currentDepth);
-        return FileVisitResult.CONTINUE;
-      } catch (IOException e) {
-        e.printStackTrace();
-        return FileVisitResult.CONTINUE;
-      }
-    } else return FileVisitResult.SKIP_SIBLINGS;
-  }
-
-  @Override
-  public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-    currentDepth++;
-    return FileVisitResult.CONTINUE;
+    try {
+      addPathToTree(dir);
+      return FileVisitResult.CONTINUE;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return FileVisitResult.SKIP_SUBTREE;
+    }
   }
 
   @Override
   public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-    LOG.fine("Visit file failed: " + file.toString());
+    LOG.info("Visit file failed: " + file.toString());
     return FileVisitResult.CONTINUE;
   }
 
-  private void addPathToTree(Path path, int currentDepth) throws IOException {
+  private void addPathToTree(Path path) throws IOException {
     Element element = getElement(path);
-    Attribute depth = new Attribute("depth", String.valueOf(currentDepth));
-    element.addAttribute(depth);
     Element parent = map.get(path.getParent());
     if (parent != null) {
       map.put(path, element);
@@ -128,6 +95,4 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
       element.addAttribute(name);
     }
   }
-
-
 }

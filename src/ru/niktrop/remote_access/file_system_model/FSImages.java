@@ -22,19 +22,19 @@ public class FSImages {
     if (!Files.isDirectory(dir)) {
       throw new IllegalArgumentException("Path should be directory.");
     }
-    else {
-      Element fileTree = new Element("directory");
 
-      FileTreeBuilder fileTreeBuilder = new FileTreeBuilder(fileTree, watcher, maxDepth);
-      Files.walkFileTree(dir, fileTreeBuilder);
+    Element fileTree = new Element(FileType.DIR.getName());
 
-      fileTree.addAttribute(new Attribute("alias", dir.toString()));
+    FileTreeBuilder fileTreeBuilder = new FileTreeBuilder(fileTree, watcher, maxDepth);
+    Files.walkFileTree(dir, fileTreeBuilder);
 
-      String uuid = UUID.randomUUID().toString();
-      fileTree.addAttribute(new Attribute("uuid", uuid));
+    fileTree.addAttribute(new Attribute("alias", dir.toString()));
 
-      return new FSImage(fileTree, dir);
-    }
+    String uuid = UUID.randomUUID().toString();
+    fileTree.addAttribute(new Attribute("uuid", uuid));
+
+    return new FSImage(fileTree, dir);
+
   }
 
   public static FSImage getFromXml(String xmlFileTree) throws ParsingException, IOException {
@@ -56,4 +56,20 @@ public class FSImages {
         return alias1.compareTo(alias2);
     }
   };
+
+  public static FSImage getDirectoryStructure(Path dir) throws IOException {
+    if (!Files.isDirectory(dir)) {
+      throw new IllegalArgumentException("Path should be directory.");
+    }
+
+    Element directoryTree = new Element(FileType.DIR.getName());
+
+    DirectoryTreeBuilder visitor = new DirectoryTreeBuilder(directoryTree);
+    Files.walkFileTree(dir, visitor);
+
+    Element root = new Element("root");
+    root.appendChild(directoryTree);
+
+    return new FSImage(root, null);
+  }
 }

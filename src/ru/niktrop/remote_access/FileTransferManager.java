@@ -33,91 +33,18 @@ public class FileTransferManager implements ChannelManager{
   private Map<String, Path> targets = new ConcurrentHashMap<>();
   private Map<String, Path> sources = new ConcurrentHashMap<>();
 
+  private FileChannel targetFileChannel;
+
+  public FileChannel getTargetFileChannel() {
+    return targetFileChannel;
+  }
+
+  public void setTargetFileChannel(FileChannel targetFileChannel) {
+    this.targetFileChannel = targetFileChannel;
+  }
+
   //Responsible for sending files one at a time
-  private final Thread fileSender = new Thread() {
-    private final ChannelBuffer buffer = ChannelBuffers.buffer(4096);
-    private long offset = 0;
-    private String operationUuid;
-    private FileChannel fileChannel;
-    private long fileLength;
-
-    @Override
-    public void run() {
-      while (true) {
-        try {
-          operationUuid = waitingUuids.take();
-        } catch (InterruptedException e) {
-          LOG.log(Level.WARNING, "File sender thread waiting was interrupted: ", e);
-        }
-        doSending();
-      }
-    }
-
-    private void doSending() {
-      try {
-        ChannelFuture future = sendHeader();
-
-        while( hasSomethingToSend() ) {
-          future = sendChunk(future);
-        }
-
-        afterLastChunk();
-
-      } catch (IOException e) {
-        sendingFileFailed(e, operationUuid);
-      }
-    }
-
-    private ChannelFuture sendHeader() throws IOException {
-      UUID uuid = UUID.fromString(operationUuid);
-
-      //2 longs for uuid, 1 long for file length
-      ChannelBuffer header = ChannelBuffers.buffer(24);
-
-      Path path = getSource(operationUuid);
-
-      fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-      fileLength = fileChannel.size();
-
-      header.writeLong(uuid.getMostSignificantBits());
-      header.writeLong(uuid.getLeastSignificantBits());
-      header.writeLong(fileLength);
-
-      return channel.write(header);
-    }
-
-    private ChannelFuture sendChunk(ChannelFuture previous) throws IOException {
-      previous.syncUninterruptibly();
-      if (!previous.isSuccess()) {
-        sendingFileFailed(previous.getCause(), operationUuid);
-        return null;
-      }
-      buffer.clear();
-      buffer.writeBytes(fileChannel, (int) Math.min(fileLength - offset, buffer.writableBytes()));
-      offset += buffer.writerIndex();
-      return previous.getChannel().write(buffer);
-    }
-
-    private boolean hasSomethingToSend() {
-      return offset < fileLength;
-    }
-
-    private void afterLastChunk() {
-      offset = 0;
-      buffer.clear();
-
-      try {
-        fileChannel.close();
-      } catch (IOException e) {
-        LOG.log(Level.WARNING, "Couldn't close FileChannel: " + fileChannel.toString());
-      }
-
-      String message = String.format("Copy finished: %s", getSource(operationUuid).toString());
-      Notification finished = Notification.operationFinished(message, operationUuid);
-      commandManager.executeCommand(finished);
-      removeSource(operationUuid);
-    }
-  };
+  private final Thread fileSender = new FileSender();
 
   private final BlockingQueue<String> waitingUuids = new LinkedBlockingQueue<>();
 
@@ -158,7 +85,17 @@ public class FileTransferManager implements ChannelManager{
     String message = String.format("Copy failed: \r\n %s", cause.toString());
     LOG.log(Level.WARNING, message, cause);
 
+
     commandManager.executeCommand(Notification.operationFailed(message, operationUUID));
+
+    try {
+      targetFileChannel.close();
+    } catch (IOException e) {
+      String message_2 = String.format("Couldn't close target file channel",
+              targetFileChannel.toString());
+      LOG.log(Level.WARNING, message_2, e.getCause());
+      commandManager.executeCommand(Notification.warning(message_2));
+    }
 
     removeSource(operationUUID);
     removeTarget(operationUUID);
@@ -173,5 +110,83 @@ public class FileTransferManager implements ChannelManager{
   @Override
   public void setChannel(Channel channel) {
     this.channel = channel;
+  }
+
+  private class FileSender extends Thread {
+    private final ChannelBuffer buffer = ChannelBuffers.buffer(4096);
+    private long offset = 0;
+    private String operationUuid;
+    private FileChannel fileChannel;
+    private long fileLength;
+
+    @Override
+    public void run() {
+      while (true) {
+        try {
+          operationUuid = waitingUuids.take();
+        } catch (InterruptedException e) {
+          LOG.log(Level.WARNING, "File sender thread waiting was interrupted: ", e);
+        }
+        doSending();
+      }
+    }
+
+    private void doSending() {
+      Path path = getSource(operationUuid);
+
+      try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ)){
+        ChannelFuture future = sendHeader(fileChannel);
+
+        while( hasSomethingToSend() ) {
+          future = sendChunk(fileChannel, future);
+        }
+
+        afterLastChunk(fileChannel);
+
+      } catch (IOException e) {
+        sendingFileFailed(e, operationUuid);
+      }
+    }
+
+    private ChannelFuture sendHeader(FileChannel fileChannel) throws IOException {
+      UUID uuid = UUID.fromString(operationUuid);
+
+      //2 longs for uuid, 1 long for file length
+      ChannelBuffer header = ChannelBuffers.buffer(24);
+
+      fileLength = fileChannel.size();
+
+      header.writeLong(uuid.getMostSignificantBits());
+      header.writeLong(uuid.getLeastSignificantBits());
+      header.writeLong(fileLength);
+
+      return channel.write(header);
+    }
+
+    private ChannelFuture sendChunk(FileChannel fileChannel, ChannelFuture previous) throws IOException {
+      previous.syncUninterruptibly();
+      if (!previous.isSuccess()) {
+        sendingFileFailed(previous.getCause(), operationUuid);
+        return null;
+      }
+      buffer.clear();
+      buffer.writeBytes(fileChannel, (int) Math.min(fileLength - offset, buffer.writableBytes()));
+      offset += buffer.writerIndex();
+      return previous.getChannel().write(buffer);
+    }
+
+    private boolean hasSomethingToSend() {
+      return offset < fileLength;
+    }
+
+    private void afterLastChunk(FileChannel fileChannel) throws IOException {
+      offset = 0;
+      buffer.clear();
+
+      String message = String.format("Copy finished: %s", getSource(operationUuid).toString());
+      Notification finished = Notification.operationFinished(message, operationUuid);
+      commandManager.executeCommand(finished);
+      removeSource(operationUuid);
+    }
   }
 }

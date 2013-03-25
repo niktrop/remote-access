@@ -46,14 +46,8 @@ public class PseudoPath {
   }
 
   public Path toPath() {
-    int size = names.size();
-    if (size == 0) {
-      return Paths.get(null);
-    }
     String firstName = "";
     String[] otherNames  = names.toArray(new String[]{});
-//    String firstName = names.get(0);
-//    String[] otherNames = names.subList(1, size).toArray(new String[]{});
 
     return Paths.get(firstName, otherNames);
   }

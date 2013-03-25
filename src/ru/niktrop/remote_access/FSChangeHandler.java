@@ -34,7 +34,7 @@ public class FSChangeHandler {
           cm.executeCommand(fsChange);
 
       if ( !controller.isClient()) {
-        cm.sendCommand(fsChange, cm.getChannel());
+        cm.sendCommand(fsChange);
       }
         }
       }

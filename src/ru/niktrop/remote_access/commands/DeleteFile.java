@@ -9,8 +9,6 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -53,13 +51,13 @@ public class DeleteFile implements SerializableCommand {
   }
 
   @Override
-  public List<SerializableCommand> execute(Controller controller) {
+  public void execute(Controller controller) {
     FSImage fsi = controller.fsImages.get(fsiUuid);
     CommandManager cm = controller.getCommandManager();
 
     if ( !fsi.isLocal()) {
-      cm.sendCommand(this, cm.getChannel());
-      return Collections.emptyList();
+      cm.sendCommand(this);
+      return;
     }
 
     Notification start = Notification.operationStarted("Deleting " + path.toString(), operationUuid);
@@ -73,15 +71,13 @@ public class DeleteFile implements SerializableCommand {
         FileUtils.forceDelete(fullPath.toFile());
         response = Notification.operationFinished("Deleted: " + path.toString(), operationUuid);
       } catch (IOException e) {
-        String message = "Deleting failed: " + path.toString();
+        String message = String.format("Deleting failed: %s \r\n %s", path.toString(), e.getMessage());
         LOG.log(Level.WARNING, message, e.getCause());
         response = Notification.operationFailed(message, operationUuid);
       }
 
       cm.executeCommand(response);
     }
-
-    return Collections.emptyList();
   }
 
   @Override

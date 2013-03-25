@@ -9,7 +9,8 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.StringTokenizer;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,7 +46,7 @@ public class RenameFile implements SerializableCommand {
   }
 
   @Override
-  public List<SerializableCommand> execute(Controller controller){
+  public void execute(Controller controller){
     if (fsiUuid == null || fsiUuid.equals(""))
       throw new IllegalStateException("FSImage uuid should be non-empty string");
     if (newName == null || newName.equals(""))
@@ -55,41 +56,21 @@ public class RenameFile implements SerializableCommand {
 
     FSImage fsi = controller.fsImages.get(fsiUuid);
     CommandManager cm = controller.getCommandManager();
-    Notification start = Notification.operationStarted("Renaming " + path.toString(), operationUuid);
 
-    if (controller.isClient()) {
-      cm.executeCommand(start);
-
-      if ( !fsi.isLocal()) {
-        cm.sendCommand(this, cm.getChannel());
-        return Collections.emptyList();
-      }
+    if ( !fsi.isLocal()) {
+      cm.sendCommand(this);
+      return;
     }
 
-    if  (fsi.isLocal()) {
-      Path pathToRoot = fsi.getPathToRoot();
-      Path fullPath = pathToRoot.resolve(path.toPath());
-      Notification response;
-      try {
-        Files.move(fullPath, fullPath.resolveSibling(newName));
-        response = Notification.operationFinished("Renamed: " + path.toString(), operationUuid);
-      } catch (IOException e) {
-        String message = "Renaming failed: " + path.toString();
-        LOG.log(Level.WARNING, message, e.getCause());
-        response = Notification.operationFailed(message, operationUuid);
-      }
-
-      if (controller.isClient()) {
-        cm.executeCommand(response);
-        return Collections.emptyList();
-      } else {
-        List<SerializableCommand> result = new ArrayList<>(1);
-        result.add(response);
-        return result;
-      }
+    Path pathToRoot = fsi.getPathToRoot();
+    Path fullPath = pathToRoot.resolve(path.toPath());
+    try {
+      Files.move(fullPath, fullPath.resolveSibling(newName));
+    } catch (IOException e) {
+      String message = "Renaming failed: " + path.toString();
+      LOG.log(Level.WARNING, message, e.getCause());
+      cm.executeCommand(Notification.warning(message));
     }
-
-    return Collections.emptyList();
   }
 
   @Override

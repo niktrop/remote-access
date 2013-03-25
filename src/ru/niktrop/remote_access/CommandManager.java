@@ -1,12 +1,8 @@
 package ru.niktrop.remote_access;
 
 import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.Channels;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,7 +31,7 @@ public class CommandManager implements ChannelManager {
     this.channel = channel;
   }
 
-  public void sendCommand(SerializableCommand command, Channel channel) {
+  public void sendCommand(SerializableCommand command) {
     if (channel == null) {
       LOG.warning("Attempt to send command while channel is null.");
       return;
@@ -48,22 +44,15 @@ public class CommandManager implements ChannelManager {
     }
   }
 
-  public List<SerializableCommand> executeCommand(SerializableCommand command){
-    List<SerializableCommand> response = Collections.emptyList();
+  public void executeCommand(SerializableCommand command){
     try {
-      response = command.execute(controller);
+      command.execute(controller);
       LOG.info("Command executed: " + command.getClass().getSimpleName());
       controller.fireControllerChange();
     } catch (Exception e) {
       String message = String.format("%s occured when executing %s", e.toString(), command.getClass().getSimpleName());
       LOG.log(Level.WARNING, message, e.getCause());
     }
-    return response;
   }
 
-  public void sendResponseBack(List<SerializableCommand> response, ChannelHandlerContext ctx) {
-    for (SerializableCommand command : response) {
-      Channels.write(ctx.getChannel(), command);
-    }
-  }
 }

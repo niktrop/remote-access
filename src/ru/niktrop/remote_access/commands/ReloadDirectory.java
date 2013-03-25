@@ -7,7 +7,10 @@ import ru.niktrop.remote_access.file_system_model.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,13 +45,17 @@ public class ReloadDirectory implements SerializableCommand {
   }
 
   @Override
-  public List<SerializableCommand> execute(Controller controller) {
+  public void execute(Controller controller) {
 
-    if (controller.isClient())
-      return executeOnClient(controller);
+    CommandManager cm = controller.getCommandManager();
+    for (FSChange fsChange : getApplicableFSChanges(controller)) {
+      cm.executeCommand(fsChange);
 
-    else
-      return executeOnServer(controller);
+      //if on server, send changes to the client too
+      if ( !controller.isClient()) {
+        cm.sendCommand(fsChange);
+      }
+    }
 
   }
 
@@ -115,28 +122,6 @@ public class ReloadDirectory implements SerializableCommand {
     }
 
     return result;
-  }
-
-  private List<SerializableCommand> executeOnServer(Controller controller) {
-    List<SerializableCommand> response = new LinkedList<>();
-    CommandManager cm = controller.getCommandManager();
-    for (FSChange fsChange : getApplicableFSChanges(controller)) {
-      cm.executeCommand(fsChange);
-      response.add(fsChange);
-    }
-    return response;
-  }
-
-  private List<SerializableCommand> executeOnClient(Controller controller) {
-    CommandManager cm = controller.getCommandManager();
-    for (FSChange fsChange : getApplicableFSChanges(controller)) {
-      try {
-        cm.executeCommand(fsChange);
-      } catch (Exception e) {
-        LOG.log(Level.WARNING, null, e.getCause());
-      }
-    }
-    return Collections.emptyList();
   }
 
 }

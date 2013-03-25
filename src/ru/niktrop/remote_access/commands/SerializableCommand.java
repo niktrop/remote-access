@@ -2,8 +2,6 @@ package ru.niktrop.remote_access.commands;
 
 import ru.niktrop.remote_access.Controller;
 
-import java.util.List;
-
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
@@ -19,7 +17,7 @@ public interface SerializableCommand {
   /**
    * Returns response actions for sending back.
    */
-  List<SerializableCommand> execute(Controller controller);
+  void execute(Controller controller);
 
   /**
    * Should build string, which begins with full class name of the SerializedCommand.

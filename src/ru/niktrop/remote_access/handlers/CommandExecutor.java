@@ -7,8 +7,6 @@ import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 
-import java.util.List;
-
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
@@ -27,8 +25,7 @@ public class CommandExecutor extends SimpleChannelUpstreamHandler {
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     SerializableCommand command = (SerializableCommand) e.getMessage();
 
-    List<SerializableCommand> response = commandManager.executeCommand(command);
-    commandManager.sendResponseBack(response, ctx);
+    commandManager.executeCommand(command);
   }
 
 }

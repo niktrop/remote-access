@@ -9,9 +9,6 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +32,9 @@ public class AllocateSpace implements SerializableCommand {
   private final long size;
   private final String operationUuid;
 
+  private CommandManager cm;
+  private FileTransferManager ftm;
+
   public AllocateSpace(String fsiUuid, PseudoPath path, long size, String operationUuid) {
     this.fsiUuid = fsiUuid;
     this.path = path;
@@ -48,14 +48,15 @@ public class AllocateSpace implements SerializableCommand {
   }
 
   @Override
-  public List<SerializableCommand> execute(Controller controller) {
+  public void execute(Controller controller) {
     FSImage fsi = controller.fsImages.get(fsiUuid);
-    CommandManager cm = controller.getCommandManager();
-    FileTransferManager ftm = controller.getFileTransferManager();
+    cm = controller.getCommandManager();
+    ftm = controller.getFileTransferManager();
 
     if ( !fsi.isLocal()) {
-      LOG.log(Level.WARNING, "No such FSImage on the target side");
-      return Collections.emptyList();
+      String message = "No such FSImage on the target side";
+      failed(new IllegalStateException(), message);
+      return;
     }
 
     Path pathToRoot = fsi.getPathToRoot();
@@ -63,23 +64,16 @@ public class AllocateSpace implements SerializableCommand {
 
     //save memo about this operation on the target side
     ftm.addTarget(operationUuid, fullPath);
-    List<SerializableCommand> result = new ArrayList<>(1);
     try (RandomAccessFile f = new RandomAccessFile(fullPath.toFile(), "rw")) {
       f.setLength(size);
 
       //will send next command to the source
-      result.add(new QueryDownload(operationUuid));
+      cm.sendCommand(new QueryDownloadFile(operationUuid));
     }
     catch (IOException e) {
       String message = String.format("Allocation memory failed: \r\n %s", e.toString());
-      LOG.log(Level.WARNING, message, e.getCause());
-
-      Notification failed = Notification.operationFailed(message, operationUuid);
-      cm.executeCommand(failed);
-
-      ftm.removeTarget(operationUuid);
+      failed(e, message);
     }
-    return result;
   }
 
   @Override
@@ -116,5 +110,14 @@ public class AllocateSpace implements SerializableCommand {
     PseudoPath path = PseudoPath.deserialize(pathAsString);
 
     return new AllocateSpace(fsiUuid, path, size, sourceId);
+  }
+
+  private void failed(Throwable cause, String message) {
+    LOG.log(Level.WARNING, message, cause);
+
+    Notification failed = Notification.operationFailed(message, operationUuid);
+    cm.executeCommand(failed);
+
+    ftm.removeTarget(operationUuid);
   }
 }

@@ -1,5 +1,6 @@
 package ru.niktrop.remote_access.file_system_model;
 
+import java.nio.file.Path;
 import java.util.*;
 
 import static ru.niktrop.remote_access.file_system_model.FSImages.byAlias;
@@ -10,7 +11,7 @@ import static ru.niktrop.remote_access.file_system_model.FSImages.byAlias;
  * Date: 18.03.13
  * Time: 14:37
  */
-public class FSImageCollection {
+public class FSImageCollection{
 
   //Keys are fsiUuid.
   private final Map<String, FSImage> fsImageMap = new HashMap<>();
@@ -53,5 +54,25 @@ public class FSImageCollection {
 
   public void addFSImage(FSImage fsi) {
     fsImageMap.put(fsi.getUuid(), fsi);
+  }
+
+  //returns local FSImage, containing path
+  public FSImage findContainingFSImage(Path path) {
+    for (FSImage fsImage : fsImageMap.values()) {
+      Path pathToRoot = fsImage.getPathToRoot();
+
+      //FSImage is not local
+      if (pathToRoot == null)
+        continue;
+
+      if (path.startsWith(pathToRoot)) {
+
+        Path relative = pathToRoot.relativize(path);
+        if (fsImage.contains(new PseudoPath(relative))) {
+          return fsImage;
+        }
+      }
+    }
+    return null;
   }
 }

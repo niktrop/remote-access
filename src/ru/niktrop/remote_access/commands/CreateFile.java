@@ -8,8 +8,6 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,13 +39,13 @@ public class CreateFile implements SerializableCommand {
 
 
   @Override
-  public List<SerializableCommand> execute(Controller controller) {
+  public void execute(Controller controller) {
     FSImage fsi = controller.fsImages.get(fsiUuid);
     CommandManager cm = controller.getCommandManager();
 
     if ( !fsi.isLocal()) {
-      cm.sendCommand(this, cm.getChannel());
-      return Collections.emptyList();
+      cm.sendCommand(this);
+      return;
     }
 
     if  (fsi.isLocal()) {
@@ -66,7 +64,6 @@ public class CreateFile implements SerializableCommand {
         cm.executeCommand(warning);
       }
     }
-    return Collections.emptyList();
   }
 
   @Override

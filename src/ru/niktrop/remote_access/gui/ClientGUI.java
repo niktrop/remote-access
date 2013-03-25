@@ -45,7 +45,7 @@ public class ClientGUI extends JFrame {
     jContentPane.add(pnlRight, BorderLayout.EAST);
 
     btnCopy = new JButton("Copy");
-    btnCopy.addActionListener(new CopyAction());
+    btnCopy.addActionListener(new CopyAction(leftFileTable, rightFileTable, controller));
     jContentPane.add(btnCopy, BorderLayout.SOUTH);
 
     setContentPane(jContentPane);

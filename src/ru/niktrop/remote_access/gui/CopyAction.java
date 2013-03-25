@@ -2,6 +2,7 @@ package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.commands.CopyDirectory;
 import ru.niktrop.remote_access.commands.CopyFile;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
@@ -40,9 +41,12 @@ class CopyAction implements ActionListener {
 
         for (int i : selectedRows) {
           PseudoFile pseudoFile = sourceModel.getPseudoFile(i);
-          if (pseudoFile.isDirectory())
-            continue;
-          SerializableCommand copy = new CopyFile(pseudoFile, targetDir);
+          SerializableCommand copy;
+          if (pseudoFile.isDirectory()) {
+            copy = new CopyDirectory(pseudoFile, targetDir);
+          } else {
+            copy = new CopyFile(pseudoFile, targetDir);
+          }
           cm.executeCommand(copy);
         }
 

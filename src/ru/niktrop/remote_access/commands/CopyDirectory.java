@@ -5,11 +5,11 @@ import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.FileTransferManager;
 import ru.niktrop.remote_access.file_system_model.FSImage;
+import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.StringTokenizer;
 import java.util.UUID;
@@ -19,14 +19,14 @@ import java.util.logging.Logger;
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
- * Date: 21.03.13
- * Time: 11:49
+ * Date: 23.03.13
+ * Time: 14:16
  */
-public class CopyFile implements SerializableCommand {
-  private static final Logger LOG = Logger.getLogger(CopyFile.class.getName());
+public class CopyDirectory implements SerializableCommand {
+  private static final Logger LOG = Logger.getLogger(CopyDirectory.class.getName());
 
   private final String sourceFsiUuid;
-  private final PseudoPath sourceFile;
+  private final PseudoPath source;
   private final String targetFsiUuid;
   private final PseudoPath targetDirectory;
 
@@ -35,26 +35,26 @@ public class CopyFile implements SerializableCommand {
   private CommandManager cm;
   private FileTransferManager ftm;
 
-  public CopyFile(String sourceFsiUuid, PseudoPath sourceFile,
-                  String targetFsiUuid, PseudoPath targetDirectory,
-                  String operationUuid)
+  public CopyDirectory(String sourceFsiUuid, PseudoPath source,
+                       String targetFsiUuid, PseudoPath targetDirectory,
+                       String operationUuid)
   {
     this.sourceFsiUuid = sourceFsiUuid;
-    this.sourceFile = sourceFile;
+    this.source = source;
     this.targetFsiUuid = targetFsiUuid;
     this.targetDirectory = targetDirectory;
     this.operationUuid = operationUuid;
   }
 
-  //Only for deserialization.
-  CopyFile() {
-    this(null, null, null, null, null);
-  }
-
-  public CopyFile(PseudoFile sourceFile, PseudoFile targetDirectory) {
+  public CopyDirectory(PseudoFile sourceFile, PseudoFile targetDirectory) {
     this(sourceFile.getFsiUuid(), sourceFile.getPseudoPath(),
             targetDirectory.getFsiUuid(), targetDirectory.getPseudoPath(),
             UUID.randomUUID().toString());
+  }
+
+  //Only for deserialization.
+  CopyDirectory() {
+    this(null, null, null, null, null);
   }
 
   @Override
@@ -72,51 +72,36 @@ public class CopyFile implements SerializableCommand {
     }
 
     Notification startNotification =
-            Notification.operationStarted("Copy started: " + sourceFile.toString(), operationUuid);
+            Notification.operationStarted("Copy started: " + source.toString(), operationUuid);
     cm.executeCommand(startNotification);
 
-    Path sourceRelative = sourceFile.toPath();
+    Path sourceRelative = source.toPath();
     Path sourcePathToRoot = sourceFsi.getPathToRoot();
-    Path source = sourcePathToRoot.resolve(sourceRelative);
+    Path realSource = sourcePathToRoot.resolve(sourceRelative);
 
     //if both files are local
     if (targetFsi != null && targetFsi.isLocal()) {
       Path targetDirRelative = targetDirectory.toPath();
       Path targetDir = targetFsi.getPathToRoot().resolve(targetDirRelative);
 
-      localCopy(source, targetDir);
+      localCopy(realSource, targetDir);
 
     } else {   //source is local, target is remote
 
       //save data about this operation on the source side
-      ftm.addSource(operationUuid, source);
+      ftm.addSource(operationUuid, realSource);
 
-      sendAllocateSpaceCommand(controller, source);
+      sendCreateDirectoryTree(controller, realSource);
     }
   }
 
-  private void localCopy(Path source, Path targetDir) {
-    Notification response;
+  private void sendCreateDirectoryTree(Controller controller, Path realSource) {
     try {
-      FileUtils.copyFileToDirectory(source.toFile(), targetDir.toFile());
-      response = Notification.operationFinished("Copy finished: " + sourceFile.toString(), operationUuid);
-    } catch (IOException e) {
-      String message = String.format("Copy failed: \r\n %s", e.toString());
-      LOG.log(Level.WARNING, message, e.getCause());
-      response = Notification.operationFailed(message, operationUuid);
-    }
-    cm.executeCommand(response);
-  }
-
-  private void sendAllocateSpaceCommand(Controller controller, Path source) {
-    try {
-      String sourceFileName = sourceFile.getName(sourceFile.getNameCount() - 1);
-      long sourceSize = Files.size(source);
-      PseudoPath targetFile = targetDirectory.resolve(sourceFileName);
-
+      FSImage directoryTree = FSImages.getDirectoryStructure(realSource);
       //send command for executing on the other side
-      AllocateSpace allocateSpace = new AllocateSpace(targetFsiUuid, targetFile, sourceSize, operationUuid);
-      cm.sendCommand(allocateSpace);
+      CreateDirectoryTree command =
+              new CreateDirectoryTree(targetFsiUuid, targetDirectory, directoryTree, operationUuid);
+      cm.sendCommand(command);
 
     } catch (IOException e) {
       FileTransferManager ftm = controller.getFileTransferManager();
@@ -132,7 +117,7 @@ public class CopyFile implements SerializableCommand {
     builder.append(sourceFsiUuid);
     builder.append(groupSeparator);
 
-    builder.append(sourceFile.serializeToString());
+    builder.append(source.serializeToString());
     builder.append(groupSeparator);
 
     builder.append(targetFsiUuid);
@@ -162,6 +147,19 @@ public class CopyFile implements SerializableCommand {
 
     String operationUuid = st.nextToken();
 
-    return new CopyFile(sourceFsiUuid, sourceFile, targetFsiUuid, targetDirectory, operationUuid);
+    return new CopyDirectory(sourceFsiUuid, sourceFile, targetFsiUuid, targetDirectory, operationUuid);
+  }
+
+  private void localCopy(Path source, Path targetDir) {
+    Notification response;
+    try {
+      FileUtils.copyDirectoryToDirectory(source.toFile(), targetDir.toFile());
+      response = Notification.operationFinished("Copy finished: " + source.toString(), operationUuid);
+    } catch (IOException e) {
+      String message = String.format("Copy failed: \r\n %s", e.toString());
+      LOG.log(Level.WARNING, message, e.getCause());
+      response = Notification.operationFailed(message, operationUuid);
+    }
+    cm.executeCommand(response);
   }
 }

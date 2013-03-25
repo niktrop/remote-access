@@ -45,6 +45,7 @@ public class FileReceiver extends SimpleChannelUpstreamHandler{
       remainingFileLength = buf.readLong();
       Path target = fileTransferManager.getTarget(operationUuid);
       currentFileChannel = FileChannel.open(target, StandardOpenOption.WRITE);
+      fileTransferManager.setTargetFileChannel(currentFileChannel);
       return;
     }
 
@@ -61,12 +62,10 @@ public class FileReceiver extends SimpleChannelUpstreamHandler{
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-    String uuid = operationUuid;
     //clean handler state
-    operationUuid = null;
     remainingFileLength = 0;
     currentFileChannel.close();
 
-    fileTransferManager.sendingFileFailed(e.getCause(), uuid);
+    fileTransferManager.sendingFileFailed(e.getCause(), operationUuid);
   }
 }

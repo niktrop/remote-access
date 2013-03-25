@@ -7,8 +7,6 @@ import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,43 +64,48 @@ public class FSChange implements SerializableCommand {
 
 
   @Override
-  public List<SerializableCommand> execute(Controller controller) {
+  public void execute(Controller controller) {
     String fsiUuid = getFsiUuid();
     FSImage fsi = controller.fsImages.get(fsiUuid);
     PseudoPath pseudoPath = getPath();
     switch (getChangeType()) {
+
       case CREATE_DIR:
         FSImage createdDirFsi = null;
         try {
           createdDirFsi = FSImages.getFromXml(getXmlFSImage());
         } catch (ParsingException e) {
-          LOG.log(Level.WARNING, null, e.getCause());
+          LOG.log(Level.WARNING, e.getMessage(), e.getCause());
         } catch (IOException e) {
-          LOG.log(Level.WARNING, null, e.getCause());
+          LOG.log(Level.WARNING, e.getMessage(), e.getCause());
         }
         fsi.addToDirectory(pseudoPath.getParent(), createdDirFsi);
         break;
+
       case CREATE_FILE:
         fsi.addFile(pseudoPath);
         break;
+
       case DELETE:
         fsi.deletePath(pseudoPath);
         break;
+
       case NEW_IMAGE:
         FSImage newFsi = null;
         try {
           newFsi = FSImages.getFromXml(getXmlFSImage());
           controller.addFSImage(newFsi);
         } catch (ParsingException e) {
-          LOG.log(Level.WARNING, null, e.getCause());
+          LOG.log(Level.WARNING, e.getMessage(), e.getCause());
         } catch (IOException e) {
-          LOG.log(Level.WARNING, null, e.getCause());
+          LOG.log(Level.WARNING, e.getMessage(), e.getCause());
         }
         break;
+
       default:
+        LOG.log(Level.WARNING, "Unknown type of FSChange");
         break;
     }
-    return Collections.emptyList();
   }
 
   /**
@@ -120,10 +123,8 @@ public class FSChange implements SerializableCommand {
     String pathAsString = st.nextToken();
     String xmlFSImage = st.hasMoreTokens() ? st.nextToken() : null;
 
-    PseudoPath path = new PseudoPath();
-    if ( !pathAsString.equals(nul)) {
-      path = PseudoPath.deserialize(pathAsString);
-    }
+    PseudoPath path = PseudoPath.deserialize(pathAsString);
+
     return new FSChange(type, fsiUuid, path, xmlFSImage);
   }
 
@@ -134,17 +135,12 @@ public class FSChange implements SerializableCommand {
   public String getStringRepresentation() {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';
-    char nul = '\u0000';
 
     builder.append(changeType.name());
     builder.append(groupSeparator);
 
     builder.append(fsiUuid);
     builder.append(groupSeparator);
-
-    if (path.getNameCount() == 0) {
-      builder.append(nul); //represents empty pseudopath
-    }
 
     builder.append(path.serializeToString());
 

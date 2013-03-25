@@ -3,9 +3,6 @@ package ru.niktrop.remote_access.commands;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.FileTransferManager;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
@@ -17,24 +14,23 @@ import java.util.List;
  * One of the command from a copy operation. Should be sent
  * from the target side to the source side as a result of AllocateSpace.
  * */
-public class QueryDownload implements SerializableCommand {
+public class QueryDownloadFile implements SerializableCommand {
 
   String operationUuid;
 
   //Only for deserialization.
-  public QueryDownload() {
+  public QueryDownloadFile() {
     this(null);
   }
 
-  public QueryDownload(String operationUuid) {
+  public QueryDownloadFile(String operationUuid) {
     this.operationUuid = operationUuid;
   }
 
   @Override
-  public List<SerializableCommand> execute(Controller controller) {
+  public void execute(Controller controller) {
     FileTransferManager ftm = controller.getFileTransferManager();
     ftm.sendFile(operationUuid);
-    return Collections.emptyList();
   }
 
   @Override
@@ -44,6 +40,6 @@ public class QueryDownload implements SerializableCommand {
 
   @Override
   public SerializableCommand fromString(String representation) {
-    return new QueryDownload(representation);
+    return new QueryDownloadFile(representation);
   }
 }

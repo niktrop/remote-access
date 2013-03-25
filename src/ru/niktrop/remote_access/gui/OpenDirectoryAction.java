@@ -56,7 +56,7 @@ class OpenDirectoryAction implements ActionListener {
           cm.executeCommand(command);
         } else {
           //send to server
-          cm.sendCommand(command, cm.getChannel());
+          cm.sendCommand(command);
         }
         return null;
       }

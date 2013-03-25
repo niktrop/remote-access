@@ -1,11 +1,9 @@
 package ru.niktrop.remote_access.commands;
 
+import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
-
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,18 +19,18 @@ public class GetFSImages implements SerializableCommand {
 
   /**
    * Represents query from client to server to sent all FSImages from server controller.
-   * Should be sent when connected to the server first time.
+   * Should be sent when client is connecting to the server.
    * */
   @Override
-  public List<SerializableCommand> execute(Controller controller) {
-    List<SerializableCommand> response = new LinkedList<>();
+  public void execute(Controller controller) {
+    CommandManager cm = controller.getCommandManager();
+
     for (FSImage fsi : controller.fsImages.getLocal()) {
       String uuid = fsi.getUuid();
       String xml = fsi.toXml();
       FSChange fsChange = new FSChange(ChangeType.NEW_IMAGE, uuid, new PseudoPath(), xml);
-      response.add(fsChange);
+      cm.sendCommand(fsChange);
     }
-    return response;
   }
 
   @Override
