@@ -68,15 +68,15 @@ public class Controller {
     return commandManager;
   }
 
-  public PseudoFile getDefaultDirectory() {
-    List<FSImage> fsImages = this.fsImages.getLocal();
-    fsImages.addAll(this.fsImages.getRemote());
+  public PseudoFile getDefaultDirectory(List<FSImage> fsImages) {
     if (fsImages.isEmpty()) {
       return null;
+  //TODO defaultDirectory when fsImages is empty?
     }
     FSImage fsi = fsImages.get(0);
     return new PseudoFile(fsi, new PseudoPath());
   }
+
 
   public void addListener(ControllerListener listener) {
     listeners.add(listener);

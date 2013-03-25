@@ -57,8 +57,9 @@ public class FileTableModel extends AbstractTableModel {
 
   @Override
   public Object getValueAt(int rowIndex, int columnIndex) {
-    PseudoFile file = directory.getContent().get(rowIndex);
+    if (directory == null) return null;
 
+    PseudoFile file = directory.getContent().get(rowIndex);
     if (columnIndex == 0) return file.getType();
     if (columnIndex == 1) return file.getName();
     return null;

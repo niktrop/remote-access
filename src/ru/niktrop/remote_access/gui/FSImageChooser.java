@@ -18,18 +18,18 @@ import java.util.List;
  */
 public class FSImageChooser extends JComboBox<FSImage> implements ControllerListener{
 
-  final String SEPARATOR = "SEPARATOR";
-  final Controller controller;
+  private final String SEPARATOR = "SEPARATOR";
+  private final Controller controller;
 
-  public FSImageChooser(Controller controller) {
+  public FSImageChooser(Controller controller, FSImage selected) {
     this.controller = controller;
-    setModel(new FSImageChooserModel(controller));
+    setModel(new FSImageChooserModel(controller, selected));
     setRenderer(new FSImageChooserRenderer());
   }
 
   @Override
   public void controllerChanged() {
-    //if no FSImages yet
+    //if no FSImages yet, only separator
     if (getModel().getSize() == 1) {
       this.setModel(new FSImageChooserModel(controller));
     }
@@ -92,6 +92,7 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
       separator = new JSeparator(JSeparator.HORIZONTAL);
     }
 
+    @Override
     public Component getListCellRendererComponent(JList list, Object value,
                                                   int index, boolean isSelected, boolean cellHasFocus) {
       FSImage fsImage = (FSImage) value;

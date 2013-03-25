@@ -39,11 +39,19 @@ class OpenDirectoryAction implements ActionListener {
     if ( !childDir.isDirectory())
       return;
 
-    final boolean needWait = (childDir.getDepth() == 0);
+    int depth = childDir.getDepth();
+    //if depth == 0, subfiles do not loaded yet
+    final boolean needWait = (depth == 0);
     if (!needWait) {
       fileTable.load(childDir);
     }
 
+    //if depth == maxDepth, no need to reload
+    if (depth == controller.getMaxDepth()) {
+      return;
+    }
+
+    //reload directory in worker thread if 0 <= depth < maxDepth
     SwingWorker worker = new SwingWorker<Void, Void>() {
       @Override
       public Void doInBackground() {

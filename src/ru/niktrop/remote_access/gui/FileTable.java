@@ -2,9 +2,13 @@ package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.ControllerListener;
+import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
+import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,21 +20,15 @@ public class FileTable extends JTable implements ControllerListener {
 
   private final Controller controller;
 
-  public FileTable(Controller controller) {
-    this.controller = controller;
-    setUpFileTable(controller);
-  }
-
   public FileTable(Controller controller, PseudoFile directory) {
     this.controller = controller;
-    setUpFileTable(controller);
+    setUpFileTable(directory);
     FileTableModel model = (FileTableModel) getModel();
     model.setDirectory(directory);
   }
 
-  private void setUpFileTable(Controller controller) {
-    PseudoFile defaultDirectory = controller.getDefaultDirectory();
-    FileTableModel fileTableModel = new FileTableModel(defaultDirectory);
+  private void setUpFileTable(PseudoFile directory) {
+    FileTableModel fileTableModel = new FileTableModel(directory);
 
     setModel(fileTableModel);
     setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -48,11 +46,6 @@ public class FileTable extends JTable implements ControllerListener {
   public void load(PseudoFile directory) {
     FileTableModel model = (FileTableModel) getModel();
     model.setDirectory(directory);
-    model.fireTableDataChanged();
-  }
-
-  public void update() {
-    FileTableModel model = (FileTableModel) getModel();
     model.fireTableDataChanged();
   }
 
@@ -74,7 +67,9 @@ public class FileTable extends JTable implements ControllerListener {
     }
 
     if (dir == null) {
-      dir = controller.getDefaultDirectory();
+      List<FSImage> fsImages = new ArrayList<>(controller.fsImages.getLocal());
+      fsImages.addAll(controller.fsImages.getRemote());
+      dir = new PseudoFile(fsImages.get(0), new PseudoPath());
     }
 
     tm.setDirectory(dir);

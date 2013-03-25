@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,6 +21,7 @@ import java.awt.event.ActionListener;
 public class OneSidePanel extends JPanel{
 
   private Controller controller;
+  private PseudoFile directory;
 
   private JScrollPane scrlFileTable;
   private FileTable fileTable;
@@ -36,14 +39,15 @@ public class OneSidePanel extends JPanel{
     return fileTable;
   }
 
-  public OneSidePanel(FileTable table, Controller controller) {
+  public OneSidePanel(Controller controller, PseudoFile directory) {
     this.controller = controller;
-    fileTable = table;
+    this.directory = directory;
+
+    fileTable = new FileTable(controller, directory);
 
     init();
 
     addListeners();
-
   }
 
   private void init() {
@@ -70,11 +74,24 @@ public class OneSidePanel extends JPanel{
     btnCreateDirectory = new JButton("Create");
     pnlActions.add(btnCreateDirectory);
 
-    fsImageChooser = new FSImageChooser(controller);
+    FSImage selected = controller.fsImages.get(directory.getFsiUuid());
+    fsImageChooser = new FSImageChooser(controller, selected);
     pnlActions.add(fsImageChooser);
   }
 
   private void addListeners() {
+
+    //open directories by double click
+    fileTable.addMouseListener(new MouseAdapter() {
+      public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2) {
+          //just any action event
+          ActionEvent ae = new ActionEvent(fileTable, 0, "open");
+          new OpenDirectoryAction(fileTable, controller).actionPerformed(ae);
+        }
+      }
+    });
+
 
     btnParent.addActionListener(new OpenParentAction(fileTable));
 

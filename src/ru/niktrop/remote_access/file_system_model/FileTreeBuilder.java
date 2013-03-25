@@ -30,6 +30,8 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
     this.rootDirElement = rootDirElement;
     this.watcher = watcher;
     currentDepth = maxDepth;
+    Attribute depth = new Attribute("depth", String.valueOf(currentDepth));
+    rootDirElement.addAttribute(depth);
   }
 
 

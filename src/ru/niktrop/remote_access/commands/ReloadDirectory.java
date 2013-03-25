@@ -93,10 +93,10 @@ public class ReloadDirectory implements SerializableCommand {
 
     int depth = new PseudoFile(fsi, dir).getDepth();
 
-    //reload only directories with small depth
-    if (depth >= 1 ) {
-      return Collections.emptyList();
-    }
+//    //reload only directories with small depth
+//    if (depth >= 1 ) {
+//      return Collections.emptyList();
+//    }
 
     Path pathToRoot1 = fsi.getPathToRoot();
     Path fullPath = pathToRoot1.resolve(dir.toPath());
