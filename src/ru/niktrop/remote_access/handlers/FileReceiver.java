@@ -51,8 +51,9 @@ public class FileReceiver extends SimpleChannelUpstreamHandler{
 
     if (remainingFileLength > 0) {
       int readable = buf.readableBytes();
-      buf.readBytes(currentFileChannel, readable);
-      remainingFileLength -= readable;
+      int toRead = (int) Math.min(remainingFileLength, readable);
+      buf.readBytes(currentFileChannel, toRead);
+      remainingFileLength -= toRead;
     }
 
     if (remainingFileLength == 0) {

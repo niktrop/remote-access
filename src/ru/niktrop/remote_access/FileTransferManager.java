@@ -113,10 +113,10 @@ public class FileTransferManager implements ChannelManager{
   }
 
   private class FileSender extends Thread {
-    private final ChannelBuffer buffer = ChannelBuffers.buffer(4096);
+    private final int BUFFER_SIZE = 4096;
+    private final ChannelBuffer buffer = ChannelBuffers.buffer(BUFFER_SIZE);
     private long offset = 0;
     private String operationUuid;
-    private FileChannel fileChannel;
     private long fileLength;
 
     @Override
@@ -141,7 +141,8 @@ public class FileTransferManager implements ChannelManager{
           future = sendChunk(fileChannel, future);
         }
 
-        afterLastChunk(fileChannel);
+        future.syncUninterruptibly();
+        afterLastChunk();
 
       } catch (IOException e) {
         sendingFileFailed(e, operationUuid);
@@ -179,7 +180,7 @@ public class FileTransferManager implements ChannelManager{
       return offset < fileLength;
     }
 
-    private void afterLastChunk(FileChannel fileChannel) throws IOException {
+    private void afterLastChunk() throws IOException {
       offset = 0;
       buffer.clear();
 
