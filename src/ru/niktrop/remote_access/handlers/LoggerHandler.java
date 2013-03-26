@@ -6,6 +6,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,11 +14,11 @@ import java.util.logging.Level;
  * Date: 14.03.13
  * Time: 17:03
  */
-public class Logger extends SimpleChannelHandler {
-  private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Logger.class.getName());
+public class LoggerHandler extends SimpleChannelHandler {
+  private static final Logger LOG = Logger.getLogger(LoggerHandler.class.getName());
   private Level level;
 
-  public Logger(Level level) {
+  public LoggerHandler(Level level) {
     this.level = level;
   }
 

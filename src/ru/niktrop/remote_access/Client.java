@@ -123,7 +123,7 @@ public class Client {
         pipeline.addLast("string encoder", new StringEncoder());
         pipeline.addLast("command decoder", new CommandDecoder());
         pipeline.addLast("command encoder", new CommandEncoder());
-        pipeline.addLast("logger", new Logger(Level.INFO));
+        pipeline.addLast("logger", new LoggerHandler(Level.INFO));
         pipeline.addLast("executor", new CommandExecutor(controller));
 
         return pipeline;

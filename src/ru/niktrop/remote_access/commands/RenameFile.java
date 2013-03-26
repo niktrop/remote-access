@@ -67,7 +67,7 @@ public class RenameFile implements SerializableCommand {
     try {
       Files.move(fullPath, fullPath.resolveSibling(newName));
     } catch (IOException e) {
-      String message = "Renaming failed: " + path.toString();
+      String message = String.format("Renaming failed: %s \r\n %s", path.toString(), e.getMessage());
       LOG.log(Level.WARNING, message, e.getCause());
       cm.executeCommand(Notification.warning(message));
     }

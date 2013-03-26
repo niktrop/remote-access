@@ -83,13 +83,11 @@ public class NotificationManager {
   }
 
   static class PendingOperationDialog extends JDialog {
-    private String message;
     private JButton okButton;
     private JOptionPane optionPane;
 
     PendingOperationDialog(Frame owner, String message) {
       super(owner, false);
-      this.message = message;
       setTitle("Operation in progress");
       okButton = new JButton( "OK" );
 

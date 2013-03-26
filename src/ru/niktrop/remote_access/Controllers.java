@@ -19,11 +19,11 @@ public class Controllers {
     return serverController;
   }
 
-  public static Controller getClientController() throws IOException {
+  public static Controller getClientController() throws IOException{
     if (clientController == null) {
       return new Controller(Controller.ControllerType.CLIENT);
     }
-    return serverController;
+    return clientController;
   }
 
   public static Controller getController() throws IOException {

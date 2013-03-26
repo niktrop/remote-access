@@ -5,6 +5,7 @@ import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,6 +14,7 @@ import java.awt.*;
  * Time: 16:42
  */
 public class ClientGUI extends JFrame {
+  private static final Logger LOG = Logger.getLogger(ClientGUI.class.getName());
 
   private JPanel jContentPane;
   private Controller controller;

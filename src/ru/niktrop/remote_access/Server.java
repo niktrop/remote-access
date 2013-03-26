@@ -32,7 +32,7 @@ public class Server {
   private static int filePort = 12346;
   private static String host = "localhost";
   private static Path[] dirs = {Paths.get("C:\\\\", "Test")};
-  private static final int MAX_DEPTH = 2;
+  private static final int MAX_DEPTH = 3;
 
   public static void main(String[] args) throws Exception {
 
@@ -83,7 +83,7 @@ public class Server {
         pipeline.addLast("string encoder", new StringEncoder());
         pipeline.addLast("command decoder", new CommandDecoder());
         pipeline.addLast("command encoder", new CommandEncoder());
-        pipeline.addLast("logger",  new Logger(Level.INFO));
+        pipeline.addLast("logger",  new LoggerHandler(Level.INFO));
         pipeline.addLast("executor", new CommandExecutor(controller));
 
         return pipeline;

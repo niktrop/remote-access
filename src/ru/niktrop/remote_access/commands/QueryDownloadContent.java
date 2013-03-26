@@ -62,6 +62,7 @@ public class QueryDownloadContent implements SerializableCommand {
 
     try {
       Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
           //form source PseudoFile
@@ -82,9 +83,6 @@ public class QueryDownloadContent implements SerializableCommand {
                   UUID.randomUUID().toString());
           cm.executeCommand(command);
 
-          String message = "Copy of directory structure finished";
-          Notification finished = Notification.operationFinished(message, operationUuid);
-          cm.executeCommand(finished);
           return FileVisitResult.CONTINUE;
         }
       });
@@ -94,6 +92,9 @@ public class QueryDownloadContent implements SerializableCommand {
       LOG.log(Level.WARNING, message, e);
       cm.executeCommand(Notification.warning(message));
     }
+    String message = "Copy of directory structure finished";
+    Notification finished = Notification.operationFinished(message, operationUuid);
+    cm.executeCommand(finished);
   }
 
   @Override
