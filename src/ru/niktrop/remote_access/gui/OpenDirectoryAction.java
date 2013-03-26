@@ -19,31 +19,35 @@ import java.awt.event.ActionListener;
 */
 class OpenDirectoryAction implements ActionListener {
 
-  private FileTable fileTable;
-  private Controller controller;
+  private final FileTable fileTable;
+  private final PseudoFile directory;
+  private final int maxDepth;
+  private final Controller controller;
 
   OpenDirectoryAction(FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
+    maxDepth = controller.getMaxDepth();
+    directory = getSelectedDirectory();
+  }
+
+  OpenDirectoryAction(PseudoFile directory, FileTable fileTable, Controller controller) {
+    this.fileTable = fileTable;
+    this.controller = controller;
+    this.directory = directory;
+    maxDepth = controller.getMaxDepth();
   }
 
   @Override
   public void actionPerformed(ActionEvent e) {
-    int[] selectedRows = fileTable.getSortedSelectedRows();
-    if (selectedRows.length != 1)
+    if (directory == null)
       return;
 
-    FileTableModel model = (FileTableModel) fileTable.getModel();
-    final PseudoFile childDir = model.getPseudoFile(selectedRows[0]);
-
-    if ( !childDir.isDirectory())
-      return;
-
-    int depth = childDir.getDepth();
-    //if depth == 0, subfiles do not loaded yet
+    int depth = directory.getDepth();
+    //if depth == 0, subfiles was not loaded yet
     final boolean needWait = (depth == 0);
     if (!needWait) {
-      fileTable.load(childDir);
+      fileTable.load(directory);
     }
 
     //if depth == maxDepth, no need to reload
@@ -55,8 +59,8 @@ class OpenDirectoryAction implements ActionListener {
     SwingWorker worker = new SwingWorker<Void, Void>() {
       @Override
       public Void doInBackground() {
-        SerializableCommand command = new ReloadDirectory(childDir);
-        FSImage fsi = controller.fsImages.get(childDir.getFsiUuid());
+        SerializableCommand command = new ReloadDirectory(directory);
+        FSImage fsi = controller.fsImages.get(directory.getFsiUuid());
         CommandManager cm = controller.getCommandManager();
         if (fsi.isLocal())
         {
@@ -72,11 +76,26 @@ class OpenDirectoryAction implements ActionListener {
       @Override
       protected void done() {
         if (needWait) {
-          fileTable.load(childDir);
+          fileTable.load(directory);
         }
       }
     };
 
     worker.execute();
+  }
+
+  private PseudoFile getSelectedDirectory() {
+    int[] selectedRows = fileTable.getSortedSelectedRows();
+
+    if (selectedRows.length != 1)
+      return null;
+
+    FileTableModel model = (FileTableModel) fileTable.getModel();
+    final PseudoFile selected = model.getPseudoFile(selectedRows[0]);
+
+    if ( !selected.isDirectory())
+      return null;
+
+    return selected;
   }
 }
