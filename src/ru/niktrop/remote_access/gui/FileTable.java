@@ -46,7 +46,8 @@ public class FileTable extends JTable implements ControllerListener {
   public void load(PseudoFile directory) {
     FileTableModel model = (FileTableModel) getModel();
     model.setDirectory(directory);
-    model.fireTableDataChanged();
+    //model.fireTableDataChanged();
+    controller.fireControllerChange();
   }
 
   @Override

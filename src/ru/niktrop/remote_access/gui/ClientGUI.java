@@ -4,7 +4,7 @@ import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.*;
-import java.awt.*;
+import javax.swing.border.EmptyBorder;
 import java.util.logging.Logger;
 
 /**
@@ -44,10 +44,15 @@ public class ClientGUI extends JFrame {
 
     initCopyButtons(controller);
 
-    jContentPane = new JPanel(new BorderLayout(3,3));
-    jContentPane.add(pnlLeft, BorderLayout.WEST);
-    jContentPane.add(pnlRight, BorderLayout.EAST);
-    jContentPane.add(pnlCenter, BorderLayout.CENTER);
+    jContentPane = new JPanel();
+    jContentPane.setLayout(new BoxLayout(jContentPane, BoxLayout.X_AXIS));
+    jContentPane.setBorder(new EmptyBorder(5,5,5,5));
+
+    jContentPane.add(pnlLeft);
+    jContentPane.add(Box.createHorizontalStrut(5));
+    jContentPane.add(pnlCenter);
+    jContentPane.add(Box.createHorizontalStrut(5));
+    jContentPane.add(pnlRight);
 
     setContentPane(jContentPane);
 

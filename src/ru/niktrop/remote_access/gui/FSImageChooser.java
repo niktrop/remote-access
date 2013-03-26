@@ -21,6 +21,8 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
   private final String SEPARATOR = "SEPARATOR";
   private final Controller controller;
 
+
+
   public FSImageChooser(Controller controller, FSImage selected) {
     this.controller = controller;
     setModel(new FSImageChooserModel(controller, selected));

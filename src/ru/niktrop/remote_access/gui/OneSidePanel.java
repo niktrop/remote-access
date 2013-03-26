@@ -1,14 +1,11 @@
 package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
-import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -33,7 +30,7 @@ public class OneSidePanel extends JPanel{
   private JButton btnRename;
   private JButton btnCreateDirectory;
 
-  private FSImageChooser fsImageChooser;
+  private NavigationBar navigationBar;
 
   public FileTable getFileTable() {
     return fileTable;
@@ -51,14 +48,21 @@ public class OneSidePanel extends JPanel{
   }
 
   private void init() {
-    setLayout(new BorderLayout(3, 3));
+    setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+    pnlActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    initPnlActions();
+    add(pnlActions);
+
+    navigationBar = new NavigationBar(fileTable, controller);
+    add(navigationBar);
 
     scrlFileTable = new JScrollPane(fileTable);
-    add(scrlFileTable, BorderLayout.CENTER);
+    add(scrlFileTable);
 
-    pnlActions = new JPanel(new FlowLayout());
-    add(pnlActions, BorderLayout.NORTH);
+  }
 
+  private void initPnlActions() {
     btnParent = new JButton("Parent");
     pnlActions.add(btnParent);
 
@@ -73,10 +77,6 @@ public class OneSidePanel extends JPanel{
 
     btnCreateDirectory = new JButton("Create");
     pnlActions.add(btnCreateDirectory);
-
-    FSImage selected = controller.fsImages.get(directory.getFsiUuid());
-    fsImageChooser = new FSImageChooser(controller, selected);
-    pnlActions.add(fsImageChooser);
   }
 
   private void addListeners() {
@@ -92,29 +92,13 @@ public class OneSidePanel extends JPanel{
       }
     });
 
-
-    btnParent.addActionListener(new OpenParentAction(fileTable));
-
+    btnParent.addActionListener(new OpenParentAction(fileTable, controller));
     btnOpen.addActionListener(new OpenDirectoryAction(fileTable, controller));
-
     btnDelete.addActionListener(new DeleteAction(fileTable, controller));
-
     btnRename.addActionListener(new RenameAction(fileTable, controller));
-
     btnCreateDirectory.addActionListener(new CreateDirectoryAction(fileTable, controller));
 
-    fsImageChooser.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        FSImageChooser chooser = (FSImageChooser)e.getSource();
-        FSImage fsImage = (FSImage)chooser.getSelectedItem();
-        PseudoFile dir = new PseudoFile(fsImage, new PseudoPath());
-        fileTable.load(dir);
-      }
-    });
-
     controller.addListener(fileTable);
-    controller.addListener(fsImageChooser);
   }
 
 

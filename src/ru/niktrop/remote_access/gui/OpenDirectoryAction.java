@@ -21,13 +21,11 @@ class OpenDirectoryAction implements ActionListener {
 
   private final FileTable fileTable;
   private final PseudoFile directory;
-  private final int maxDepth;
   private final Controller controller;
 
   OpenDirectoryAction(FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
-    maxDepth = controller.getMaxDepth();
     directory = getSelectedDirectory();
   }
 
@@ -35,7 +33,6 @@ class OpenDirectoryAction implements ActionListener {
     this.fileTable = fileTable;
     this.controller = controller;
     this.directory = directory;
-    maxDepth = controller.getMaxDepth();
   }
 
   @Override
