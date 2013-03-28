@@ -34,6 +34,7 @@ public class FileTable extends JTable implements ControllerListener {
     setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     setAutoCreateRowSorter(true);
     getRowSorter().toggleSortOrder(0);
+    getColumnModel().getColumn(0).setMaxWidth(80);
 
     setShowGrid(false);
   }
@@ -46,7 +47,6 @@ public class FileTable extends JTable implements ControllerListener {
   public void load(PseudoFile directory) {
     FileTableModel model = (FileTableModel) getModel();
     model.setDirectory(directory);
-    //model.fireTableDataChanged();
     controller.fireControllerChange();
   }
 
@@ -67,6 +67,7 @@ public class FileTable extends JTable implements ControllerListener {
       }
     }
 
+    //if directory became null, show default directory
     if (dir == null) {
       List<FSImage> fsImages = new ArrayList<>(controller.fsImages.getLocal());
       fsImages.addAll(controller.fsImages.getRemote());

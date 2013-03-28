@@ -35,6 +35,8 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
     if (getModel().getSize() == 1) {
       this.setModel(new FSImageChooserModel(controller));
     }
+    this.revalidate();
+    this.repaint();
   }
 
 

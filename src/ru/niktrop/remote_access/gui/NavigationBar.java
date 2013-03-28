@@ -21,7 +21,6 @@ import java.util.Deque;
  */
 public class NavigationBar extends JPanel implements ControllerListener{
 
-  private JPanel pnlDirectories;
   private PseudoFile directory;
   private final FileTable fileTable;
   private final Controller controller;
@@ -30,20 +29,20 @@ public class NavigationBar extends JPanel implements ControllerListener{
   public NavigationBar(FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
-    setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    setLayout(new WrapLayout(FlowLayout.LEFT));
 
     directory = fileTable.getDirectory();
-
-    FSImage selected;
-    if (directory != null) {
-      selected = controller.fsImages.get(directory.getFsiUuid());
-    } else {
-      selected = null;
-    }
-
+    FSImage selected = getSelectedFSImage(controller);
     fsImageChooser = new FSImageChooser(controller, selected);
+
+    arrangeElements();
+
+    controller.addListener(this);
+  }
+
+  private void initFsImageChooser() {
+    fsImageChooser.setAlignmentY(Component.TOP_ALIGNMENT);
     fsImageChooser.setMaximumSize(fsImageChooser.getPreferredSize());
-    add(fsImageChooser);
     fsImageChooser.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -53,27 +52,24 @@ public class NavigationBar extends JPanel implements ControllerListener{
         NavigationBar.this.fileTable.load(dir);
       }
     });
-
-    add(Box.createHorizontalStrut(3));
-
-    pnlDirectories = new JPanel();
-    pnlDirectories.setLayout(new BoxLayout(pnlDirectories, BoxLayout.X_AXIS));
-    initPnlDirectories();
-
-    add(pnlDirectories);
-
-    add(Box.createHorizontalGlue());
-
-    controller.addListener(this);
   }
 
-  public FSImageChooser getFsImageChooser() {
-    return fsImageChooser;
+  private FSImage getSelectedFSImage(Controller controller) {
+    FSImage selected;
+    if (directory != null) {
+      selected = controller.fsImages.get(directory.getFsiUuid());
+    } else {
+      selected = null;
+    }
+    return selected;
   }
 
-  private void initPnlDirectories() {
+  private void arrangeElements() {
 
-    pnlDirectories.removeAll();
+    removeAll();
+
+    initFsImageChooser();
+    add(fsImageChooser);
 
     Deque<PseudoFile> directories = new ArrayDeque<>();
     PseudoFile tempDir = directory;
@@ -90,8 +86,7 @@ public class NavigationBar extends JPanel implements ControllerListener{
       JButton button = new JButton(name);
       button.setMargin(new Insets(1,1,1,1));
       button.addActionListener(new OpenAction(tempDir, fileTable, controller));
-      pnlDirectories.add(button);
-      pnlDirectories.add(Box.createHorizontalStrut(3));
+      add(button);
     }
   }
 
@@ -100,7 +95,7 @@ public class NavigationBar extends JPanel implements ControllerListener{
     PseudoFile newDirectory = fileTable.getDirectory();
     if (directory != newDirectory) {
       directory = newDirectory;
-      initPnlDirectories();
+      arrangeElements();
       this.revalidate();
       this.repaint();
     }

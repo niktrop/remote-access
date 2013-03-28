@@ -39,6 +39,7 @@ public class ClientGUI extends JFrame {
   public void init(Controller controller) {
     this.controller = controller;
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    setResizable(false);
 
     initSidePanels();
 
@@ -46,7 +47,7 @@ public class ClientGUI extends JFrame {
 
     jContentPane = new JPanel();
     jContentPane.setLayout(new BoxLayout(jContentPane, BoxLayout.X_AXIS));
-    jContentPane.setBorder(new EmptyBorder(10,10,10,10));
+    jContentPane.setBorder(new EmptyBorder(5,5,5,5));
 
     jContentPane.add(pnlLeft);
     jContentPane.add(Box.createHorizontalStrut(5));

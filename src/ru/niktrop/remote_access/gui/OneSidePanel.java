@@ -52,13 +52,14 @@ public class OneSidePanel extends JPanel{
     pnlActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
     initPnlActions();
     add(pnlActions);
-    add(Box.createVerticalStrut(5));
+    add(Box.createVerticalStrut(2));
 
     navigationBar = new NavigationBar(fileTable, controller);
     add(navigationBar);
-    add(Box.createVerticalStrut(5));
+    add(Box.createVerticalStrut(2));
 
     scrlFileTable = new JScrollPane(fileTable);
+    scrlFileTable.setPreferredSize(new Dimension(400,600));
     add(scrlFileTable);
 
   }
