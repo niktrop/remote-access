@@ -29,6 +29,8 @@ import static ru.niktrop.remote_access.file_system_model.FSImages.getFromDirecto
  * Date: 18.03.13
  * Time: 12:38
  */
+
+//TODO Если удаляется корень FSImage?
 public class FileSystemWatcher {
   private static final Logger LOG = Logger.getLogger(FileSystemWatcher.class.getName());
 

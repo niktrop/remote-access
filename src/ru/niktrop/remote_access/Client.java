@@ -4,6 +4,7 @@ import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import ru.niktrop.remote_access.commands.GetFSImages;
+import ru.niktrop.remote_access.commands.Notification;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.gui.ClientGUI;
@@ -13,12 +14,13 @@ import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.WatchService;
+import java.nio.file.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 
@@ -31,51 +33,33 @@ import java.util.logging.Level;
 public class Client {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Client.class.getName());
 
-  private static int commandPort = 12345;
-  private static int filePort = 12346;
+  private static int commandPort;
+  private static int filePort;
+  private static String host;
 
-  private static String host = "fe80::c546:8df8:e300:7efb%13";
-  private static Iterable<Path> dirs = FileSystems.getDefault().getRootDirectories();
+  private static Map<Path,String> directoriesAndAliases = new HashMap<>();
   private static String propFileName = "client.properties";
+  private static Controller controller;
   private static final int MAX_DEPTH = 2;
 
-  public static void main(String[] args) throws IOException, InterruptedException {
+  private static int waitConnection;
+
+  public static void main(String[] args) {
 
     loadProperties(propFileName);
 
-    final Controller controller = Controllers.getClientController();
-    WatchService watchService = controller.getWatchService();
+    setupController();
 
-    for (Path dir : dirs) {
-      if (!Files.isDirectory(dir)) {
-        continue;
-      }
-      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watchService);
-      controller.addFSImage(fsi);
-      LOG.info(fsi.getRootAlias() + " added to client's controller");
-    }
+    createFSImages();
 
+    startFileSystemWatching();
 
-    ChannelFuture commandFuture = getCommandChannelFuture(controller);
+    setupCommandChannel();
 
-    commandFuture.sync();
-    Channel commandChannel = commandFuture.getChannel();
+    //Query to the server for its FSImages
+    controller.getCommandManager().sendCommand(new GetFSImages());
 
-    controller.getCommandManager().setChannel(commandChannel);
-    LOG.info("channel is ready");
-
-    CommandManager commandManager = controller.getCommandManager();
-    commandManager.sendCommand(new GetFSImages());
-
-    FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
-    FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);
-    fsWatcher.runWatcher();
-    fsHandler.runHandler();
-
-    ChannelFuture fileFuture = getFileChannelFuture(controller);
-
-    fileFuture.sync();
-    controller.getFileTransferManager().setChannel(fileFuture.getChannel());
+    setupFileTransferChannel();
 
     final ClientGUI clientGUI = ClientGUI.instance();
     controller.getNotificationManager().setParentFrame(clientGUI);
@@ -83,14 +67,69 @@ public class Client {
     SwingUtilities.invokeLater(new Runnable() {
       @Override
       public void run() {
-
         clientGUI.init(controller);
-
       }
     });
   }
 
-  private static ChannelFuture getFileChannelFuture(final Controller controller) {
+  private static void setupController() {
+    try {
+      controller = Controllers.getClientController();
+      controller.setMaxDepth(MAX_DEPTH);
+    } catch (IOException e) {
+      String message = "Couldn't initialize WatchService and create controller.";
+      LOG.log(Level.WARNING, message, e.getCause());
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+      System.exit(1);
+    }
+  }
+
+  private static void startFileSystemWatching() {
+    FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
+    FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);
+    fsWatcher.runWatcher();
+    fsHandler.runHandler();
+  }
+
+  private static void createFSImages() {
+    WatchService watchService = controller.getWatchService();
+
+    Iterable<Path> dirs = null;
+    if (directoriesAndAliases.isEmpty()) {
+      dirs = FileSystems.getDefault().getRootDirectories();
+    } else {
+      dirs = directoriesAndAliases.keySet();
+    }
+    for (Path dir : dirs) {
+      if (!Files.isDirectory(dir)) {
+        String message = String.format("Not a directory: %s", dir.toString());
+        LOG.log(Level.WARNING, message);
+        Notification warning = Notification.warning(message);
+        controller.getNotificationManager().show(warning);
+        continue;
+      }
+      FSImage fsi = null;
+
+      try {
+        fsi = FSImages.getFromDirectory(dir, controller.getMaxDepth(), watchService);
+        String alias = directoriesAndAliases.get(dir);
+        if (alias == null) {
+          alias = dir.toString();
+        }
+        fsi.setRootAlias(alias);
+        controller.addFSImage(fsi);
+        LOG.info(fsi.getRootAlias() + " added to client's controller");
+      } catch (IOException e) {
+        String message = String.format("Couldn't build image of %s", dir.toString());
+        LOG.log(Level.INFO, message, e.getCause());
+        Notification warning = Notification.warning(message);
+        controller.getNotificationManager().show(warning);
+      }
+    }
+  }
+
+  private static void setupFileTransferChannel() {
     // Configure the file transfer client.
     ClientBootstrap fileBootstrap = new ClientBootstrap(
             new NioClientSocketChannelFactory(
@@ -102,18 +141,18 @@ public class Client {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
 
-        //pipeline.addLast("logger",  new Logger(Level.INFO));
+        //pipeline.addLast("logger",  new Logger(Level.PLAIN));
         pipeline.addLast("file receiver", new FileReceiver(controller));
 
         return pipeline;
       }
     });
 
-    // Bind and start to accept incoming connections.
-    return fileBootstrap.connect(new InetSocketAddress(host, filePort));
+    ChannelFuture fileFuture = fileBootstrap.connect(new InetSocketAddress(host, filePort));
+    waitAndSetupChannel(fileFuture, controller.getFileTransferManager());
   }
 
-  private static ChannelFuture getCommandChannelFuture(final Controller controller) {
+  private static void setupCommandChannel() {
     ChannelFactory factory = new NioClientSocketChannelFactory(
             Executors.newFixedThreadPool(1),
             Executors.newFixedThreadPool(2));
@@ -135,7 +174,34 @@ public class Client {
       }
     });
 
-    return bootstrap.connect(new InetSocketAddress(host, commandPort));
+    ChannelFuture commandFuture = bootstrap.connect(new InetSocketAddress(host, commandPort));
+    waitAndSetupChannel(commandFuture, controller.getCommandManager());
+
+  }
+
+  private static void waitAndSetupChannel(ChannelFuture future, ChannelManager manager) {
+    Channel channel = null;
+    try {
+      future.await(waitConnection, TimeUnit.SECONDS);
+      channel = future.getChannel();
+      manager.setChannel(channel);
+      String message = String.format("Successfull connection to %s:%s", host, commandPort);
+      LOG.log(Level.INFO, message);
+    } catch (InterruptedException e) {
+      String message = String.format("Connection to %s:%s \r\n was interrupted", host, commandPort);;
+      LOG.log(Level.WARNING, message, e.getCause());
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+      System.exit(1);
+
+    }
+    if (channel == null) {
+      String message = String.format("Time to connect to %s:%s \r\n is out.", host, commandPort);;
+      LOG.log(Level.WARNING, message);
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+      System.exit(1);
+    }
   }
 
   private static void loadProperties(String filename) {
@@ -148,10 +214,22 @@ public class Client {
       filePort = Integer.parseInt(prop.getProperty("file_port"));
       commandPort = Integer.parseInt(prop.getProperty("command_port"));
       host = prop.getProperty("host");
+      waitConnection = Integer.parseInt(prop.getProperty("wait_connection"));
+
+      Set<String> propertyNames = prop.stringPropertyNames();
+      for (String name : propertyNames) {
+        if (name.startsWith("alias_")) {
+          String alias = name.substring("alias_".length());
+          directoriesAndAliases.put(Paths.get(prop.getProperty(name)), alias);
+        }
+      }
 
     } catch (IOException ex) {
-      LOG.log(Level.WARNING, "Could not read property file", ex);
+      String message = "Could not read property file";
+      LOG.log(Level.WARNING, message, ex);
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+      System.exit(1);
     }
-    //TODO вывести сообщение о неправильных настройках
   }
 }

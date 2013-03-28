@@ -25,6 +25,9 @@ public class NotificationManager {
       case WARNING:
         showWarning(n.getMessage());
         break;
+      case PLAIN:
+        showPlain(n.getMessage());
+        break;
       case OPERATION_STARTED:
         showOperationStarted(n.getMessage(), n.getOperationUuid());
         break;
@@ -50,6 +53,13 @@ public class NotificationManager {
             message,
             "Warning",
             JOptionPane.WARNING_MESSAGE);
+  }
+
+  private void showPlain(String message) {
+    JOptionPane.showMessageDialog(parentFrame,
+            message,
+            "",
+            JOptionPane.PLAIN_MESSAGE);
   }
 
   private void showOperationStarted(String message, String uuid) {
@@ -122,6 +132,8 @@ public class NotificationManager {
     void operationFailed(String message) {
       setDefaultCloseOperation(DISPOSE_ON_CLOSE);
       okButton.setEnabled(true);
+
+      setVisible(true);
       setTitle("Operation failed");
       optionPane.setMessage(message);
       optionPane.setMessageType(JOptionPane.WARNING_MESSAGE);

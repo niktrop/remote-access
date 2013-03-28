@@ -26,7 +26,7 @@ public class Controller {
     SERVER;
   }
 
-  private int maxDepth = 2;
+  private int maxDepth = 1;
 
   public final FSImageCollection fsImages = new FSImageCollection();
   private final ControllerType type;

@@ -6,7 +6,7 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import ru.niktrop.remote_access.commands.GetFSImages;
+import ru.niktrop.remote_access.commands.Notification;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.handlers.*;
@@ -18,9 +18,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
@@ -36,45 +37,76 @@ public class Server {
   private static int commandPort;
   private static int filePort;
   private static String host;
-  private static List<Path> dirs = new ArrayList<>();
+  private static Map<Path,String> directoriesAndAliases = new HashMap<>();
+  private static Controller controller;
   private static String propFileName = "server.properties";
   private static final int MAX_DEPTH = 2;
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args){
 
     loadProperties(propFileName);
 
-    final Controller controller = Controllers.getServerController();
+    setupController();
+
+    createFSImages();
+
+    startFileSystemWatching();
+
+    Channel commandChannel = setupCommandChannel();
+    Channel fileTransferChannel = setupFileTransferChannel();
+
+    if (commandChannel == null || fileTransferChannel == null) {
+      System.exit(1);
+    }
+
+    String message = "Server is running.";
+    controller.getNotificationManager().show(Notification.plain(message));
+    LOG.log(Level.INFO, message);
+  }
+
+  private static void setupController() {
+    try {
+      controller = Controllers.getServerController();
+      controller.setMaxDepth(MAX_DEPTH);
+    } catch (IOException e) {
+      String message = "Couldn't initialize WatchService and create controller.";
+      LOG.log(Level.WARNING, message, e.getCause());
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+      System.exit(1);
+    }
+  }
+
+  private static void createFSImages() {
     WatchService watchService = controller.getWatchService();
 
-    for (Path dir : dirs) {
+    for (Path dir : directoriesAndAliases.keySet()) {
       if (!Files.isDirectory(dir)) {
         continue;
       }
-      FSImage fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watchService);
-      controller.addFSImage(fsi);
-      LOG.info(fsi.getRootAlias() + " added to server's controller");
+      FSImage fsi = null;
+      try {
+        fsi = FSImages.getFromDirectory(dir, MAX_DEPTH, watchService);
+        fsi.setRootAlias(directoriesAndAliases.get(dir));
+        controller.addFSImage(fsi);
+        LOG.info(fsi.getRootAlias() + " added to server's controller");
+      } catch (IOException e) {
+        String message = String.format("Couldn't build image of %s", dir.toString());
+        LOG.log(Level.INFO, message, e.getCause());
+        Notification warning = Notification.warning(message);
+        controller.getNotificationManager().show(warning);
+      }
     }
-    Channel commandChannel = getCommandChannel(controller);
-    controller.getCommandManager().setChannel(commandChannel);
+  }
 
-    CommandManager commandManager = controller.getCommandManager();
-    commandManager.sendCommand(new GetFSImages());
-
+  private static void startFileSystemWatching() {
     FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
     FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);
     fsWatcher.runWatcher();
     fsHandler.runHandler();
-
-    if (commandChannel.isBound())
-      LOG.info("Listening: " + host);
-
-    // Configure the file transfer server.
-    Channel filechannel = getFileTransferChannel(controller);
-    controller.getFileTransferManager().setChannel(filechannel);
   }
 
-  private static Channel getCommandChannel(final Controller controller) {
+  private static Channel setupCommandChannel() {
     // Configure command server.
     ServerBootstrap bootstrap = new ServerBootstrap(
             new NioServerSocketChannelFactory(
@@ -99,10 +131,22 @@ public class Server {
     });
 
     // Bind and start to accept incoming connections.
-    return bootstrap.bind(new InetSocketAddress(host, commandPort));
+    // ChannelSaver handler will save first connected channel to FileTransferManager
+    Channel commandChannel = null;
+    try {
+      commandChannel = bootstrap.bind(new InetSocketAddress(host, commandPort));
+    } catch (Exception e) {
+      String message = String.format("Couldn't bind to %s : %s. \r\n " +
+              "Probably port is already in use.", host, commandPort);
+      LOG.log(Level.INFO, message, e.getCause());
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+    }
+
+    return commandChannel;
   }
 
-  private static Channel getFileTransferChannel(final Controller controller) {
+  private static Channel setupFileTransferChannel() {
     ServerBootstrap fileBootstrap = new ServerBootstrap(
             new NioServerSocketChannelFactory(
                     Executors.newFixedThreadPool(1),
@@ -113,7 +157,7 @@ public class Server {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
 
-        //pipeline.addLast("logger",  new Logger(Level.INFO));
+        //pipeline.addLast("logger",  new Logger(Level.PLAIN));
         pipeline.addLast("channel saver", new ChannelSaver(controller.getFileTransferManager()));
         pipeline.addLast("file receiver", new FileReceiver(controller));
 
@@ -122,7 +166,19 @@ public class Server {
     });
 
     // Bind and start to accept incoming connections.
-    return fileBootstrap.bind(new InetSocketAddress(host, filePort));
+    // ChannelSaver handler will save first connected channel to FileTransferManager
+    Channel fileTransferChannel = null;
+    try {
+      fileTransferChannel = fileBootstrap.bind(new InetSocketAddress(host, filePort));
+    } catch (Exception e) {
+      String message = String.format("Couldn't bind to %s : %s. \r\n " +
+              "Probably port is already in use.", host, filePort);
+      LOG.log(Level.INFO, message, e.getCause());
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+    }
+
+    return fileTransferChannel;
   }
 
   private static void loadProperties(String filename) {
@@ -135,13 +191,19 @@ public class Server {
       filePort = Integer.parseInt(prop.getProperty("file_port"));
       commandPort = Integer.parseInt(prop.getProperty("command_port"));
       host = prop.getProperty("host");
-      String[] names = prop.getProperty("directories").split("\\s*;\\s*");
-      for (String name : names) {
-        dirs.add(Paths.get(name));
+
+      Set<String> propertyNames = prop.stringPropertyNames();
+      for (String name : propertyNames) {
+        if (name.startsWith("alias_")) {
+          String alias = name.substring("alias_".length());
+          directoriesAndAliases.put(Paths.get(prop.getProperty(name)), alias);
+        }
       }
     } catch (IOException ex) {
-      ex.printStackTrace();
-    }
-    //TODO вывести сообщение о неправильных настройках
+      String message = "Could not read property file";
+      LOG.log(Level.WARNING, message, ex);
+      Notification warning = Notification.warning(message);
+      controller.getNotificationManager().show(warning);
+      System.exit(1);    }
   }
 }
