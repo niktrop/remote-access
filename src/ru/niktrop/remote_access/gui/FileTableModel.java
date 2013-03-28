@@ -2,9 +2,7 @@ package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
-import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.AbstractTableModel;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,9 +60,9 @@ public class FileTableModel extends AbstractTableModel {
     if (directory == null) return null;
 
     PseudoFile pseudoFile = directory.getContent().get(rowIndex);
-    Path path = pseudoFile.getPseudoPath().toPath();
-    FileSystemView fileSystemView = FileSystemView.getFileSystemView();
-    if (columnIndex == 0) return fileSystemView.getSystemIcon(path.toFile());
+//    Path path = pseudoFile.getPseudoPath().toPath();
+//    FileSystemView fileSystemView = FileSystemView.getFileSystemView();
+    if (columnIndex == 0) return pseudoFile.getType();
     if (columnIndex == 1) return pseudoFile.getName();
     return null;
   }

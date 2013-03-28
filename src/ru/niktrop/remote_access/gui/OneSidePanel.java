@@ -25,7 +25,6 @@ public class OneSidePanel extends JPanel{
 
   private JPanel pnlActions;
   private JButton btnParent;
-  private JButton btnOpen;
   private JButton btnDelete;
   private JButton btnRename;
   private JButton btnCreateDirectory;
@@ -53,9 +52,11 @@ public class OneSidePanel extends JPanel{
     pnlActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
     initPnlActions();
     add(pnlActions);
+    add(Box.createVerticalStrut(5));
 
     navigationBar = new NavigationBar(fileTable, controller);
     add(navigationBar);
+    add(Box.createVerticalStrut(5));
 
     scrlFileTable = new JScrollPane(fileTable);
     add(scrlFileTable);
@@ -66,16 +67,13 @@ public class OneSidePanel extends JPanel{
     btnParent = new JButton("Parent");
     pnlActions.add(btnParent);
 
-    btnOpen = new JButton("Open");
-    pnlActions.add(btnOpen);
-
     btnDelete = new JButton("Delete");
     pnlActions.add(btnDelete);
 
     btnRename = new JButton("Rename");
     pnlActions.add(btnRename);
 
-    btnCreateDirectory = new JButton("Create");
+    btnCreateDirectory = new JButton("New directory");
     pnlActions.add(btnCreateDirectory);
   }
 
@@ -87,13 +85,12 @@ public class OneSidePanel extends JPanel{
         if (e.getClickCount() == 2) {
           //just any action event
           ActionEvent ae = new ActionEvent(fileTable, 0, "open");
-          new OpenDirectoryAction(fileTable, controller).actionPerformed(ae);
+          new OpenAction(fileTable, controller).actionPerformed(ae);
         }
       }
     });
 
     btnParent.addActionListener(new OpenParentAction(fileTable, controller));
-    btnOpen.addActionListener(new OpenDirectoryAction(fileTable, controller));
     btnDelete.addActionListener(new DeleteAction(fileTable, controller));
     btnRename.addActionListener(new RenameAction(fileTable, controller));
     btnCreateDirectory.addActionListener(new CreateDirectoryAction(fileTable, controller));

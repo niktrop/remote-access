@@ -9,7 +9,7 @@ import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +37,7 @@ class DeleteAction implements ActionListener {
       @Override
       public Void doInBackground() {
 
-        List<PseudoFile> toDelete = new LinkedList<>();
+        List<PseudoFile> toDelete = new ArrayList<>();
         for (int i : selectedRows) {
           toDelete.add(model.getPseudoFile(i));
         }

@@ -10,8 +10,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.LinkedList;
 
 /**
  * Created with IntelliJ IDEA.
@@ -75,7 +75,7 @@ public class NavigationBar extends JPanel implements ControllerListener{
 
     pnlDirectories.removeAll();
 
-    Deque<PseudoFile> directories = new LinkedList();
+    Deque<PseudoFile> directories = new ArrayDeque<>();
     PseudoFile tempDir = directory;
 
     while (tempDir != null) {
@@ -89,7 +89,7 @@ public class NavigationBar extends JPanel implements ControllerListener{
       name = (name == null ? "root" : name);
       JButton button = new JButton(name);
       button.setMargin(new Insets(1,1,1,1));
-      button.addActionListener(new OpenDirectoryAction(tempDir, fileTable, controller));
+      button.addActionListener(new OpenAction(tempDir, fileTable, controller));
       pnlDirectories.add(button);
       pnlDirectories.add(Box.createHorizontalStrut(3));
     }
