@@ -8,7 +8,7 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.WatchService;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -26,11 +26,11 @@ public class Controller {
     SERVER;
   }
 
-  private int maxDepth = 3;
+  private int maxDepth = 2;
 
   public final FSImageCollection fsImages = new FSImageCollection();
   private final ControllerType type;
-  private final List<ControllerListener> listeners = new LinkedList<>();
+  private final List<ControllerListener> listeners = new ArrayList<>();
 
   private final WatchService watchService;
   private final NotificationManager notificationManager;

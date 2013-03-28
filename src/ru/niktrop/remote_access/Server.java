@@ -11,11 +11,16 @@ import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.handlers.*;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
@@ -28,13 +33,16 @@ import java.util.logging.Level;
 public class Server {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Server.class.getName());
 
-  private static int commandPort = 12345;
-  private static int filePort = 12346;
-  private static String host = "localhost";
-  private static Path[] dirs = {Paths.get("C:\\\\", "Test")};
-  private static final int MAX_DEPTH = 3;
+  private static int commandPort;
+  private static int filePort;
+  private static String host;
+  private static List<Path> dirs = new ArrayList<>();
+  private static String propFileName = "server.properties";
+  private static final int MAX_DEPTH = 2;
 
   public static void main(String[] args) throws Exception {
+
+    loadProperties(propFileName);
 
     final Controller controller = Controllers.getServerController();
     WatchService watchService = controller.getWatchService();
@@ -59,7 +67,7 @@ public class Server {
     fsHandler.runHandler();
 
     if (commandChannel.isBound())
-      LOG.info("Listening...");
+      LOG.info("Listening: " + host);
 
     // Configure the file transfer server.
     Channel filechannel = getFileTransferChannel(controller);
@@ -115,5 +123,25 @@ public class Server {
 
     // Bind and start to accept incoming connections.
     return fileBootstrap.bind(new InetSocketAddress(host, filePort));
+  }
+
+  private static void loadProperties(String filename) {
+    Properties prop = new Properties();
+
+    try {
+      //load a properties file
+      prop.load(new FileInputStream(filename));
+
+      filePort = Integer.parseInt(prop.getProperty("file_port"));
+      commandPort = Integer.parseInt(prop.getProperty("command_port"));
+      host = prop.getProperty("host");
+      String[] names = prop.getProperty("directories").split("\\s*;\\s*");
+      for (String name : names) {
+        dirs.add(Paths.get(name));
+      }
+    } catch (IOException ex) {
+      ex.printStackTrace();
+    }
+    //TODO вывести сообщение о неправильных настройках
   }
 }

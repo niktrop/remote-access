@@ -10,12 +10,14 @@ import ru.niktrop.remote_access.gui.ClientGUI;
 import ru.niktrop.remote_access.handlers.*;
 
 import javax.swing.*;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.WatchService;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
@@ -32,11 +34,14 @@ public class Client {
   private static int commandPort = 12345;
   private static int filePort = 12346;
 
-  private static String host = "localhost";
-  private static Path[] dirs = {Paths.get("C:\\\\", "TestClient")};
+  private static String host = "fe80::c546:8df8:e300:7efb%13";
+  private static Iterable<Path> dirs = FileSystems.getDefault().getRootDirectories();
+  private static String propFileName = "client.properties";
   private static final int MAX_DEPTH = 2;
 
   public static void main(String[] args) throws IOException, InterruptedException {
+
+    loadProperties(propFileName);
 
     final Controller controller = Controllers.getClientController();
     WatchService watchService = controller.getWatchService();
@@ -131,5 +136,22 @@ public class Client {
     });
 
     return bootstrap.connect(new InetSocketAddress(host, commandPort));
+  }
+
+  private static void loadProperties(String filename) {
+    Properties prop = new Properties();
+
+    try (FileInputStream file = new FileInputStream(filename)) {
+
+      prop.load(file);
+
+      filePort = Integer.parseInt(prop.getProperty("file_port"));
+      commandPort = Integer.parseInt(prop.getProperty("command_port"));
+      host = prop.getProperty("host");
+
+    } catch (IOException ex) {
+      LOG.log(Level.WARNING, "Could not read property file", ex);
+    }
+    //TODO вывести сообщение о неправильных настройках
   }
 }
