@@ -14,11 +14,11 @@ import java.util.List;
  */
 public class PseudoFile {
   private final PseudoPath path;
-  private final FSImage fsi;
+  private final FSImage fsImage;
 
-  public PseudoFile(FSImage fsi, PseudoPath path) {
+  public PseudoFile(FSImage fsImage, PseudoPath path) {
 
-    this.fsi = fsi;
+    this.fsImage = fsImage;
 
     if (path == null)
       this.path = new PseudoPath();
@@ -27,7 +27,11 @@ public class PseudoFile {
   }
 
   public String getType() {
-    return fsi.getType(path);
+    return fsImage.getType(path);
+  }
+
+  public FSImage getFsImage() {
+    return fsImage;
   }
 
   public PseudoPath getPseudoPath() {
@@ -39,16 +43,16 @@ public class PseudoFile {
   }
 
   public boolean exists() {
-    return fsi.contains(path);
+    return fsImage.contains(path);
   }
 
   public List<PseudoFile> getContent() {
-    Element parent = fsi.getElement(path);
+    Element parent = fsImage.getElement(path);
     List<PseudoFile> content = new ArrayList<>();
     Elements children = parent.getChildElements();
     for(int i=0; i < children.size(); i++) {
       String childName = children.get(i).getAttributeValue("name");
-      content.add(new PseudoFile(fsi, path.resolve(childName)));
+      content.add(new PseudoFile(fsImage, path.resolve(childName)));
     }
     return content;
   }
@@ -70,7 +74,7 @@ public class PseudoFile {
     }
 
     PseudoPath parent = path.getParent();
-    return new PseudoFile(fsi, parent);
+    return new PseudoFile(fsImage, parent);
   }
 
   public String getName() {
@@ -82,11 +86,11 @@ public class PseudoFile {
   }
 
   public String getFsiUuid() {
-    return fsi.getUuid();
+    return fsImage.getUuid();
   }
 
   public int getDepth() {
-    Element element = fsi.getElement(path);
+    Element element = fsImage.getElement(path);
     String depth = element.getAttributeValue("depth");
     if (depth == null) {
       return -1;
@@ -100,7 +104,7 @@ public class PseudoFile {
     char groupSeparator = '\u001E';
     char unitSeparator = '\u001F';
 
-    builder.append(fsi.getUuid());
+    builder.append(fsImage.getUuid());
     builder.append(groupSeparator);
     for (int i = 0; i < path.getNameCount(); i++) {
       builder.append(path.getName(i));
@@ -117,7 +121,7 @@ public class PseudoFile {
 
     PseudoFile that = (PseudoFile) o;
 
-    if (fsi != null ? !fsi.equals(that.fsi) : that.fsi != null) return false;
+    if (fsImage != null ? !fsImage.equals(that.fsImage) : that.fsImage != null) return false;
     if (path != null ? !path.equals(that.path) : that.path != null) return false;
 
     return true;
@@ -126,7 +130,7 @@ public class PseudoFile {
   @Override
   public int hashCode() {
     int result = path != null ? path.hashCode() : 0;
-    result = 31 * result + (fsi != null ? fsi.hashCode() : 0);
+    result = 31 * result + (fsImage != null ? fsImage.hashCode() : 0);
     return result;
   }
 }
