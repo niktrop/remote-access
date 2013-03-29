@@ -75,4 +75,14 @@ public class FSImageCollection{
     }
     return null;
   }
+
+  public int size() {
+    return fsImageMap.size();
+  }
+
+  public PseudoFile defaultDirectory() {
+    List<FSImage> fsImages = new ArrayList<>(getLocal());
+    fsImages.addAll(getRemote());
+    return new PseudoFile(fsImages.get(0), new PseudoPath());
+  }
 }
