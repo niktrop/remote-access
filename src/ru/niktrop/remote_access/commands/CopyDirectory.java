@@ -104,8 +104,11 @@ public class CopyDirectory implements SerializableCommand {
       cm.sendCommand(command);
 
     } catch (IOException e) {
-      FileTransferManager ftm = controller.getFileTransferManager();
-      ftm.sendingFileFailed(e, operationUuid);
+      String message = String.format("Sending CreateDirectoryTree command failed: %s \r\n %s",
+              realSource.toString(), e.toString());
+      LOG.log(Level.WARNING, message, e);
+      cm.executeCommand(Notification.operationFailed(message, operationUuid));
+      return;
     }
   }
 

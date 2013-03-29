@@ -14,6 +14,7 @@ import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,9 +57,6 @@ public class Client {
 
     setupCommandChannel();
 
-    //Query to the server for its FSImages
-    controller.getCommandManager().sendCommand(new GetFSImages());
-
     setupFileTransferChannel();
 
     final ClientGUI clientGUI = ClientGUI.instance();
@@ -68,6 +66,9 @@ public class Client {
       @Override
       public void run() {
         clientGUI.init(controller);
+
+        //Query to the server for its FSImages
+        controller.getCommandManager().sendCommand(new GetFSImages());
       }
     });
   }
@@ -131,7 +132,7 @@ public class Client {
 
   private static void setupFileTransferChannel() {
     // Configure the file transfer client.
-    ClientBootstrap fileBootstrap = new ClientBootstrap(
+    final ClientBootstrap fileBootstrap = new ClientBootstrap(
             new NioClientSocketChannelFactory(
                     Executors.newFixedThreadPool(1),
                     Executors.newFixedThreadPool(2)));
@@ -142,6 +143,7 @@ public class Client {
         ChannelPipeline pipeline = Channels.pipeline();
 
         //pipeline.addLast("logger",  new Logger(Level.PLAIN));
+        pipeline.addLast("reconnector", new Reconnector(fileBootstrap, controller.getFileTransferManager()));
         pipeline.addLast("file receiver", new FileReceiver(controller));
 
         return pipeline;
@@ -157,17 +159,18 @@ public class Client {
             Executors.newFixedThreadPool(1),
             Executors.newFixedThreadPool(2));
 
-    ClientBootstrap bootstrap = new ClientBootstrap(factory);
+    final ClientBootstrap bootstrap = new ClientBootstrap(factory);
 
     bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
 
+        pipeline.addLast("reconnector", new Reconnector(bootstrap, controller.getCommandManager()));
         pipeline.addLast("string decoder", new StringDecoder());
         pipeline.addLast("string encoder", new StringEncoder());
         pipeline.addLast("command decoder", new CommandDecoder());
         pipeline.addLast("command encoder", new CommandEncoder());
-        pipeline.addLast("logger", new LoggerHandler(Level.INFO));
+        pipeline.addLast("logger", new LoggerHandler(Level.FINE));
         pipeline.addLast("executor", new CommandExecutor(controller));
 
         return pipeline;
@@ -180,23 +183,23 @@ public class Client {
   }
 
   private static void waitAndSetupChannel(ChannelFuture future, ChannelManager manager) {
-    Channel channel = null;
     try {
       future.await(waitConnection, TimeUnit.SECONDS);
-      channel = future.getChannel();
-      manager.setChannel(channel);
-      String message = String.format("Successfull connection to %s:%s", host, commandPort);
-      LOG.log(Level.INFO, message);
     } catch (InterruptedException e) {
-      String message = String.format("Connection to %s:%s \r\n was interrupted", host, commandPort);;
+      String message = "Connection was interrupted";
       LOG.log(Level.WARNING, message, e.getCause());
       Notification warning = Notification.warning(message);
       controller.getNotificationManager().show(warning);
       System.exit(1);
-
     }
-    if (channel == null) {
-      String message = String.format("Time to connect to %s:%s \r\n is out.", host, commandPort);;
+    Channel channel = future.getChannel();
+    if (channel.isConnected()) {
+      manager.setChannel(channel);
+      SocketAddress address = channel.getRemoteAddress();
+      String message = String.format("Successfull connection to %s", address.toString());
+      LOG.log(Level.INFO, message);
+    } else {
+      String message = "Time to connect is out";
       LOG.log(Level.WARNING, message);
       Notification warning = Notification.warning(message);
       controller.getNotificationManager().show(warning);

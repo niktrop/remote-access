@@ -44,6 +44,10 @@ public class Notification implements SerializableCommand{
     return new Notification(NotificationType.WARNING, message, null);
   }
 
+  public static Notification plain(String message) {
+    return new Notification(NotificationType.PLAIN, message, null);
+  }
+
   public static Notification operationStarted(String message, String uuid) {
     return new Notification(NotificationType.OPERATION_STARTED, message, uuid);
   }

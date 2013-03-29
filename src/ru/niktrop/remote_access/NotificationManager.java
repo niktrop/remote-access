@@ -6,8 +6,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,28 +20,22 @@ import java.util.Map;
  * Time: 14:47
  */
 public class NotificationManager {
+  private static final Logger LOG = Logger.getLogger(NotificationManager.class.getName());
+
   private JFrame parentFrame;
-  private Map<String, JDialog> dialogs = new HashMap<>();
+  private Map<String, JDialog> dialogs = new ConcurrentHashMap<>();
+  private BlockingQueue<Notification> notifications = new LinkedBlockingQueue<>();
+  private Thread worker = new NotificationThread("Notification thread");
+
+  //Time (in milliseconds) to close dialog after operation is finished successfully
   private final long TIME_TO_CLOSE = 100L;
 
+  public NotificationManager() {
+    worker.start();
+  }
+
   public void show(Notification n) {
-    switch (n.getType()) {
-      case WARNING:
-        showWarning(n.getMessage());
-        break;
-      case PLAIN:
-        showPlain(n.getMessage());
-        break;
-      case OPERATION_STARTED:
-        showOperationStarted(n.getMessage(), n.getOperationUuid());
-        break;
-      case OPERATION_FINISHED:
-        showOperationFinished(n.getMessage(), n.getOperationUuid());
-        break;
-      case OPERATION_FAILED:
-        showOperationFailed(n.getMessage(), n.getOperationUuid());
-        break;
-    }
+    notifications.offer(n);
   }
 
   public JFrame getParentFrame() {
@@ -70,8 +68,8 @@ public class NotificationManager {
 
   private void showOperationFinished(String message, String uuid) {
     final PendingOperationDialog dialog = (PendingOperationDialog) dialogs.get(uuid);
-    dialog.operationFinished(message);
     dialogs.remove(uuid);
+    dialog.operationFinished(message);
 
     new Thread() {
       @Override
@@ -83,13 +81,12 @@ public class NotificationManager {
         dialog.dispose();
       }
     }.start();
-
   }
 
   private void showOperationFailed(String message, String uuid) {
     PendingOperationDialog dialog = (PendingOperationDialog) dialogs.get(uuid);
-    dialog.operationFailed(message);
     dialogs.remove(uuid);
+    dialog.operationFailed(message);
   }
 
   static class PendingOperationDialog extends JDialog {
@@ -137,6 +134,50 @@ public class NotificationManager {
       setTitle("Operation failed");
       optionPane.setMessage(message);
       optionPane.setMessageType(JOptionPane.WARNING_MESSAGE);
+    }
+  }
+
+  private class NotificationThread extends Thread {
+    NotificationThread(String name) {
+      super(name);
+    }
+
+    @Override
+    public void run() {
+      Notification notification;
+      while(true) {
+        try {
+          notification = notifications.take();
+        } catch (InterruptedException e) {
+          LOG.log(Level.WARNING, "Notification thread waiting was interrupted: ", e);
+          continue;
+        }
+
+
+        String message = notification.getMessage();
+        try {
+          switch (notification.getType()) {
+            case WARNING:
+              showWarning(message);
+              break;
+            case PLAIN:
+              showPlain(message);
+              break;
+            case OPERATION_STARTED:
+              showOperationStarted(message, notification.getOperationUuid());
+              break;
+            case OPERATION_FINISHED:
+              showOperationFinished(message, notification.getOperationUuid());
+              break;
+            case OPERATION_FAILED:
+              showOperationFailed(message, notification.getOperationUuid());
+              break;
+          }
+        } catch (Exception e) {
+          String msg = String.format("Exception while showing notification %s", message);
+          LOG.log(Level.WARNING, msg, e);
+        }
+      }
     }
   }
 }

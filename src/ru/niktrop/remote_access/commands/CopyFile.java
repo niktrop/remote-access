@@ -87,10 +87,6 @@ public class CopyFile implements SerializableCommand {
       localCopy(source, targetDir);
 
     } else {   //source is local, target is remote
-
-      //save data about this operation on the source side
-      ftm.addSource(operationUuid, source);
-
       sendAllocateSpaceCommand(controller, source);
     }
   }
@@ -101,7 +97,8 @@ public class CopyFile implements SerializableCommand {
       FileUtils.copyFileToDirectory(source.toFile(), targetDir.toFile());
       response = Notification.operationFinished("Copy finished: " + sourceFile.toString(), operationUuid);
     } catch (IOException e) {
-      String message = String.format("Copy failed: \r\n %s", e.toString());
+      e.printStackTrace();
+      String message = String.format("Copy failed: \r\n %s", e.getMessage());
       LOG.log(Level.WARNING, message, e.getCause());
       response = Notification.operationFailed(message, operationUuid);
     }
@@ -109,8 +106,12 @@ public class CopyFile implements SerializableCommand {
   }
 
   private void sendAllocateSpaceCommand(Controller controller, Path source) {
+
+    //save data about this operation on the source side
+    ftm.addSource(operationUuid, source);
+
     try {
-      String sourceFileName = sourceFile.getName(sourceFile.getNameCount() - 1);
+      String sourceFileName = sourceFile.getFileName();
       long sourceSize = Files.size(source);
       PseudoPath targetFile = targetDirectory.resolve(sourceFileName);
 
@@ -119,8 +120,12 @@ public class CopyFile implements SerializableCommand {
       cm.sendCommand(allocateSpace);
 
     } catch (IOException e) {
-      FileTransferManager ftm = controller.getFileTransferManager();
-      ftm.sendingFileFailed(e, operationUuid);
+      String message = String.format("Sending AllocateSpace command failed for the file: %s \r\n %s",
+              sourceFile.getFileName(), e.toString());
+      LOG.log(Level.WARNING, message, e);
+      cm.executeCommand(Notification.operationFailed(message, operationUuid));
+      ftm.removeSource(operationUuid);
+      return;
     }
   }
 

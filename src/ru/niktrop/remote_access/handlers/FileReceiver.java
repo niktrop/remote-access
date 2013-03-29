@@ -5,13 +5,17 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.FileTransferManager;
+import ru.niktrop.remote_access.commands.Notification;
 
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,14 +24,17 @@ import java.util.UUID;
  * Time: 21:56
  */
 public class FileReceiver extends SimpleChannelUpstreamHandler{
+  private static final Logger LOG = Logger.getLogger(FileReceiver.class.getName());
 
-  private final FileTransferManager fileTransferManager;
+  private final FileTransferManager ftm;
+  private final CommandManager cm;
   private String operationUuid;
   private long remainingFileLength;
   private FileChannel currentFileChannel;
 
   public FileReceiver(Controller controller) {
-    fileTransferManager = controller.getFileTransferManager();
+    ftm = controller.getFileTransferManager();
+    cm = controller.getCommandManager();
   }
 
   @Override
@@ -43,9 +50,9 @@ public class FileReceiver extends SimpleChannelUpstreamHandler{
 
       operationUuid = new UUID(buf.readLong(), buf.readLong()).toString();
       remainingFileLength = buf.readLong();
-      Path target = fileTransferManager.getTarget(operationUuid);
+      Path target = ftm.getTarget(operationUuid);
       currentFileChannel = FileChannel.open(target, StandardOpenOption.WRITE);
-      fileTransferManager.setTargetFileChannel(currentFileChannel);
+      ftm.setTargetFileChannel(currentFileChannel);
       return;
     }
 
@@ -66,7 +73,13 @@ public class FileReceiver extends SimpleChannelUpstreamHandler{
     //clean handler state
     remainingFileLength = 0;
     currentFileChannel.close();
+    //delete info about this operation from FileTransferManager
+    Path targetPath = ftm.getTarget(operationUuid);
+    ftm.removeTarget(operationUuid);
 
-    fileTransferManager.sendingFileFailed(e.getCause(), operationUuid);
+    String message = String.format("Receiving file failed: %s \r\n %s", operationUuid, e.getCause());
+    LOG.log(Level.WARNING, message, e.getCause());
+    cm.executeCommand(Notification.operationFailed(message, operationUuid));
+    return;
   }
 }

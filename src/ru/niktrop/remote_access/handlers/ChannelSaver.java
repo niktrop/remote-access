@@ -1,5 +1,6 @@
 package ru.niktrop.remote_access.handlers;
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
@@ -20,6 +21,9 @@ public class ChannelSaver extends SimpleChannelHandler {
 
   @Override
   public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    manager.setChannel(ctx.getChannel());
+    Channel oldChannel = manager.getChannel();
+    if (oldChannel == null || !oldChannel.isConnected()) {
+      manager.setChannel(ctx.getChannel());
+    }
   }
 }

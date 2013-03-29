@@ -8,6 +8,7 @@ package ru.niktrop.remote_access.commands;
 */
 public enum NotificationType {
   WARNING,
+  PLAIN,
   OPERATION_STARTED,
   OPERATION_FINISHED,
   OPERATION_FAILED;

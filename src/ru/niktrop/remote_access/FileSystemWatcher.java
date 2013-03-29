@@ -106,7 +106,8 @@ public class FileSystemWatcher {
 
       for (FSChange fsChange : applicableFSChanges) {
         fsChangeQueue.offer(fsChange);
-        LOG.info("FSChange enqueued:" + fsChange.getChangeType().name() + " , " + fsChange.getPath());
+//        String message = String.format("FSChange enqueued: %s, %s", fsChange.getChangeType().name(), fsChange.getPath());
+//        LOG.log(Level.FINE, message);
       }
 
       boolean valid = key.reset();

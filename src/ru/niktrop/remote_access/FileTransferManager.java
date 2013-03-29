@@ -35,16 +35,12 @@ public class FileTransferManager implements ChannelManager{
 
   private FileChannel targetFileChannel;
 
-  public FileChannel getTargetFileChannel() {
-    return targetFileChannel;
-  }
-
   public void setTargetFileChannel(FileChannel targetFileChannel) {
     this.targetFileChannel = targetFileChannel;
   }
 
   //Responsible for sending files one at a time
-  private final Thread fileSender = new FileSender();
+  private final Thread fileSender = new FileSender("FileSender");
 
   private final BlockingQueue<String> waitingUuids = new LinkedBlockingQueue<>();
 
@@ -82,9 +78,8 @@ public class FileTransferManager implements ChannelManager{
   }
 
   public void sendingFileFailed(Throwable cause, String operationUUID) {
-    String message = String.format("Copy failed: \r\n %s", cause.toString());
+    String message = String.format("Sending file failed: \r\n %s", cause.toString());
     LOG.log(Level.WARNING, message, cause);
-
 
     commandManager.executeCommand(Notification.operationFailed(message, operationUUID));
 
@@ -119,6 +114,10 @@ public class FileTransferManager implements ChannelManager{
     private String operationUuid;
     private long fileLength;
 
+    private FileSender(String name) {
+      super(name);
+    }
+
     @Override
     public void run() {
       while (true) {
@@ -126,6 +125,7 @@ public class FileTransferManager implements ChannelManager{
           operationUuid = waitingUuids.take();
         } catch (InterruptedException e) {
           LOG.log(Level.WARNING, "File sender thread waiting was interrupted: ", e);
+          continue;
         }
         doSending();
       }
@@ -167,8 +167,7 @@ public class FileTransferManager implements ChannelManager{
     private ChannelFuture sendChunk(FileChannel fileChannel, ChannelFuture previous) throws IOException {
       previous.syncUninterruptibly();
       if (!previous.isSuccess()) {
-        sendingFileFailed(previous.getCause(), operationUuid);
-        return null;
+        throw new IOException("Sending chunk of the file failed.");
       }
       buffer.clear();
       buffer.writeBytes(fileChannel, (int) Math.min(fileLength - offset, buffer.writableBytes()));

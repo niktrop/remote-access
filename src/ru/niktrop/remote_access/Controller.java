@@ -2,8 +2,6 @@ package ru.niktrop.remote_access;
 
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImageCollection;
-import ru.niktrop.remote_access.file_system_model.PseudoFile;
-import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -67,16 +65,6 @@ public class Controller {
   public CommandManager getCommandManager() {
     return commandManager;
   }
-
-  public PseudoFile getDefaultDirectory(List<FSImage> fsImages) {
-    if (fsImages.isEmpty()) {
-      return null;
-  //TODO defaultDirectory when fsImages is empty?
-    }
-    FSImage fsi = fsImages.get(0);
-    return new PseudoFile(fsi, new PseudoPath());
-  }
-
 
   public void addListener(ControllerListener listener) {
     listeners.add(listener);

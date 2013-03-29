@@ -33,7 +33,7 @@ public class PseudoPath {
   }
 
   public PseudoPath(Path path) {
-    this.names = new ArrayList<>();
+    names = new ArrayList<>();
     //empty Path represented by path with one empty filename
     int count = path.getNameCount();
     String name = path.getFileName().toString();
@@ -41,7 +41,7 @@ public class PseudoPath {
       return;
     }
     for(int i = 0; i < path.getNameCount(); i++) {
-      this.names.add(path.getName(i).toString());
+      names.add(path.getName(i).toString());
     }
   }
 
@@ -53,11 +53,15 @@ public class PseudoPath {
   }
 
   public String getName(int i) {
-    return this.names.get(i);
+    return names.get(i);
+  }
+
+  public String getFileName() {
+    return names.get(names.size() - 1);
   }
 
   public int getNameCount() {
-    return this.names.size();
+    return names.size();
   }
 
   public PseudoPath resolve(String name) {
@@ -67,7 +71,7 @@ public class PseudoPath {
   }
 
   public PseudoPath getParent() {
-    if (this.names.size() == 0) {
+    if (names.size() == 0) {
       return null;
     }
     List<String> newNames = new ArrayList<>(names);

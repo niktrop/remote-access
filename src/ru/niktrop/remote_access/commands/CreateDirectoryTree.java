@@ -10,7 +10,7 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -37,7 +37,7 @@ public class CreateDirectoryTree implements SerializableCommand{
 
   private CommandManager cm;
 
-  private List<PseudoFile> leafNodes = new LinkedList<>();
+  private List<PseudoFile> leafNodes = new ArrayList<>();
 
   public CreateDirectoryTree(String targetFsiUuid, PseudoPath targetDir, FSImage directoryTree, String operationUuid) {
     this.targetFsiUuid = targetFsiUuid;

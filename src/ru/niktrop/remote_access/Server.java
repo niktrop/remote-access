@@ -59,7 +59,7 @@ public class Server {
       System.exit(1);
     }
 
-    String message = "Server is running.";
+    String message = "Remote access server is running.";
     controller.getNotificationManager().show(Notification.plain(message));
     LOG.log(Level.INFO, message);
   }
@@ -123,7 +123,7 @@ public class Server {
         pipeline.addLast("string encoder", new StringEncoder());
         pipeline.addLast("command decoder", new CommandDecoder());
         pipeline.addLast("command encoder", new CommandEncoder());
-        pipeline.addLast("logger",  new LoggerHandler(Level.INFO));
+        pipeline.addLast("logger",  new LoggerHandler(Level.FINE));
         pipeline.addLast("executor", new CommandExecutor(controller));
 
         return pipeline;
