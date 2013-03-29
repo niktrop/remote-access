@@ -95,8 +95,6 @@ public class OneSidePanel extends JPanel{
     btnDelete.addActionListener(new DeleteAction(fileTable, controller));
     btnRename.addActionListener(new RenameAction(fileTable, controller));
     btnCreateDirectory.addActionListener(new CreateDirectoryAction(fileTable, controller));
-
-    controller.addListener(fileTable);
   }
 
 

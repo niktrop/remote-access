@@ -1,14 +1,9 @@
 package ru.niktrop.remote_access.gui;
 
 import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.ControllerListener;
-import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
-import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,7 +11,7 @@ import java.util.List;
  * Date: 12.03.13
  * Time: 16:52
  */
-public class FileTable extends JTable implements ControllerListener {
+public class FileTable extends JTable {
 
   private final Controller controller;
 
@@ -28,9 +23,10 @@ public class FileTable extends JTable implements ControllerListener {
   }
 
   private void setUpFileTable(PseudoFile directory) {
-    FileTableModel fileTableModel = new FileTableModel(directory);
-
+    FileTableModel fileTableModel = new FileTableModel(controller, directory);
     setModel(fileTableModel);
+    controller.addListener(fileTableModel);
+
     setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     setAutoCreateRowSorter(true);
     getRowSorter().toggleSortOrder(0);
@@ -50,33 +46,6 @@ public class FileTable extends JTable implements ControllerListener {
     controller.fireControllerChange();
   }
 
-  @Override
-  public void controllerChanged() {
-    FileTableModel tm = (FileTableModel)getModel();
-    PseudoFile dir = tm.getDirectory();
-
-    if (dir != null && dir.exists()) {
-      tm.fireTableDataChanged();
-      return;
-    }
-
-    //if directory was deleted, show nearest ancestor
-    if (dir != null && !dir.exists()) {
-      while(!dir.exists()) {
-        dir = dir.getParent();
-      }
-    }
-
-    //if directory became null, show default directory
-    if (dir == null) {
-      List<FSImage> fsImages = new ArrayList<>(controller.fsImages.getLocal());
-      fsImages.addAll(controller.fsImages.getRemote());
-      dir = new PseudoFile(fsImages.get(0), new PseudoPath());
-    }
-
-    tm.setDirectory(dir);
-    tm.fireTableDataChanged();
-  }
 
   /**
    * Returns selected rows indexes in terms of view.

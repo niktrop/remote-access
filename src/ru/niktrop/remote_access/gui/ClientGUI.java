@@ -84,11 +84,10 @@ public class ClientGUI extends JFrame {
   }
 
   private void initSidePanels() {
-    PseudoFile leftDir = controller.getDefaultDirectory(controller.fsImages.getLocal());
-    PseudoFile rightDir = controller.getDefaultDirectory(controller.fsImages.getRemote());
+    PseudoFile defaultDirectory = controller.fsImages.defaultDirectory();
 
-    pnlLeft = new OneSidePanel(controller, leftDir);
-    pnlRight = new OneSidePanel(controller, rightDir);
+    pnlLeft = new OneSidePanel(controller, defaultDirectory);
+    pnlRight = new OneSidePanel(controller, defaultDirectory);
   }
 
 }

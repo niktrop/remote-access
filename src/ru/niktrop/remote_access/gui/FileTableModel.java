@@ -1,5 +1,7 @@
 package ru.niktrop.remote_access.gui;
 
+import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.ControllerListener;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 
 import javax.swing.table.AbstractTableModel;
@@ -12,18 +14,19 @@ import java.util.List;
  * Date: 12.03.13
  * Time: 15:37
  */
-public class FileTableModel extends AbstractTableModel {
+public class FileTableModel extends AbstractTableModel implements ControllerListener {
+  private Controller controller;
   private PseudoFile directory;
   private List<String> columns = new ArrayList<>();
+
   {
     columns.add("Type");
     columns.add("Name");
   }
 
-  public FileTableModel() {}
-
-  public FileTableModel(PseudoFile directory) {
+  public FileTableModel(Controller controller, PseudoFile directory) {
     this.directory = directory;
+    this.controller = controller;
   }
 
   public PseudoFile getPseudoFile(int index) {
@@ -65,5 +68,24 @@ public class FileTableModel extends AbstractTableModel {
     if (columnIndex == 0) return pseudoFile.getType();
     if (columnIndex == 1) return pseudoFile.getName();
     return null;
+  }
+
+  @Override
+  public void controllerChanged() {
+
+    //if directory was deleted, show nearest ancestor
+    if (directory != null && !directory.exists()) {
+      while(!directory.exists()) {
+        directory = directory.getParent();
+      }
+    }
+
+    //if directory became null, show default directory
+    if (directory == null) {
+      directory = controller.fsImages.defaultDirectory();
+    }
+
+    setDirectory(directory);
+    fireTableDataChanged();
   }
 }
