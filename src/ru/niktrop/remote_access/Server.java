@@ -183,10 +183,9 @@ public class Server {
 
   private static void loadProperties(String filename) {
     Properties prop = new Properties();
-
-    try {
-      //load a properties file
-      prop.load(new FileInputStream(filename));
+    String path = "./" + filename;
+    try (FileInputStream file = new FileInputStream(path)) {
+      prop.load(file);
 
       filePort = Integer.parseInt(prop.getProperty("file_port"));
       commandPort = Integer.parseInt(prop.getProperty("command_port"));
@@ -204,6 +203,7 @@ public class Server {
       LOG.log(Level.WARNING, message, ex);
       Notification warning = Notification.warning(message);
       controller.getNotificationManager().show(warning);
-      System.exit(1);    }
+      System.exit(1);
+    }
   }
 }

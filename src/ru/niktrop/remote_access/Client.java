@@ -209,8 +209,8 @@ public class Client {
 
   private static void loadProperties(String filename) {
     Properties prop = new Properties();
-
-    try (FileInputStream file = new FileInputStream(filename)) {
+    String path = "./" + filename;
+    try (FileInputStream file = new FileInputStream(path)) {
 
       prop.load(file);
 
