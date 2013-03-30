@@ -1,15 +1,16 @@
 package ru.niktrop.remote_access.handlers;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
 import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.FileTransferManager;
 import ru.niktrop.remote_access.commands.Notification;
 
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -20,66 +21,87 @@ import java.util.logging.Logger;
 /**
  * Created with IntelliJ IDEA.
  * User: Nikolai Tropin
- * Date: 20.03.13
- * Time: 21:56
+ * Date: 30.03.13
+ * Time: 15:03
  */
-public class FileReceiver extends SimpleChannelUpstreamHandler{
+public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
   private static final Logger LOG = Logger.getLogger(FileReceiver.class.getName());
 
   private final FileTransferManager ftm;
   private final CommandManager cm;
+  private Path target;
   private String operationUuid;
   private long remainingFileLength;
   private FileChannel currentFileChannel;
 
+  //Buffer for chunking large files
+  private ChannelBuffer tempBuf = ChannelBuffers.buffer(10000);
+
   public FileReceiver(Controller controller) {
+    super(DecodingState.OPERATION_UUID);
     ftm = controller.getFileTransferManager();
     cm = controller.getCommandManager();
   }
 
   @Override
-  public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-    ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+  protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer, DecodingState state)
+          throws Exception {
 
-    //receiving new file
-    if (remainingFileLength == 0) {
+    switch (state) {
+      case OPERATION_UUID:
+        //receive operation uuid and setup FileChannel
+        operationUuid = new UUID(buffer.readLong(), buffer.readLong()).toString();
+        target = ftm.getTarget(operationUuid);
+        currentFileChannel = FileChannel.open(target, StandardOpenOption.WRITE);
+        ftm.setTargetFileChannel(currentFileChannel);
+        checkpoint(DecodingState.FILE_LENGTH);
+      case FILE_LENGTH:
+        remainingFileLength = buffer.readLong();
+        checkpoint(DecodingState.DATA);
+      case DATA:
+        int toRead;
+        while (remainingFileLength > 0) {
+          //write to temp buffer first
+          toRead = (int) Math.min(remainingFileLength, tempBuf.capacity());
+          tempBuf = buffer.readBytes(toRead);
+          checkpoint();
+          //write to file
+          tempBuf.readBytes(currentFileChannel, toRead);
+          remainingFileLength -= toRead;
+          tempBuf.clear();
+        }
 
-      if (buf.readableBytes() < 24) {
-        return;
-      }
-
-      operationUuid = new UUID(buf.readLong(), buf.readLong()).toString();
-      remainingFileLength = buf.readLong();
-      Path target = ftm.getTarget(operationUuid);
-      currentFileChannel = FileChannel.open(target, StandardOpenOption.WRITE);
-      ftm.setTargetFileChannel(currentFileChannel);
-      return;
-    }
-
-    if (remainingFileLength > 0) {
-      int readable = buf.readableBytes();
-      int toRead = (int) Math.min(remainingFileLength, readable);
-      buf.readBytes(currentFileChannel, toRead);
-      remainingFileLength -= toRead;
-    }
-
-    if (remainingFileLength == 0) {
-      currentFileChannel.close();
+        if (remainingFileLength == 0) {
+          checkpoint(DecodingState.OPERATION_UUID);
+          fileReceived();
+          return null;
+        } else {
+          buffer.readBytes(currentFileChannel, (int)Math.min(remainingFileLength, Integer.MAX_VALUE));
+        }
+      default:
+        throw new Error("Shouldn't reach here.");
     }
   }
 
-  @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-    //clean handler state
-    remainingFileLength = 0;
-    currentFileChannel.close();
-    //delete info about this operation from FileTransferManager
-    Path targetPath = ftm.getTarget(operationUuid);
-    ftm.removeTarget(operationUuid);
+  private void fileReceived() {
+    try {
+      currentFileChannel.close();
+    } catch (IOException e) {
+      String message = String.format("Couldn't close file ", target.toString());
+      LOG.log(Level.WARNING, message, e.getCause());
+    }
 
-    String message = String.format("Receiving file failed: %s \r\n %s", operationUuid, e.getCause());
-    LOG.log(Level.WARNING, message, e.getCause());
-    cm.executeCommand(Notification.operationFailed(message, operationUuid));
-    return;
+    String message = String.format("Copy finished: %s", target.getFileName().toString());
+    Notification finished = Notification.operationFinished(message, operationUuid);
+    cm.executeCommand(finished);
+
+    ftm.removeTarget(operationUuid);
+  }
+
+  public enum DecodingState {
+    OPERATION_UUID,
+    FILE_LENGTH,
+    DATA
   }
 }
+

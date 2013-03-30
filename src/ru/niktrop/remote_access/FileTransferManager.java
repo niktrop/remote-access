@@ -182,10 +182,6 @@ public class FileTransferManager implements ChannelManager{
     private void afterLastChunk() throws IOException {
       offset = 0;
       buffer.clear();
-
-      String message = String.format("Copy finished: %s", getSource(operationUuid).toString());
-      Notification finished = Notification.operationFinished(message, operationUuid);
-      commandManager.executeCommand(finished);
       removeSource(operationUuid);
     }
   }

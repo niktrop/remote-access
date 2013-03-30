@@ -97,30 +97,31 @@ public class CommandManager implements ChannelManager {
             LOG.log(Level.WARNING, "CommandSender waiting was interrupted: ", e);
             continue;
           }
-        }
+        } else {
 
-        //check channel
-        if (channel == null || !channel.isConnected()) {
-          LOG.warning("Attempt to send command while channel is not connected.");
-          try {
-            Thread.sleep(1000);
-          } catch (InterruptedException e) {
-            LOG.log(Level.WARNING, "Waiting for reconnection was interrupted.");
+          //check channel
+          if (channel == null || !channel.isConnected()) {
+            LOG.warning("Attempt to send command while channel is not connected.");
+            try {
+              Thread.sleep(3000);
+            } catch (InterruptedException e) {
+              LOG.log(Level.WARNING, "Waiting for reconnection was interrupted.");
+            }
+            continue;
           }
-          continue;
-        }
 
-        //send command
-        try {
-          channel.write(command);
-        } catch (Exception e) {
-          String message = String.format("Problem with sending to %s.", channel.getRemoteAddress());
-          LOG.log(Level.WARNING, message, e.getCause());
-          continue;
-        }
+          //send command
+          try {
+            channel.write(command);
+          } catch (Exception e) {
+            String message = String.format("Problem with sending to %s.", channel.getRemoteAddress());
+            LOG.log(Level.WARNING, message, e.getCause());
+            continue;
+          }
 
-        //clear command
-        command = null;
+          //clear command
+          command = null;
+        }
       }
     }
   }
