@@ -13,6 +13,10 @@ import java.util.List;
  * Date: 26.02.13
  * Time: 21:24
  */
+
+/**
+ * Represents a real node in the specific FSImage.
+ * */
 public class PseudoFile {
   private final PseudoPath pseudoPath;
   private final FSImage fsImage;

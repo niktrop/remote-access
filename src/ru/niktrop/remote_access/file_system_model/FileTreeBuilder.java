@@ -18,6 +18,11 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
  * Date: 28.02.13
  * Time: 13:27
  */
+
+/**
+ * File visitor for building FSImage of the specified depth. While traversing file tree,
+ * it registers added directories with WatchService.
+ * */
 public class FileTreeBuilder extends SimpleFileVisitor<Path> {
   private static final Logger LOG = Logger.getLogger(FileTreeBuilder.class.getName());
 
@@ -48,7 +53,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
         currentDepth--;
         return FileVisitResult.CONTINUE;
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.info(e.getMessage());
         return FileVisitResult.SKIP_SUBTREE;
       }
     } else return FileVisitResult.SKIP_SIBLINGS;
@@ -64,7 +69,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
         addPathToTree(file, currentDepth);
         return FileVisitResult.CONTINUE;
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.info(e.getMessage());
         return FileVisitResult.CONTINUE;
       }
     } else return FileVisitResult.SKIP_SIBLINGS;
@@ -78,6 +83,7 @@ public class FileTreeBuilder extends SimpleFileVisitor<Path> {
 
   @Override
   public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+    //In windows visiting failes on all symbolic links
     LOG.fine("Visit file failed: " + file.toString());
     return FileVisitResult.CONTINUE;
   }

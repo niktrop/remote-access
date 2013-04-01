@@ -14,14 +14,17 @@ import java.nio.file.Path;
  * Date: 25.02.13
  * Time: 10:28
  */
+
+/**
+ * Internal representation of parts of the file system using nu.xom library.
+ * Can be serialized to xml. Each FSImage has unique id.
+ * */
 public class FSImage {
   private final Element fileTree;
 
   /*Should not be saved to xml serialization,
     for local use only.*/
   private final Path pathToRoot;
-
-  //private final String uuid;
 
   public String getUuid() {
     return fileTree.getAttributeValue("uuid");
@@ -76,6 +79,9 @@ public class FSImage {
     return currentElement;
   }
 
+  /**
+   * Represents label of the root directory of this FSImage.
+   * */
   public String getRootAlias() {
     String alias = isLocal() ? pathToRoot.toString() : fileTree.getAttributeValue("alias");
     if (alias == null)

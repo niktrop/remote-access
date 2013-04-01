@@ -13,6 +13,11 @@ import java.util.StringTokenizer;
  * Date: 25.02.13
  * Time: 11:27
  */
+
+/**
+ * List of string names, represents abstract path in FSImage.
+ * Can be serialized to string.
+ * */
 public class PseudoPath {
   private List<String> names;
   private static String unitSeparator = "\u001F";

@@ -11,6 +11,11 @@ import static ru.niktrop.remote_access.file_system_model.FSImages.byAlias;
  * Date: 18.03.13
  * Time: 14:37
  */
+
+/**
+ * Collection of FSImages. These can be local or not.
+ * Returned lists are sorted by the alias of the FSImage.
+ * */
 public class FSImageCollection{
 
   //Keys are fsiUuid.

@@ -7,6 +7,7 @@ package ru.niktrop.remote_access.file_system_model;
  * Time: 16:28
  */
 public enum FileType {
+  //only file and directory are really used
   DIR("directory"),
   FILE("file"),
   SYMLINK("symlink"),
