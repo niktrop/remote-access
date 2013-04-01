@@ -43,7 +43,7 @@ public class RenameFile implements SerializableCommand {
   }
 
   //Only for deserialization.
-  public RenameFile() {
+  RenameFile() {
     this(null, null, null, null);
   }
 
@@ -88,6 +88,8 @@ public class RenameFile implements SerializableCommand {
     }
   }
 
+  //Implemented in essence as in FileUtils.moveDirectory(), but added some extra time
+  //between cleaning and deleting directory, if File.renameTo doesn't work.
   private void renameDirectory(File srcDir, File destDir) throws IOException {
     boolean rename = srcDir.renameTo(destDir);
     if (!rename) {

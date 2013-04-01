@@ -10,26 +10,23 @@ import ru.niktrop.remote_access.Controller;
  */
 
 /**
- * All implementations should have parameterless constructor for deserialization.
+ * All implementations should have parameterless constructor for the deserialization.
  * */
 public interface SerializableCommand {
 
   /**
-   * Returns response actions for sending back.
-   */
+   * Does all the work. Controller encapsulates all resources, needed for execution.
+   * */
   void execute(Controller controller);
 
   /**
-   * Should build string, which begins with full class name of the SerializedCommand.
-   * The rest of the string contains all information for command execution.
-   * Two parts of the string separated by the character '\u001E' ("group separator").
+   * Should build string, which contains all information for command execution.
    */
   String getStringRepresentation();
 
   /**
-   * Should return the instance of the SerializedCommand.
-   * Argument should match part of the string representation after separator (without class name).
-   */
+   * Should reconstruct the instance of the SerializedCommand from string representation.
+   * */
   SerializableCommand fromString(String string);
 
 }

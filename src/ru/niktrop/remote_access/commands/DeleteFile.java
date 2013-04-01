@@ -7,6 +7,7 @@ import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.StringTokenizer;
@@ -20,6 +21,10 @@ import java.util.logging.Logger;
  * Date: 18.03.13
  * Time: 9:48
  */
+
+/**
+ * Command for deleting file or directory.
+ * */
 public class DeleteFile implements SerializableCommand {
   private static final Logger LOG = Logger.getLogger(DeleteFile.class.getName());
 
@@ -66,15 +71,22 @@ public class DeleteFile implements SerializableCommand {
       cm.executeCommand(start);
       Path pathToRoot = fsi.getPathToRoot();
       Path fullPath = pathToRoot.resolve(path.toPath());
+      File file = fullPath.toFile();
       Notification response;
       try {
-        FileUtils.cleanDirectory(fullPath.toFile());
-        //need to wait some time before deleting
-        try {
-          Thread.sleep(100L);
-        } catch (InterruptedException e) {
+        if (file.isDirectory()) {
+          //FileUtils.forceDelete() sometimes just clean the directory
+          //and throws exception when deleting empty directory after that.
+          //Waiting some times after cleaning seems to work.
+          FileUtils.cleanDirectory(file);
+          try {
+            Thread.sleep(100L);
+          } catch (InterruptedException e) {
+          }
+          FileUtils.deleteDirectory(file);
+        } else {
+          FileUtils.forceDelete(file);
         }
-        FileUtils.deleteDirectory(fullPath.toFile());
         response = Notification.operationFinished("Deleted: " + path.toString(), operationUuid);
       } catch (IOException e) {
         String message = String.format("Deleting failed:\r\n%s", e.getMessage());

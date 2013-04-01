@@ -12,6 +12,12 @@ import java.util.StringTokenizer;
  * Date: 19.03.13
  * Time: 12:29
  */
+
+/**
+ * Command for showing different kinds of notification dialogs in the GUI.
+ * Execution of Notification.operationStarted() should be followed by Notification.operationFinished()
+ * or Notification.operationFailed().
+ * */
 public class Notification implements SerializableCommand{
   private final NotificationType type;
   private final String message;
@@ -100,5 +106,13 @@ public class Notification implements SerializableCommand{
       operationUuid = st.nextToken();
     }
     return new Notification(type, message, operationUuid);
+  }
+
+  public static enum NotificationType {
+    WARNING,
+    PLAIN,
+    OPERATION_STARTED,
+    OPERATION_FINISHED,
+    OPERATION_FAILED;
   }
 }

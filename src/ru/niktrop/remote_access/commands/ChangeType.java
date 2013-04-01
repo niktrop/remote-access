@@ -11,6 +11,11 @@ import java.nio.file.WatchEvent;
  * Date: 04.03.13
  * Time: 12:38
  */
+
+/**
+ * Represents different types of commands to making change in existing
+ * FSImages or adding FSImage to a controller.
+ * */
 public enum ChangeType {
   CREATE_DIR,
   CREATE_FILE,

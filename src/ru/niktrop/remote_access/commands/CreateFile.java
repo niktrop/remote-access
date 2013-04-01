@@ -18,6 +18,10 @@ import java.util.logging.Logger;
  * Date: 20.03.13
  * Time: 23:36
  */
+
+/**
+ * Command for creating file or directory.
+ * */
 public class CreateFile implements SerializableCommand {
   private static final Logger LOG = Logger.getLogger(CreateFile.class.getName());
 

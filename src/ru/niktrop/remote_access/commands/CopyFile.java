@@ -22,6 +22,11 @@ import java.util.logging.Logger;
  * Date: 21.03.13
  * Time: 11:49
  */
+
+/**
+ * Starts operation of making copy of a file. If both source and target are on
+ * the same machine, does the whole task. Otherwise sends to the target side an AllocateSpace command.
+ * */
 public class CopyFile implements SerializableCommand {
   private static final Logger LOG = Logger.getLogger(CopyFile.class.getName());
 

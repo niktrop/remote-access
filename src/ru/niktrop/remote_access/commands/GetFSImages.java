@@ -11,16 +11,18 @@ import ru.niktrop.remote_access.file_system_model.PseudoPath;
  * Date: 11.03.13
  * Time: 11:17
  */
+
+/**
+ * Represents query from client to server to sent all FSImages from server controller.
+ * Should be sent when client is connecting to the server.
+ * */
 public class GetFSImages implements SerializableCommand {
 
-  //Only for deserialization.
+  //Command is stateless, but default constructor is needed for deserialization also.
   public GetFSImages() {
   }
 
-  /**
-   * Represents query from client to server to sent all FSImages from server controller.
-   * Should be sent when client is connecting to the server.
-   * */
+
   @Override
   public void execute(Controller controller) {
     CommandManager cm = controller.getCommandManager();

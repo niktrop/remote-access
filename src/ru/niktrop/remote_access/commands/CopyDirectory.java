@@ -22,6 +22,11 @@ import java.util.logging.Logger;
  * Date: 23.03.13
  * Time: 14:16
  */
+
+/**
+ * Starts operation of making copy of a directory. If both source and target are on
+ * the same machine, does the whole task. Otherwise sends to the target side a CreateDirectoryTree command.
+ * */
 public class CopyDirectory implements SerializableCommand {
   private static final Logger LOG = Logger.getLogger(CopyDirectory.class.getName());
 
@@ -91,7 +96,8 @@ public class CopyDirectory implements SerializableCommand {
       PseudoFile targetPseudoFile = new PseudoFile(targetFsi, targetDirectory.resolve(source.getFileName()));
       controller.getFileSystemWatcher().forceUpdate(targetPseudoFile);
 
-    } else {   //source is local, target is remote
+      //source is local, target is remote
+    } else {
 
       //save data about this operation on the source side
       ftm.addSource(operationUuid, realSource);

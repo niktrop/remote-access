@@ -10,10 +10,17 @@ import java.util.logging.Logger;
  * Date: 07.03.13
  * Time: 23:56
  */
+
+/**
+ * Utility class for SerializableCommand interface.
+ * */
 public class Commands {
   private static final Logger LOG = Logger.getLogger(Commands.class.getName());
 
-
+  /**
+   * Reconstructs an instance of SerializableCommand from serialized form.
+   * Works in pair with serializeToString() method.
+   * */
   public static SerializableCommand getFromString(String serialized)
           throws ClassNotFoundException, IllegalAccessException, InstantiationException {
     String groupSeparator = "\u001E";
@@ -41,6 +48,10 @@ public class Commands {
   }
 
 
+  /**
+   * Produces string form of a SerializableCommand for network communication.
+   * Works in pair with getFromString() method.
+   * */
   public static String serializeToString(SerializableCommand command) {
     StringBuilder builder = new StringBuilder();
     char groupSeparator = '\u001E';

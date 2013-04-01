@@ -21,8 +21,8 @@ import java.util.logging.Logger;
  */
 
 /**
- * Creates empty file of specified size.
- * Executes on the target side of a copy operation.
+ * Creates empty file of specified size. Should be sent as a result of execution
+ * CopyFile command from source to target size.
  * */
 public class AllocateSpace implements SerializableCommand {
   private static final Logger LOG = Logger.getLogger(AllocateSpace.class.getName());

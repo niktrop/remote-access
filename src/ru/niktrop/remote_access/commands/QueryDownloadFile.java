@@ -12,14 +12,14 @@ import ru.niktrop.remote_access.FileTransferManager;
 
 /**
  * One of the command from a copy operation. Should be sent
- * from the target side to the source side as a result of AllocateSpace.
+ * from the target side to the source side after execution of AllocateSpace command.
  * */
 public class QueryDownloadFile implements SerializableCommand {
 
   String operationUuid;
 
   //Only for deserialization.
-  public QueryDownloadFile() {
+  QueryDownloadFile() {
     this(null);
   }
 

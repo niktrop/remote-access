@@ -17,6 +17,11 @@ import java.util.logging.Logger;
  * Date: 04.03.13
  * Time: 12:39
  */
+
+/**
+ * Represents command to make change in existing
+ * FSImage or adding FSImage to a controller.
+ * */
 public class FSChange implements SerializableCommand {
   private static final Logger LOG = Logger.getLogger(FSChange.class.getName());
 

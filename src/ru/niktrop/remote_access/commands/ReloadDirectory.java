@@ -20,6 +20,11 @@ import java.util.logging.Logger;
  * Date: 11.03.13
  * Time: 14:30
  */
+
+/**
+ * Reloads content of the directory to the FSImage with depth of traversing
+ * file tree, specified by the controller. Executes when directory is opened in the first time.
+ * */
 public class ReloadDirectory implements SerializableCommand {
   private static final Logger LOG = Logger.getLogger(ReloadDirectory.class.getName());
 
