@@ -12,6 +12,11 @@ import ru.niktrop.remote_access.ChannelManager;
  * Date: 19.03.13
  * Time: 9:01
  */
+
+/**
+ * Saves channel to server controller when a client connect to server.
+ * Does nothing, if server already have connected channel.
+ * */
 public class ChannelSaver extends SimpleChannelHandler {
   private ChannelManager manager;
 

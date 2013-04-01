@@ -14,6 +14,10 @@ import java.util.logging.Logger;
  * Date: 29.03.13
  * Time: 12:22
  */
+
+/**
+ * Tries to reconnect channel on the client side if something went wrong.
+ * */
 public class Reconnector extends SimpleChannelHandler{
   private static final Logger LOG = Logger.getLogger(Reconnector.class.getName());
 

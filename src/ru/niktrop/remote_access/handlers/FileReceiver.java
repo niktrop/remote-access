@@ -24,6 +24,10 @@ import java.util.logging.Logger;
  * Date: 30.03.13
  * Time: 15:03
  */
+
+/**
+ * Responsible for receiving files, that are sent by FileTransferManager.
+ * */
 public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
   private static final Logger LOG = Logger.getLogger(FileReceiver.class.getName());
 
@@ -34,7 +38,7 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
   private long remainingFileLength;
   private FileChannel currentFileChannel;
 
-  //Buffer for chunking large files
+  //Buffer for minimize write to file operations for large files
   private ChannelBuffer tempBuf = ChannelBuffers.buffer(65536);
 
   public FileReceiver(Controller controller) {
@@ -75,9 +79,8 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
           checkpoint(DecodingState.OPERATION_UUID);
           fileReceived();
           return null;
-        } else {
-          buffer.readBytes(currentFileChannel, (int)Math.min(remainingFileLength, Integer.MAX_VALUE));
         }
+
       default:
         throw new Error("Shouldn't reach here.");
     }

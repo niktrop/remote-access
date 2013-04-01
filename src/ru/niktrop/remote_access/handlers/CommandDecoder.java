@@ -13,8 +13,7 @@ import ru.niktrop.remote_access.commands.Commands;
  */
 public class CommandDecoder extends OneToOneDecoder {
   /**
-   * Produces String representation of written SerializableCommand object.
-   * Beginning of the String encodes type of the object.
+   * Transforms String message to a SerializableCommand instance.
    */
   @Override
   protected Object decode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {

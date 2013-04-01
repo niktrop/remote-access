@@ -15,7 +15,8 @@ import ru.niktrop.remote_access.commands.SerializableCommand;
 public class CommandEncoder extends OneToOneEncoder {
 
   /**
-   * Transforms String message to a SerializableCommand instance.
+   * Produces String representation of written SerializableCommand object.
+   * Beginning of the String encodes type of the object.
    */
   @Override
   protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {

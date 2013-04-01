@@ -13,6 +13,10 @@ import ru.niktrop.remote_access.commands.SerializableCommand;
  * Date: 14.03.13
  * Time: 17:10
  */
+
+/**
+ * Executes received command.
+ * */
 public class CommandExecutor extends SimpleChannelUpstreamHandler {
 
   private final CommandManager commandManager;

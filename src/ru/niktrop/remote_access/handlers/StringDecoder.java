@@ -16,6 +16,10 @@ import java.util.logging.Logger;
  * Date: 07.03.13
  * Time: 12:58
  */
+
+/**
+ * Construct right strings from received buffers.
+ * */
 public class StringDecoder extends FrameDecoder{
   private static final Logger LOG = Logger.getLogger(StringDecoder.class.getName());
 

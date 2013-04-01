@@ -11,8 +11,11 @@ import java.util.logging.Logger;
  * Date: 14.03.13
  * Time: 17:03
  */
+
 public class LoggerHandler extends SimpleChannelHandler {
   private static final Logger LOG = Logger.getLogger(LoggerHandler.class.getName());
+
+  //Logging level of messageReceived and writeRequested events.
   private Level level;
 
   public LoggerHandler(Level level) {
