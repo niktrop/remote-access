@@ -45,7 +45,8 @@ public class CommandManager implements ChannelManager {
   }
 
   public void executeCommand(SerializableCommand command){
-    commandsToExecute.offer(command);
+    if (command != null)
+      commandsToExecute.offer(command);
   }
 
   private class CommandExecutor extends Thread {

@@ -84,7 +84,12 @@ public class CopyDirectory implements SerializableCommand {
       Path targetDirRelative = targetDirectory.toPath();
       Path targetDir = targetFsi.getPathToRoot().resolve(targetDirRelative);
 
-      localCopy(realSource, targetDir);
+      localCopyToDirectory(realSource, targetDir);
+
+      //FileSystemWatcher may have no time to register target directory
+      //before copy of subelements will be made, so we so we force update it.
+      PseudoFile targetPseudoFile = new PseudoFile(targetFsi, targetDirectory.resolve(source.getFileName()));
+      controller.getFileSystemWatcher().forceUpdate(targetPseudoFile);
 
     } else {   //source is local, target is remote
 
@@ -153,7 +158,7 @@ public class CopyDirectory implements SerializableCommand {
     return new CopyDirectory(sourceFsiUuid, sourceFile, targetFsiUuid, targetDirectory, operationUuid);
   }
 
-  private void localCopy(Path source, Path targetDir) {
+  private void localCopyToDirectory(Path source, Path targetDir) {
     Notification response;
     try {
       FileUtils.copyDirectoryToDirectory(source.toFile(), targetDir.toFile());

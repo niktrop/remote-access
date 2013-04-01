@@ -31,19 +31,22 @@ public class Controller {
   private final List<ControllerListener> listeners = new ArrayList<>();
 
   private final WatchService watchService;
+  private final FileSystemWatcher fileSystemWatcher;
+  private final FSChangeHandler fsChangeHandler;
+
   private final NotificationManager notificationManager;
   private final CommandManager commandManager;
   private final FileTransferManager fileTransferManager;
 
-  {
-    notificationManager = new NotificationManager();
-    commandManager = new CommandManager(this);
-    fileTransferManager = new FileTransferManager(this);
-  }
 
 
   Controller(ControllerType type) throws IOException {
     watchService = FileSystems.getDefault().newWatchService();
+    fileSystemWatcher = new FileSystemWatcher(this);
+    fsChangeHandler = new FSChangeHandler(fileSystemWatcher, this);
+    notificationManager = new NotificationManager();
+    commandManager = new CommandManager(this);
+    fileTransferManager = new FileTransferManager(this);
     this.type = type;
   }
   public boolean isClient() {
@@ -64,6 +67,14 @@ public class Controller {
 
   public CommandManager getCommandManager() {
     return commandManager;
+  }
+
+  public FileSystemWatcher getFileSystemWatcher() {
+    return fileSystemWatcher;
+  }
+
+  public FSChangeHandler getFsChangeHandler() {
+    return fsChangeHandler;
   }
 
   public void addListener(ControllerListener listener) {

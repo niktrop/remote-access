@@ -1,9 +1,6 @@
 package ru.niktrop.remote_access.handlers;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.*;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,6 +31,46 @@ public class LoggerHandler extends SimpleChannelHandler {
     String typeOfMessage = e.getMessage().getClass().getSimpleName();
     LOG.log(level, "Sent: " + typeOfMessage);
     ctx.sendDownstream(e);
+  }
+
+  @Override
+  public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    LOG.log(Level.INFO, "Open: " + ctx.getChannel().toString());
+    super.channelOpen(ctx, e);
+  }
+
+  @Override
+  public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    LOG.log(Level.INFO, "Bound: " + ctx.getChannel().toString());
+    super.channelBound(ctx, e);
+  }
+
+  @Override
+  public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    LOG.log(Level.INFO, "Connected: " + ctx.getChannel().toString());
+    super.channelConnected(ctx, e);
+
+  }
+
+  @Override
+  public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    LOG.log(Level.INFO, "Closed: " + ctx.getChannel().toString());
+    super.channelClosed(ctx, e);
+
+  }
+
+  @Override
+  public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    LOG.log(Level.INFO, "Disconnected: " + ctx.getChannel().toString());
+    super.channelDisconnected(ctx, e);
+
+  }
+
+  @Override
+  public void channelUnbound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    LOG.log(Level.INFO, "Unbound: " + ctx.getChannel().toString());
+    super.channelUnbound(ctx, e);
+
   }
 
   @Override

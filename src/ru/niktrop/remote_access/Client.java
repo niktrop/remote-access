@@ -87,10 +87,8 @@ public class Client {
   }
 
   private static void startFileSystemWatching() {
-    FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
-    FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);
-    fsWatcher.runWatcher();
-    fsHandler.runHandler();
+    controller.getFileSystemWatcher().runWatcher();
+    controller.getFsChangeHandler().runHandler();
   }
 
   private static void createFSImages() {

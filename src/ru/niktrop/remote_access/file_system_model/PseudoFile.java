@@ -3,6 +3,7 @@ package ru.niktrop.remote_access.file_system_model;
 import nu.xom.Element;
 import nu.xom.Elements;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,21 +14,21 @@ import java.util.List;
  * Time: 21:24
  */
 public class PseudoFile {
-  private final PseudoPath path;
+  private final PseudoPath pseudoPath;
   private final FSImage fsImage;
 
-  public PseudoFile(FSImage fsImage, PseudoPath path) {
+  public PseudoFile(FSImage fsImage, PseudoPath pseudoPath) {
 
     this.fsImage = fsImage;
 
-    if (path == null)
-      this.path = new PseudoPath();
+    if (pseudoPath == null)
+      this.pseudoPath = new PseudoPath();
     else
-      this.path = path;
+      this.pseudoPath = pseudoPath;
   }
 
   public String getType() {
-    return fsImage.getType(path);
+    return fsImage.getType(pseudoPath);
   }
 
   public FSImage getFsImage() {
@@ -35,7 +36,7 @@ public class PseudoFile {
   }
 
   public PseudoPath getPseudoPath() {
-    return path;
+    return pseudoPath;
   }
 
   public boolean isDirectory() {
@@ -43,16 +44,16 @@ public class PseudoFile {
   }
 
   public boolean exists() {
-    return fsImage.contains(path);
+    return fsImage.contains(pseudoPath);
   }
 
   public List<PseudoFile> getContent() {
-    Element parent = fsImage.getElement(path);
+    Element parent = fsImage.getElement(pseudoPath);
     List<PseudoFile> content = new ArrayList<>();
     Elements children = parent.getChildElements();
     for(int i=0; i < children.size(); i++) {
       String childName = children.get(i).getAttributeValue("name");
-      content.add(new PseudoFile(fsImage, path.resolve(childName)));
+      content.add(new PseudoFile(fsImage, pseudoPath.resolve(childName)));
     }
     return content;
   }
@@ -78,9 +79,9 @@ public class PseudoFile {
   }
 
   public String getName() {
-    int count = path.getNameCount();
+    int count = pseudoPath.getNameCount();
     if (count > 0)
-      return path.getName(count - 1);
+      return pseudoPath.getName(count - 1);
     else
       return null;
   }
@@ -90,14 +91,13 @@ public class PseudoFile {
   }
 
   public int getDepth() {
-    Element element = fsImage.getElement(path);
+    Element element = fsImage.getElement(pseudoPath);
     String depth = element.getAttributeValue("depth");
     if (depth == null) {
       return -1;
     }
     else return Integer.parseInt(depth);
   }
-
 
   public String serializeToString() {
     StringBuilder builder = new StringBuilder();
@@ -106,13 +106,26 @@ public class PseudoFile {
 
     builder.append(fsImage.getUuid());
     builder.append(groupSeparator);
-    for (int i = 0; i < path.getNameCount(); i++) {
-      builder.append(path.getName(i));
+    for (int i = 0; i < pseudoPath.getNameCount(); i++) {
+      builder.append(pseudoPath.getName(i));
       builder.append(unitSeparator);
     }
     return builder.toString();
   }
 
+  /**
+   * Returns full pseudoPath to this Pseudofile if FSImage is local (knows pseudoPath to root),
+   * and relative pseudoPath if it is not.
+   * */
+  public Path toPath() {
+    if (fsImage.isLocal()) {
+      return fsImage.getPathToRoot().resolve(pseudoPath.toPath());
+    }
+    else {
+      return pseudoPath.toPath();
+    }
+
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -122,14 +135,14 @@ public class PseudoFile {
     PseudoFile that = (PseudoFile) o;
 
     if (fsImage != null ? !fsImage.equals(that.fsImage) : that.fsImage != null) return false;
-    if (path != null ? !path.equals(that.path) : that.path != null) return false;
+    if (pseudoPath != null ? !pseudoPath.equals(that.pseudoPath) : that.pseudoPath != null) return false;
 
     return true;
   }
 
   @Override
   public int hashCode() {
-    int result = path != null ? path.hashCode() : 0;
+    int result = pseudoPath != null ? pseudoPath.hashCode() : 0;
     result = 31 * result + (fsImage != null ? fsImage.hashCode() : 0);
     return result;
   }

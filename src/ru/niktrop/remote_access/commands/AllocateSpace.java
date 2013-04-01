@@ -66,7 +66,6 @@ public class AllocateSpace implements SerializableCommand {
     ftm.addTarget(operationUuid, fullPath);
     try (RandomAccessFile f = new RandomAccessFile(fullPath.toFile(), "rw")) {
       f.setLength(size);
-
       //will send next command to the source
       cm.sendCommand(new QueryDownloadFile(operationUuid));
     }
@@ -117,7 +116,5 @@ public class AllocateSpace implements SerializableCommand {
 
     Notification failed = Notification.operationFailed(message, operationUuid);
     cm.executeCommand(failed);
-
-    ftm.removeTarget(operationUuid);
   }
 }

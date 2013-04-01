@@ -35,7 +35,7 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
   private FileChannel currentFileChannel;
 
   //Buffer for chunking large files
-  private ChannelBuffer tempBuf = ChannelBuffers.buffer(10000);
+  private ChannelBuffer tempBuf = ChannelBuffers.buffer(65536);
 
   public FileReceiver(Controller controller) {
     super(DecodingState.OPERATION_UUID);
@@ -61,11 +61,11 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
       case DATA:
         int toRead;
         while (remainingFileLength > 0) {
-          //write to temp buffer first
+          //attempts to write to temp buffer
           toRead = (int) Math.min(remainingFileLength, tempBuf.capacity());
           tempBuf = buffer.readBytes(toRead);
           checkpoint();
-          //write to file
+          //write to file when writing to temp buffer succeeded
           tempBuf.readBytes(currentFileChannel, toRead);
           remainingFileLength -= toRead;
           tempBuf.clear();

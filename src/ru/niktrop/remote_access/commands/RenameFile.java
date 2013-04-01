@@ -1,11 +1,13 @@
 package ru.niktrop.remote_access.commands;
 
+import org.apache.commons.io.FileUtils;
 import ru.niktrop.remote_access.CommandManager;
 import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,12 +66,45 @@ public class RenameFile implements SerializableCommand {
 
     Path pathToRoot = fsi.getPathToRoot();
     Path fullPath = pathToRoot.resolve(path.toPath());
+    File file = fullPath.toFile();
+    Path newFullPath = fullPath.resolveSibling(newName);
+    File newFile = newFullPath.toFile();
     try {
-      Files.move(fullPath, fullPath.resolveSibling(newName));
+      if (Files.isDirectory(fullPath)) {
+        renameDirectory(file, newFile);
+
+        //FileSystemWatcher may have no time to register target directory
+        //before copy of sub-elements will be made, so we force update it.
+        PseudoPath newPseudoPath = new PseudoPath(pathToRoot.relativize(newFullPath));
+        PseudoFile newPseudoFile = new PseudoFile(fsi, newPseudoPath);
+        controller.getFileSystemWatcher().forceUpdate(newPseudoFile);
+      } else {
+        FileUtils.moveFile(file, newFile);
+      }
     } catch (IOException e) {
-      String message = String.format("Renaming failed: %s \r\n %s", path.toString(), e.getMessage());
+      String message = String.format("Renaming failed:\r\n%s", e.getMessage());
       LOG.log(Level.WARNING, message, e.getCause());
       cm.executeCommand(Notification.warning(message));
+    }
+  }
+
+  private void renameDirectory(File srcDir, File destDir) throws IOException {
+    boolean rename = srcDir.renameTo(destDir);
+    if (!rename) {
+      FileUtils.copyDirectory(srcDir, destDir);
+      FileUtils.cleanDirectory(srcDir);
+      try {
+        Thread.sleep(100L);
+      } catch (InterruptedException e) {
+        String message = String.format("Pause between cleaning and deleting directory %s was interrupted.",
+                srcDir.toString());
+        LOG.log(Level.FINE, message);
+      }
+      FileUtils.deleteDirectory(srcDir);
+      if (srcDir.exists()) {
+        throw new IOException("Failed to delete original directory '" + srcDir +
+                "' after copy to '" + destDir + "'");
+      }
     }
   }
 

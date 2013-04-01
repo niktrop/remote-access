@@ -21,11 +21,16 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
   private final String SEPARATOR = "SEPARATOR";
   private final Controller controller;
 
+  //background colors
+  private final Color colorLocal = new Color(200, 255, 200);
+  private final Color colorRemote = new Color(200, 200, 255);
+
 
 
   public FSImageChooser(Controller controller, FSImage selected) {
     this.controller = controller;
     setModel(new FSImageChooserModel(controller, selected));
+    setBackground(selected.isLocal() ? colorLocal : colorRemote);
     setRenderer(new FSImageChooserRenderer());
     controller.addListener(this);
   }
@@ -41,6 +46,12 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
     }
   }
 
+  @Override
+  protected void selectedItemChanged() {
+    super.selectedItemChanged();
+    FSImage selected = (FSImage)getSelectedItem();
+    setBackground(selected.isLocal() ? colorLocal : colorRemote);
+  }
 
   class FSImageChooserModel extends AbstractListModel<FSImage> implements ComboBoxModel<FSImage> {
 
@@ -106,13 +117,12 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
       if (SEPARATOR.equals(str)) {
         return separator;
       }
-      if (isSelected) {
-        setBackground(list.getSelectionBackground());
-        setForeground(list.getSelectionForeground());
+      if (fsImage.isLocal()) {
+        setBackground(colorLocal);
       } else {
-        setBackground(list.getBackground());
-        setForeground(list.getForeground());
+        setBackground(colorRemote);
       }
+      setForeground(list.getSelectionForeground());
       setFont(list.getFont());
       setText(str);
       return this;

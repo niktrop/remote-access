@@ -68,10 +68,16 @@ public class DeleteFile implements SerializableCommand {
       Path fullPath = pathToRoot.resolve(path.toPath());
       Notification response;
       try {
-        FileUtils.forceDelete(fullPath.toFile());
+        FileUtils.cleanDirectory(fullPath.toFile());
+        //need to wait some time before deleting
+        try {
+          Thread.sleep(100L);
+        } catch (InterruptedException e) {
+        }
+        FileUtils.deleteDirectory(fullPath.toFile());
         response = Notification.operationFinished("Deleted: " + path.toString(), operationUuid);
       } catch (IOException e) {
-        String message = String.format("Deleting failed: %s \r\n %s", path.toString(), e.getMessage());
+        String message = String.format("Deleting failed:\r\n%s", e.getMessage());
         LOG.log(Level.WARNING, message, e.getCause());
         response = Notification.operationFailed(message, operationUuid);
       }

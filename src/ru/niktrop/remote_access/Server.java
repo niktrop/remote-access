@@ -100,15 +100,13 @@ public class Server {
   }
 
   private static void startFileSystemWatching() {
-    FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
-    FSChangeHandler fsHandler = new FSChangeHandler(fsWatcher, controller);
-    fsWatcher.runWatcher();
-    fsHandler.runHandler();
+    controller.getFileSystemWatcher().runWatcher();
+    controller.getFsChangeHandler().runHandler();
   }
 
   private static Channel setupCommandChannel() {
     // Configure command server.
-    ServerBootstrap bootstrap = new ServerBootstrap(
+    final ServerBootstrap bootstrap = new ServerBootstrap(
             new NioServerSocketChannelFactory(
                     Executors.newFixedThreadPool(1),
                     Executors.newFixedThreadPool(2)));
@@ -147,7 +145,7 @@ public class Server {
   }
 
   private static Channel setupFileTransferChannel() {
-    ServerBootstrap fileBootstrap = new ServerBootstrap(
+    final ServerBootstrap fileBootstrap = new ServerBootstrap(
             new NioServerSocketChannelFactory(
                     Executors.newFixedThreadPool(1),
                     Executors.newFixedThreadPool(2)));
@@ -157,7 +155,6 @@ public class Server {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
 
-        //pipeline.addLast("logger",  new Logger(Level.PLAIN));
         pipeline.addLast("channel saver", new ChannelSaver(controller.getFileTransferManager()));
         pipeline.addLast("file receiver", new FileReceiver(controller));
 

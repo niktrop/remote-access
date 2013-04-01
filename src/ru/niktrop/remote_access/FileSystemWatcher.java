@@ -2,10 +2,7 @@ package ru.niktrop.remote_access;
 
 import ru.niktrop.remote_access.commands.ChangeType;
 import ru.niktrop.remote_access.commands.FSChange;
-import ru.niktrop.remote_access.file_system_model.FSImage;
-import ru.niktrop.remote_access.file_system_model.FSImageCollection;
-import ru.niktrop.remote_access.file_system_model.PseudoFile;
-import ru.niktrop.remote_access.file_system_model.PseudoPath;
+import ru.niktrop.remote_access.file_system_model.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -50,7 +47,7 @@ public class FileSystemWatcher {
       @Override
       public void run() {
         while(true) {
-          enqueueChanges();
+          enqueueChangesWaiting();
         }
       }
     };
@@ -69,7 +66,7 @@ public class FileSystemWatcher {
     try {
       fsChange = fsChangeQueue.take();
     } catch (InterruptedException e) {
-      LOG.log(Level.WARNING, "Waiting for file system change was interrupted.", e.getCause());
+      LOG.log(Level.WARNING, "Waiting for FSChange from the queue was interrupted.", e.getCause());
     }
     return fsChange;
   }
@@ -81,15 +78,40 @@ public class FileSystemWatcher {
   /**
    * Builds FSChange objects from WatchService events and
    * adds them to the internal queue of the FileSystemWatcher.
+   * Does not wait changes, if watch service does not have any.
    * Should be invoked from a separate thread in an infinite loop.
    */
-  public void enqueueChanges() {
-    WatchKey key = null;
-    key = watchService.poll();
+  public void enqueueChangesIfAny() {
+    WatchKey key = watchService.poll();
 
     if (key == null)
       return;
 
+    enqueueChanges(key);
+  }
+
+  /**
+   * Builds FSChange objects from WatchService events and
+   * adds them to the internal queue of the FileSystemWatcher.
+   * Wait changes, if watch service is empty.
+   * Should be invoked from a separate thread in an infinite loop.
+   */
+  public void enqueueChangesWaiting() {
+    WatchKey key = null;
+    try {
+      key = watchService.take();
+    } catch (InterruptedException e) {
+      LOG.log(Level.WARNING, "Waiting of file system changes was interrupted.");
+    }
+
+    if (key == null) {
+      return;
+    }
+
+    enqueueChanges(key);
+  }
+
+  private void enqueueChanges(WatchKey key) {
     Path dir = (Path)key.watchable();
     List<WatchEvent<?>> events = key.pollEvents();
     for (WatchEvent<?> event : events) {
@@ -106,8 +128,6 @@ public class FileSystemWatcher {
 
       for (FSChange fsChange : applicableFSChanges) {
         fsChangeQueue.offer(fsChange);
-//        String message = String.format("FSChange enqueued: %s, %s", fsChange.getChangeType().name(), fsChange.getPath());
-//        LOG.log(Level.FINE, message);
       }
 
       boolean valid = key.reset();
@@ -137,8 +157,6 @@ public class FileSystemWatcher {
           try {
             String xmlFsi = null;
             if (type == ChangeType.CREATE_DIR) {
-              //Find depth of loading for created directory
-              int depth = new PseudoFile(fsi, pseudoDir).getDepth() - 1;
               FSImage addedFsi = getFromDirectory(fullPath, maxDepth, watchService);
               xmlFsi = addedFsi.toXml();
             }
@@ -152,5 +170,31 @@ public class FileSystemWatcher {
       }
     }
     return result;
+  }
+
+  /**
+   * Update contents of specific directory. Works only with local FSImages.
+   * */
+  public void forceUpdate(PseudoFile directory) {
+    FSImage fsImage = directory.getFsImage();
+    if ( !fsImage.isLocal()) {
+      throw new IllegalArgumentException("FSImage of this Pseudofile should be local.");
+    }
+
+    Path fullPath = directory.toPath();
+    FSImage newDirFSImage = null;
+    try {
+      newDirFSImage = FSImages.getFromDirectory(fullPath, maxDepth, watchService);
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "Couldn't make FSImage from directory " + fullPath.toString());
+    }
+
+    FSChange fsChange = new FSChange(
+            ChangeType.CREATE_DIR,
+            fsImage.getUuid(),
+            directory.getPseudoPath(),
+            newDirFSImage.toXml());
+
+    fsChangeQueue.offer(fsChange);
   }
 }
