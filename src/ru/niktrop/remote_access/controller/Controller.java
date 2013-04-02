@@ -42,7 +42,7 @@ public class Controller {
 
   private final List<ControllerListener> listeners = new ArrayList<>();
 
-  Controller(ControllerType type) throws IOException {
+  public Controller(ControllerType type) throws IOException {
     this.type = type;
     watchService = FileSystems.getDefault().newWatchService();
     fileSystemWatcher = new FileSystemWatcher(this);

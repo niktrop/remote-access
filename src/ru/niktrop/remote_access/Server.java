@@ -8,7 +8,6 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import ru.niktrop.remote_access.commands.Notification;
 import ru.niktrop.remote_access.controller.Controller;
-import ru.niktrop.remote_access.controller.Controllers;
 import ru.niktrop.remote_access.controller.NotificationManager;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
@@ -85,7 +84,7 @@ public class Server {
 
   private static void setupController() {
     try {
-      controller = Controllers.getServerController();
+      controller = new Controller(Controller.ControllerType.SERVER);
       controller.setMaxDepth(maxDepth);
       notificationManager = controller.getNotificationManager();
     } catch (IOException e) {

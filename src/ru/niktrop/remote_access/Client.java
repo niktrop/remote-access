@@ -8,7 +8,6 @@ import ru.niktrop.remote_access.commands.Notification;
 import ru.niktrop.remote_access.controller.ChannelManager;
 import ru.niktrop.remote_access.controller.CommandManager;
 import ru.niktrop.remote_access.controller.Controller;
-import ru.niktrop.remote_access.controller.Controllers;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.gui.ClientGUI;
@@ -85,7 +84,7 @@ public class Client {
 
   private static void setupController() {
     try {
-      controller = Controllers.getClientController();
+      controller = new Controller(Controller.ControllerType.CLIENT);
       controller.setMaxDepth(maxDepth);
       commandManager = controller.getCommandManager();
     } catch (IOException e) {
