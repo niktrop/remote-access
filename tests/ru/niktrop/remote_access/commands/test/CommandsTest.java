@@ -36,7 +36,5 @@ public class CommandsTest {
     assertThat(deserialized_2.getFsiUuid()).isEqualTo("test");
     assertThat(deserialized_2.getPath()).isEqualTo(path);
     assertThat(deserialized_2.getXmlFSImage()).isEqualTo("<test xml />");
-
-
   }
 }

@@ -2,9 +2,9 @@ package ru.niktrop.remote_access.commands.test;
 
 import org.junit.AfterClass;
 import org.junit.Test;
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.Controllers;
-import ru.niktrop.remote_access.FileSystemWatcher;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.Controllers;
+import ru.niktrop.remote_access.controller.FileSystemWatcher;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.FileType;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchService;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
 import java.util.Queue;
 
 import static org.apache.commons.io.FileUtils.*;
@@ -29,7 +29,7 @@ import static org.fest.assertions.api.Assertions.assertThat;
  */
 public class FSChangeExecuteTest {
   private static final int MAX_TRIES = 20;
-  private static Queue<Path> tempDirs = new LinkedList<>();
+  private static Queue<Path> tempDirs = new ArrayDeque<>();
 
   @AfterClass
   public static void clean() {
@@ -235,7 +235,6 @@ public class FSChangeExecuteTest {
     PseudoPath b_a_b_c = b_a_b.resolve("c");
     PseudoPath b_a_b_c_d = b_a_b_c.resolve("d");
 
-    System.out.println(fsi.toXml());
     assertThat(fsi.contains(b_a)).isTrue();
     assertThat(fsi.contains(b_a_b)).isTrue();
     assertThat(fsi.contains(b_a_b_c)).isTrue();
@@ -246,9 +245,9 @@ public class FSChangeExecuteTest {
   }
 
   /*Creates temp directory with following structure:
-          temp/a/b/c/d/
-          temp/a/f
-          */
+            temp/a/b/c/d/
+            temp/a/f
+            */
   private static Path createTempDir() throws IOException {
     Path tempDir = Files.createTempDirectory("temp");
     Path a = tempDir.resolve("a");
@@ -282,18 +281,12 @@ public class FSChangeExecuteTest {
     FileSystemWatcher fsWatcher = new FileSystemWatcher(controller);
     for (int i = 0; i < 10; i++) {
       Thread.sleep(1L);
-      fsWatcher.enqueueChanges();
+      fsWatcher.enqueueChangesIfAny();
     }
 
     while(fsWatcher.hasFSChanges()) {
       fsWatcher.takeFSChange().execute(controller);
     }
-
-//    BlockingQueue<FSChange> fsChanges = new LinkedBlockingQueue<>();
-//    controller.enqueueChanges(fsChanges);
-//    while (!fsChanges.isEmpty()) {
-//      controller.executeCommand(fsChanges.poll());
-//    }
   }
 
 }

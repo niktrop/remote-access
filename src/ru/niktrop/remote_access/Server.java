@@ -44,11 +44,10 @@ public class Server {
   private static Controller controller;
   private static String propFileName = "server.properties";
   private static int maxDepth = 2;
-  private static String uuid = UUID.randomUUID().toString();
 
   /*
   Need to use NotificationManager.show() on the server side instead of
-  CommandManager.execute(), because the last show messages only on client.
+  CommandManager.executeCommand(), because the last show messages only on client.
   */
   private static NotificationManager notificationManager;
 
@@ -99,6 +98,7 @@ public class Server {
   }
 
   private static void createFSImages() {
+    String uuid = UUID.randomUUID().toString();
     notificationManager.show(Notification.operationStarted("Creating image of file system...", uuid));
 
     WatchService watchService = controller.getWatchService();

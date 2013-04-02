@@ -20,10 +20,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.file.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -106,6 +103,9 @@ public class Client {
   }
 
   private static void createFSImages() {
+    String uuid = UUID.randomUUID().toString();
+    commandManager.executeCommand(Notification.operationStarted("Creating image of file system...", uuid));
+
     WatchService watchService = controller.getWatchService();
 
     Iterable<Path> dirs;
@@ -140,6 +140,8 @@ public class Client {
         commandManager.executeCommand(warning);
       }
     }
+
+    commandManager.executeCommand(Notification.operationFinished("File system image created.", uuid));
   }
 
   private static void setupFileTransferChannel() {

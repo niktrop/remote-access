@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="client">
+    <output-path>$PROJECT_DIR$/out/artifacts/client</output-path>
+    <root id="archive" name="remote-access.jar">
+      <element id="module-output" name="remote-access" />
+      <element id="extracted-dir" path="$APPLICATION_HOME_DIR$/lib/junit-4.10.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../NettyDemo/lib/netty-3.6.2.Final.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../remote_access/lib/fest-assert-core-2.0M8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../remote_access/lib/fest-util-1.2.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../remote_access/lib/org.apache.commons.io-2.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../remote_access/lib/commons-io-2.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../remote_access/lib/annotations-1.0.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/com.springsource.nu.xom-1.2.5.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
