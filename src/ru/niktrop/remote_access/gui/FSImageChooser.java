@@ -1,7 +1,7 @@
 package ru.niktrop.remote_access.gui;
 
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.ControllerListener;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.ControllerListener;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 
 import javax.swing.*;
@@ -16,16 +16,18 @@ import java.util.List;
  * Date: 13.03.13
  * Time: 21:37
  */
+
+/**
+ * Component for choosing one of the FSImages from the controller.
+ * One can determine whether the FSImage is local or not by the color.
+ * */
 public class FSImageChooser extends JComboBox<FSImage> implements ControllerListener{
 
-  private final String SEPARATOR = "SEPARATOR";
   private final Controller controller;
 
   //background colors
   private final Color colorLocal = new Color(200, 255, 200);
   private final Color colorRemote = new Color(200, 200, 255);
-
-
 
   public FSImageChooser(Controller controller, FSImage selected) {
     this.controller = controller;
@@ -37,7 +39,7 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
 
   @Override
   public void controllerChanged() {
-    //Number of FSImages + separator
+    //Number of FSImages + jSeparator
     int newSize = controller.fsImages.size() + 1;
     if (getModel().getSize() != newSize) {
       setModel(new FSImageChooserModel(controller));
@@ -101,23 +103,24 @@ public class FSImageChooser extends JComboBox<FSImage> implements ControllerList
   }
 
   class FSImageChooserRenderer extends JLabel implements ListCellRenderer {
-    JSeparator separator;
+    JSeparator jSeparator;
 
     public FSImageChooserRenderer() {
       setOpaque(true);
       setBorder(new EmptyBorder(1, 1, 1, 1));
-      separator = new JSeparator(JSeparator.HORIZONTAL);
+      jSeparator = new JSeparator(JSeparator.HORIZONTAL);
     }
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value,
                                                   int index, boolean isSelected, boolean cellHasFocus) {
       FSImage fsImage = (FSImage) value;
-      String str = (fsImage == null) ? "SEPARATOR" : fsImage.getRootAlias();
-      if (SEPARATOR.equals(str)) {
-        return separator;
+      String separator = "SEPARATOR";
+      String str = (fsImage == null) ? separator : fsImage.getRootAlias();
+      if (separator.equals(str)) {
+        return jSeparator;
       }
-      if (fsImage.isLocal()) {
+      if (fsImage != null && fsImage.isLocal()) {
         setBackground(colorLocal);
       } else {
         setBackground(colorRemote);

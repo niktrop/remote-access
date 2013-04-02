@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -24,6 +24,11 @@ import java.util.logging.Logger;
  * Date: 20.03.13
  * Time: 22:14
  */
+
+/**
+ * This class is responsible for sending files from server to client or vice versa.
+ * It owns special channel for this purpose.
+ * */
 public class FileTransferManager implements ChannelManager{
   private static final Logger LOG = Logger.getLogger(FileTransferManager.class.getName());
 
@@ -35,18 +40,16 @@ public class FileTransferManager implements ChannelManager{
 
   private FileChannel targetFileChannel;
 
-  public void setTargetFileChannel(FileChannel targetFileChannel) {
-    this.targetFileChannel = targetFileChannel;
-  }
-
-  //Responsible for sending files one at a time
-  private final Thread fileSender = new FileSender("FileSender");
-
   private final BlockingQueue<String> waitingUuids = new LinkedBlockingQueue<>();
 
   public FileTransferManager(Controller controller) {
     this.commandManager = controller.getCommandManager();
+    Thread fileSender = new FileSender("FileSender");
     fileSender.start();
+  }
+
+  public void setTargetFileChannel(FileChannel targetFileChannel) {
+    this.targetFileChannel = targetFileChannel;
   }
 
   public Path getTarget(String uuid) {

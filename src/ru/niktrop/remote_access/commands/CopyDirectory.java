@@ -1,9 +1,9 @@
 package ru.niktrop.remote_access.commands;
 
 import org.apache.commons.io.FileUtils;
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.FileTransferManager;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.FileTransferManager;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
@@ -102,11 +102,11 @@ public class CopyDirectory implements SerializableCommand {
       //save data about this operation on the source side
       ftm.addSource(operationUuid, realSource);
 
-      sendCreateDirectoryTree(controller, realSource);
+      sendCreateDirectoryTree(realSource);
     }
   }
 
-  private void sendCreateDirectoryTree(Controller controller, Path realSource) {
+  private void sendCreateDirectoryTree(Path realSource) {
     try {
       FSImage directoryTree = FSImages.getDirectoryStructure(realSource);
       //send command for executing on the other side

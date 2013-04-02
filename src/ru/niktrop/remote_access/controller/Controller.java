@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImageCollection;
@@ -8,7 +8,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,20 +15,23 @@ import java.util.logging.Logger;
  * Date: 04.03.13
  * Time: 18:34
  */
-public class Controller {
-  private static final Logger LOG = Logger.getLogger(Controller.class.getName());
 
-  static enum ControllerType {
+/**
+ * Used to store and pass different resources to different components of the application.
+ * Can notify registered ControllerListeners about changes.
+ * */
+public class Controller {
+
+  public static enum ControllerType {
     CLIENT,
     SERVER;
   }
 
-  private int maxDepth = 1;
+  private final ControllerType type;
 
   public final FSImageCollection fsImages = new FSImageCollection();
-  private final ControllerType type;
-  private final List<ControllerListener> listeners = new ArrayList<>();
 
+  private int maxDepth = 2;
   private final WatchService watchService;
   private final FileSystemWatcher fileSystemWatcher;
   private final FSChangeHandler fsChangeHandler;
@@ -38,16 +40,16 @@ public class Controller {
   private final CommandManager commandManager;
   private final FileTransferManager fileTransferManager;
 
-
+  private final List<ControllerListener> listeners = new ArrayList<>();
 
   Controller(ControllerType type) throws IOException {
+    this.type = type;
     watchService = FileSystems.getDefault().newWatchService();
     fileSystemWatcher = new FileSystemWatcher(this);
     fsChangeHandler = new FSChangeHandler(fileSystemWatcher, this);
     notificationManager = new NotificationManager();
     commandManager = new CommandManager(this);
     fileTransferManager = new FileTransferManager(this);
-    this.type = type;
   }
   public boolean isClient() {
     return type.equals(ControllerType.CLIENT);

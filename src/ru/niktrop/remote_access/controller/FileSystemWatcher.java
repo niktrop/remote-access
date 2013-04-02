@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 import ru.niktrop.remote_access.commands.ChangeType;
 import ru.niktrop.remote_access.commands.FSChange;
@@ -27,7 +27,11 @@ import static ru.niktrop.remote_access.file_system_model.FSImages.getFromDirecto
  * Time: 12:38
  */
 
-//TODO Если удаляется корень FSImage?
+/**
+ * Track all changes in the parts of file system, which are present in FSImages.
+ * Adds them all to the queue as FSChanges which are then processed by FSChangeManager
+ * in a different thread.
+ * */
 public class FileSystemWatcher {
   private static final Logger LOG = Logger.getLogger(FileSystemWatcher.class.getName());
 
@@ -69,10 +73,6 @@ public class FileSystemWatcher {
       LOG.log(Level.WARNING, "Waiting for FSChange from the queue was interrupted.", e.getCause());
     }
     return fsChange;
-  }
-
-  public WatchService getWatchService() {
-    return watchService;
   }
 
   /**
@@ -182,19 +182,18 @@ public class FileSystemWatcher {
     }
 
     Path fullPath = directory.toPath();
-    FSImage newDirFSImage = null;
     try {
-      newDirFSImage = FSImages.getFromDirectory(fullPath, maxDepth, watchService);
+      FSImage newDirFSImage = FSImages.getFromDirectory(fullPath, maxDepth, watchService);
+      FSChange fsChange = new FSChange(
+              ChangeType.CREATE_DIR,
+              fsImage.getUuid(),
+              directory.getPseudoPath(),
+              newDirFSImage.toXml());
+
+      fsChangeQueue.offer(fsChange);
     } catch (IOException e) {
       LOG.log(Level.WARNING, "Couldn't make FSImage from directory " + fullPath.toString());
     }
 
-    FSChange fsChange = new FSChange(
-            ChangeType.CREATE_DIR,
-            fsImage.getUuid(),
-            directory.getPseudoPath(),
-            newDirFSImage.toXml());
-
-    fsChangeQueue.offer(fsChange);
   }
 }

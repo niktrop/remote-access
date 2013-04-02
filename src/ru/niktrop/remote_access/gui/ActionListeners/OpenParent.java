@@ -1,7 +1,8 @@
-package ru.niktrop.remote_access.gui;
+package ru.niktrop.remote_access.gui.ActionListeners;
 
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
+import ru.niktrop.remote_access.gui.FileTable;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,11 +13,11 @@ import java.awt.event.ActionListener;
 * Date: 22.03.13
 * Time: 23:32
 */
-class OpenParentAction implements ActionListener {
+public class OpenParent implements ActionListener {
   private final FileTable fileTable;
   private final Controller controller;
 
-  OpenParentAction(FileTable fileTable, Controller controller) {
+  public OpenParent(FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
   }

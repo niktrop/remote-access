@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 import ru.niktrop.remote_access.commands.Notification;
 
@@ -19,18 +19,22 @@ import java.util.logging.Logger;
  * Date: 19.03.13
  * Time: 14:47
  */
+
+/**
+ * This class is responsible for showing notifications to the user.
+ * */
 public class NotificationManager {
   private static final Logger LOG = Logger.getLogger(NotificationManager.class.getName());
 
   private JFrame parentFrame;
   private Map<String, JDialog> dialogs = new ConcurrentHashMap<>();
   private BlockingQueue<Notification> notifications = new LinkedBlockingQueue<>();
-  private Thread worker = new NotificationThread("Notification thread");
 
   //Time (in milliseconds) to close dialog after operation is finished successfully
   private final long TIME_TO_CLOSE = 100L;
 
   public NotificationManager() {
+    Thread worker = new NotificationThread("Notification thread");
     worker.start();
   }
 

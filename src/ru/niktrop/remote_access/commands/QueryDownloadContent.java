@@ -1,8 +1,8 @@
 package ru.niktrop.remote_access.commands;
 
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.FileTransferManager;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.FileTransferManager;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 

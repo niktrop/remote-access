@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 import org.jboss.netty.channel.Channel;
 import ru.niktrop.remote_access.commands.SerializableCommand;
@@ -14,6 +14,11 @@ import java.util.logging.Logger;
  * Date: 18.03.13
  * Time: 15:01
  */
+
+/**
+ * Class, responsible for executing and sending SerializableCommands.
+ * Does it in two different threads. Manage one of two channels used by the application.
+ * */
 public class CommandManager implements ChannelManager {
   private static final Logger LOG = Logger.getLogger(CommandManager.class.getName());
   private final Controller controller;
@@ -21,11 +26,10 @@ public class CommandManager implements ChannelManager {
   private final BlockingQueue<SerializableCommand> commandsToSend = new LinkedBlockingQueue<>();
   private Channel channel;
 
-  private final Thread commandExecutor = new CommandExecutor("CommandExecutor");
-  private final Thread commandSender = new CommandSender("CommandSender");
-
   public CommandManager(Controller controller) {
     this.controller = controller;
+    Thread commandExecutor = new CommandExecutor("CommandExecutor");
+    Thread commandSender = new CommandSender("CommandSender");
     commandExecutor.start();
     commandSender.start();
   }
@@ -59,7 +63,7 @@ public class CommandManager implements ChannelManager {
     public void run() {
       while(true) {
         //get command from the queue
-        SerializableCommand command = null;
+        SerializableCommand command;
         try {
           command = commandsToExecute.take();
         } catch (InterruptedException e) {
@@ -70,12 +74,12 @@ public class CommandManager implements ChannelManager {
         //execute command
         try {
           command.execute(controller);
-          //LOG.info("Command executed: " + command.getClass().getSimpleName());
+          LOG.log(Level.FINE, "Command executed: " + command.getClass().getSimpleName());
           controller.fireControllerChange();
         } catch (Exception e) {
-          String message = String.format("%s occured when executing %s", e.toString(), command.getStringRepresentation());
+          String message = String.format("%s occured when executing %s",
+                  e.toString(), command.getClass().getSimpleName());
           LOG.log(Level.WARNING, message, e.getCause());
-          e.printStackTrace();
         }
       }
     }
@@ -102,7 +106,7 @@ public class CommandManager implements ChannelManager {
 
           //check channel
           if (channel == null || !channel.isConnected()) {
-            LOG.warning("Attempt to send command while channel is not connected.");
+            LOG.fine("Attempt to send command while channel is not connected.");
             try {
               Thread.sleep(3000);
             } catch (InterruptedException e) {

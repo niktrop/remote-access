@@ -1,7 +1,8 @@
 package ru.niktrop.remote_access.gui;
 
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
+import ru.niktrop.remote_access.gui.ActionListeners.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,6 +16,11 @@ import java.awt.event.MouseEvent;
  * Date: 12.03.13
  * Time: 15:36
  */
+
+/**
+ * Represents one half of the user interface, displaying one
+ * directory in some FSImage.
+ * */
 public class OneSidePanel extends JPanel{
 
   private Controller controller;
@@ -86,15 +92,15 @@ public class OneSidePanel extends JPanel{
         if (e.getClickCount() == 2) {
           //just any action event
           ActionEvent ae = new ActionEvent(fileTable, 0, "open");
-          new OpenAction(fileTable, controller).actionPerformed(ae);
+          new Open(fileTable, controller).actionPerformed(ae);
         }
       }
     });
 
-    btnParent.addActionListener(new OpenParentAction(fileTable, controller));
-    btnDelete.addActionListener(new DeleteAction(fileTable, controller));
-    btnRename.addActionListener(new RenameAction(fileTable, controller));
-    btnCreateDirectory.addActionListener(new CreateDirectoryAction(fileTable, controller));
+    btnParent.addActionListener(new OpenParent(fileTable, controller));
+    btnDelete.addActionListener(new Delete(fileTable, controller));
+    btnRename.addActionListener(new Rename(fileTable, controller));
+    btnCreateDirectory.addActionListener(new CreateDirectory(fileTable, controller));
   }
 
 

@@ -2,7 +2,7 @@ package ru.niktrop.remote_access.handlers;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
-import ru.niktrop.remote_access.ChannelManager;
+import ru.niktrop.remote_access.controller.ChannelManager;
 
 import java.net.SocketAddress;
 import java.util.logging.Level;

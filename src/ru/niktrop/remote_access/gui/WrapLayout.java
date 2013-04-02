@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -14,7 +14,7 @@
  * the License.
  */
 
-/*
+/**
  * Taken from http://tips4java.wordpress.com/2008/11/06/wrap-layout/ and
  * originally written by Rob Camick.  The About link for the web site at
  * http://tips4java.wordpress.com/about/ says this about IP rights:

@@ -1,7 +1,7 @@
 package ru.niktrop.remote_access.commands;
 
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.*;
 
 import java.io.IOException;
@@ -95,13 +95,6 @@ public class ReloadDirectory implements SerializableCommand {
     FSImage fsi = controller.fsImages.get(fsiUuid);
     if (fsi == null)
       return Collections.emptyList();
-
-    int depth = new PseudoFile(fsi, dir).getDepth();
-
-//    //reload only directories with small depth
-//    if (depth >= 1 ) {
-//      return Collections.emptyList();
-//    }
 
     Path pathToRoot1 = fsi.getPathToRoot();
     Path fullPath = pathToRoot1.resolve(dir.toPath());

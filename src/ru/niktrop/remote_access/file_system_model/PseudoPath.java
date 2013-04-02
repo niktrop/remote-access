@@ -42,10 +42,10 @@ public class PseudoPath {
     //empty Path represented by path with one empty filename
     int count = path.getNameCount();
     String name = path.getFileName().toString();
-    if (path.getNameCount() == 1 && path.getFileName().toString().equals("")) {
+    if (count == 1 && name.equals("")) {
       return;
     }
-    for(int i = 0; i < path.getNameCount(); i++) {
+    for(int i = 0; i < count; i++) {
       names.add(path.getName(i).toString());
     }
   }

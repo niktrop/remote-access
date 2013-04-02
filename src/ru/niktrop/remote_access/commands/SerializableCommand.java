@@ -1,6 +1,6 @@
 package ru.niktrop.remote_access.commands;
 
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.controller.Controller;
 
 /**
  * Created with IntelliJ IDEA.

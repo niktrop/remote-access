@@ -1,7 +1,7 @@
 package ru.niktrop.remote_access.commands;
 
 import nu.xom.ParsingException;
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
@@ -96,7 +96,7 @@ public class FSChange implements SerializableCommand {
         break;
 
       case NEW_IMAGE:
-        FSImage newFsi = null;
+        FSImage newFsi;
         try {
           newFsi = FSImages.getFromXml(getXmlFSImage());
           controller.addFSImage(newFsi);
@@ -120,7 +120,6 @@ public class FSChange implements SerializableCommand {
   @Override
   public FSChange fromString(String changeAsString) {
     String groupSeparator = "\u001E";
-    String nul = "\u0000";
 
     StringTokenizer st = new StringTokenizer(changeAsString, groupSeparator, false);
     ChangeType type = ChangeType.valueOf(st.nextToken());

@@ -1,11 +1,11 @@
 package ru.niktrop.remote_access.gui;
 
-import ru.niktrop.remote_access.Controller;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
+import ru.niktrop.remote_access.gui.ActionListeners.Copy;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,13 +14,9 @@ import java.util.logging.Logger;
  * Time: 16:42
  */
 public class ClientGUI extends JFrame {
-  private static final Logger LOG = Logger.getLogger(ClientGUI.class.getName());
 
-  private JPanel jContentPane;
   private Controller controller;
 
-  private JButton btnCopyToRight;
-  private JButton btnCopyToLeft;
   private OneSidePanel pnlLeft;
   private OneSidePanel pnlRight;
   private JPanel pnlCenter;
@@ -45,9 +41,9 @@ public class ClientGUI extends JFrame {
 
     initCopyButtons(controller);
 
-    jContentPane = new JPanel();
+    JPanel jContentPane = new JPanel();
     jContentPane.setLayout(new BoxLayout(jContentPane, BoxLayout.X_AXIS));
-    jContentPane.setBorder(new EmptyBorder(5,5,5,5));
+    jContentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
     jContentPane.add(pnlLeft);
     jContentPane.add(Box.createHorizontalStrut(5));
@@ -64,12 +60,12 @@ public class ClientGUI extends JFrame {
   }
 
   private void initCopyButtons(Controller controller) {
-    btnCopyToRight = new JButton("=>");
-    btnCopyToRight.addActionListener(new CopyAction(pnlLeft.getFileTable(), pnlRight.getFileTable(), controller));
+    JButton btnCopyToRight = new JButton("=>");
+    btnCopyToRight.addActionListener(new Copy(pnlLeft.getFileTable(), pnlRight.getFileTable(), controller));
     btnCopyToRight.setSize(btnCopyToRight.getMinimumSize());
 
-    btnCopyToLeft = new JButton("<=");
-    btnCopyToLeft.addActionListener(new CopyAction(pnlRight.getFileTable(), pnlLeft.getFileTable(), controller));
+    JButton btnCopyToLeft = new JButton("<=");
+    btnCopyToLeft.addActionListener(new Copy(pnlRight.getFileTable(), pnlLeft.getFileTable(), controller));
     btnCopyToLeft.setSize(btnCopyToLeft.getMinimumSize());
 
     pnlCenter = new JPanel();

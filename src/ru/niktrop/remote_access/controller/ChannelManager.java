@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 import org.jboss.netty.channel.Channel;
 
@@ -8,6 +8,10 @@ import org.jboss.netty.channel.Channel;
  * Date: 21.03.13
  * Time: 18:39
  */
+
+/**
+ * Common interface of CommandManager and FileTransferManager.
+ * */
 public interface ChannelManager {
   Channel getChannel();
   void setChannel(Channel channel);

@@ -1,9 +1,9 @@
 package ru.niktrop.remote_access.commands;
 
 import org.apache.commons.io.FileUtils;
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.FileTransferManager;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.FileTransferManager;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
@@ -90,9 +90,9 @@ public class CopyFile implements SerializableCommand {
       Path targetDir = targetFsi.getPathToRoot().resolve(targetDirRelative);
 
       localCopy(source, targetDir);
-
-    } else {   //source is local, target is remote
-      sendAllocateSpaceCommand(controller, source);
+    //source is local, target is remote
+    } else {
+      sendAllocateSpaceCommand(source);
     }
   }
 
@@ -110,7 +110,7 @@ public class CopyFile implements SerializableCommand {
     cm.executeCommand(response);
   }
 
-  private void sendAllocateSpaceCommand(Controller controller, Path source) {
+  private void sendAllocateSpaceCommand(Path source) {
 
     //save data about this operation on the source side
     ftm.addSource(operationUuid, source);

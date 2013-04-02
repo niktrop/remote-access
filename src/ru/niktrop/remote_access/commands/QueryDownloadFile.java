@@ -1,7 +1,7 @@
 package ru.niktrop.remote_access.commands;
 
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.FileTransferManager;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.FileTransferManager;
 
 /**
  * Created with IntelliJ IDEA.

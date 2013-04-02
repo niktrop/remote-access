@@ -1,12 +1,13 @@
-package ru.niktrop.remote_access.gui;
+package ru.niktrop.remote_access.gui.ActionListeners;
 
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.commands.Notification;
 import ru.niktrop.remote_access.commands.ReloadDirectory;
 import ru.niktrop.remote_access.commands.SerializableCommand;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
+import ru.niktrop.remote_access.gui.FileTable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,19 +22,19 @@ import java.nio.file.Path;
 * Date: 22.03.13
 * Time: 23:31
 */
-class OpenAction implements ActionListener {
+public class Open implements ActionListener {
 
   private final FileTable fileTable;
   private final PseudoFile selected;
   private final Controller controller;
 
-  OpenAction(FileTable fileTable, Controller controller) {
+  public Open(FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
     selected = getSelected();
   }
 
-  OpenAction(PseudoFile selected, FileTable fileTable, Controller controller) {
+  public Open(PseudoFile selected, FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
     this.selected = selected;
@@ -126,7 +127,7 @@ class OpenAction implements ActionListener {
     if (selectedRows.length != 1)
       return null;
 
-    FileTableModel model = (FileTableModel) fileTable.getModel();
+    FileTable.FileTableModel model = (FileTable.FileTableModel) fileTable.getModel();
     final PseudoFile selected = model.getPseudoFile(selectedRows[0]);
 
     return selected;

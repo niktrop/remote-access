@@ -3,9 +3,9 @@ package ru.niktrop.remote_access.handlers;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.commands.SerializableCommand;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
 
 /**
  * Created with IntelliJ IDEA.

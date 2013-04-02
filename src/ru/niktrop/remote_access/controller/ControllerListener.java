@@ -1,4 +1,4 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 /**
  * Created with IntelliJ IDEA.
@@ -6,6 +6,7 @@ package ru.niktrop.remote_access;
  * Date: 14.03.13
  * Time: 11:18
  */
+
 public interface ControllerListener {
   void controllerChanged();
 }

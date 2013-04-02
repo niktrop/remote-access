@@ -5,10 +5,10 @@ import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.FileTransferManager;
 import ru.niktrop.remote_access.commands.Notification;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.FileTransferManager;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;

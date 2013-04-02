@@ -1,8 +1,7 @@
-package ru.niktrop.remote_access;
+package ru.niktrop.remote_access.controller;
 
 import ru.niktrop.remote_access.commands.FSChange;
 
-import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,8 +9,11 @@ import java.util.logging.Logger;
  * Date: 18.03.13
  * Time: 15:32
  */
+
+/**
+ * Processes all FSChanges from FileSystemWatcher.
+ * */
 public class FSChangeHandler {
-  private static final Logger LOG = Logger.getLogger(FSChangeHandler.class.getName());
 
   private final FileSystemWatcher fsWatcher;
   private final Controller controller;

@@ -4,7 +4,7 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
-import ru.niktrop.remote_access.ChannelManager;
+import ru.niktrop.remote_access.controller.ChannelManager;
 
 /**
  * Created with IntelliJ IDEA.

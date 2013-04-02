@@ -5,6 +5,10 @@ import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import ru.niktrop.remote_access.commands.GetFSImages;
 import ru.niktrop.remote_access.commands.Notification;
+import ru.niktrop.remote_access.controller.ChannelManager;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.Controllers;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.gui.ClientGUI;
@@ -31,6 +35,10 @@ import java.util.logging.Level;
  * Date: 12.03.13
  * Time: 9:25
  */
+
+/**
+ * Main class for the client side of the application.
+ * */
 public class Client {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Client.class.getName());
 
@@ -41,9 +49,10 @@ public class Client {
   private static Map<Path,String> directoriesAndAliases = new HashMap<>();
   private static String propFileName = "client.properties";
   private static Controller controller;
-  private static final int MAX_DEPTH = 2;
-
+  private static int maxDepth = 2;
   private static int waitConnection;
+
+  private static CommandManager commandManager;
 
   public static void main(String[] args) {
 
@@ -59,6 +68,10 @@ public class Client {
 
     setupFileTransferChannel();
 
+    runGUI();
+  }
+
+  private static void runGUI() {
     final ClientGUI clientGUI = ClientGUI.instance();
     controller.getNotificationManager().setParentFrame(clientGUI);
 
@@ -68,7 +81,7 @@ public class Client {
         clientGUI.init(controller);
 
         //Query to the server for its FSImages
-        controller.getCommandManager().sendCommand(new GetFSImages());
+        commandManager.sendCommand(new GetFSImages());
       }
     });
   }
@@ -76,12 +89,13 @@ public class Client {
   private static void setupController() {
     try {
       controller = Controllers.getClientController();
-      controller.setMaxDepth(MAX_DEPTH);
+      controller.setMaxDepth(maxDepth);
+      commandManager = controller.getCommandManager();
     } catch (IOException e) {
       String message = "Couldn't initialize WatchService and create controller.";
       LOG.log(Level.WARNING, message, e.getCause());
       Notification warning = Notification.warning(message);
-      controller.getNotificationManager().show(warning);
+      commandManager.executeCommand(warning);
       System.exit(1);
     }
   }
@@ -94,7 +108,7 @@ public class Client {
   private static void createFSImages() {
     WatchService watchService = controller.getWatchService();
 
-    Iterable<Path> dirs = null;
+    Iterable<Path> dirs;
     if (directoriesAndAliases.isEmpty()) {
       dirs = FileSystems.getDefault().getRootDirectories();
     } else {
@@ -105,10 +119,10 @@ public class Client {
         String message = String.format("Not a directory: %s", dir.toString());
         LOG.log(Level.WARNING, message);
         Notification warning = Notification.warning(message);
-        controller.getNotificationManager().show(warning);
+        commandManager.executeCommand(warning);
         continue;
       }
-      FSImage fsi = null;
+      FSImage fsi;
 
       try {
         fsi = FSImages.getFromDirectory(dir, controller.getMaxDepth(), watchService);
@@ -123,7 +137,7 @@ public class Client {
         String message = String.format("Couldn't build image of %s", dir.toString());
         LOG.log(Level.INFO, message, e.getCause());
         Notification warning = Notification.warning(message);
-        controller.getNotificationManager().show(warning);
+        commandManager.executeCommand(warning);
       }
     }
   }
@@ -187,7 +201,7 @@ public class Client {
       String message = "Connection was interrupted";
       LOG.log(Level.WARNING, message, e.getCause());
       Notification warning = Notification.warning(message);
-      controller.getNotificationManager().show(warning);
+      commandManager.executeCommand(warning);
       System.exit(1);
     }
     Channel channel = future.getChannel();
@@ -200,7 +214,7 @@ public class Client {
       String message = "Time to connect is out";
       LOG.log(Level.WARNING, message);
       Notification warning = Notification.warning(message);
-      controller.getNotificationManager().show(warning);
+      commandManager.executeCommand(warning);
       System.exit(1);
     }
   }
@@ -216,6 +230,7 @@ public class Client {
       commandPort = Integer.parseInt(prop.getProperty("command_port"));
       host = prop.getProperty("host");
       waitConnection = Integer.parseInt(prop.getProperty("wait_connection"));
+      maxDepth = Integer.parseInt(prop.getProperty("max_depth"));
 
       Set<String> propertyNames = prop.stringPropertyNames();
       for (String name : propertyNames) {
@@ -229,7 +244,7 @@ public class Client {
       String message = "Could not read property file";
       LOG.log(Level.WARNING, message, ex);
       Notification warning = Notification.warning(message);
-      controller.getNotificationManager().show(warning);
+      commandManager.executeCommand(warning);
       System.exit(1);
     }
   }

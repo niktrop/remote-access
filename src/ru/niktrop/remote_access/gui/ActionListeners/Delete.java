@@ -1,10 +1,11 @@
-package ru.niktrop.remote_access.gui;
+package ru.niktrop.remote_access.gui.ActionListeners;
 
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.commands.DeleteFile;
 import ru.niktrop.remote_access.commands.SerializableCommand;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
+import ru.niktrop.remote_access.gui.FileTable;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -18,11 +19,11 @@ import java.util.List;
 * Date: 22.03.13
 * Time: 23:32
 */
-class DeleteAction implements ActionListener {
+public class Delete implements ActionListener {
   private FileTable fileTable;
   private Controller controller;
 
-  DeleteAction(FileTable fileTable, Controller controller) {
+  public Delete(FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
   }
@@ -31,7 +32,7 @@ class DeleteAction implements ActionListener {
   public void actionPerformed(ActionEvent e) {
     final int[] selectedRows = fileTable.getSortedSelectedRows();
     final CommandManager cm = controller.getCommandManager();
-    final FileTableModel model = (FileTableModel) fileTable.getModel();
+    final FileTable.FileTableModel model = (FileTable.FileTableModel) fileTable.getModel();
 
     SwingWorker worker = new SwingWorker<Void, Void>() {
       @Override

@@ -1,8 +1,8 @@
 package ru.niktrop.remote_access.commands;
 
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.FileTransferManager;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.FileTransferManager;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
 
@@ -33,7 +33,6 @@ public class AllocateSpace implements SerializableCommand {
   private final String operationUuid;
 
   private CommandManager cm;
-  private FileTransferManager ftm;
 
   public AllocateSpace(String fsiUuid, PseudoPath path, long size, String operationUuid) {
     this.fsiUuid = fsiUuid;
@@ -51,7 +50,7 @@ public class AllocateSpace implements SerializableCommand {
   public void execute(Controller controller) {
     FSImage fsi = controller.fsImages.get(fsiUuid);
     cm = controller.getCommandManager();
-    ftm = controller.getFileTransferManager();
+    FileTransferManager ftm = controller.getFileTransferManager();
 
     if ( !fsi.isLocal()) {
       String message = "No such FSImage on the target side";

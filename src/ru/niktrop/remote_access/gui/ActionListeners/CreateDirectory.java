@@ -1,11 +1,12 @@
-package ru.niktrop.remote_access.gui;
+package ru.niktrop.remote_access.gui.ActionListeners;
 
-import ru.niktrop.remote_access.CommandManager;
-import ru.niktrop.remote_access.Controller;
 import ru.niktrop.remote_access.commands.CreateFile;
 import ru.niktrop.remote_access.commands.SerializableCommand;
+import ru.niktrop.remote_access.controller.CommandManager;
+import ru.niktrop.remote_access.controller.Controller;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
+import ru.niktrop.remote_access.gui.FileTable;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -17,12 +18,12 @@ import java.awt.event.ActionListener;
 * Date: 22.03.13
 * Time: 23:29
 */
-class CreateDirectoryAction implements ActionListener {
+public class CreateDirectory implements ActionListener {
 
   private FileTable fileTable;
   private Controller controller;
 
-  CreateDirectoryAction(FileTable fileTable, Controller controller) {
+  public CreateDirectory(FileTable fileTable, Controller controller) {
     this.fileTable = fileTable;
     this.controller = controller;
   }
@@ -42,7 +43,7 @@ class CreateDirectoryAction implements ActionListener {
       return;
     }
 
-    FileTableModel model = (FileTableModel) fileTable.getModel();
+    FileTable.FileTableModel model = (FileTable.FileTableModel) fileTable.getModel();
     PseudoFile directory = model.getDirectory();
     final String fsiUuid = directory.getFsiUuid();
     final boolean isDirectory = true;

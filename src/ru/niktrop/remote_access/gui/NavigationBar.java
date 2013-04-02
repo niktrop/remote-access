@@ -1,10 +1,11 @@
 package ru.niktrop.remote_access.gui;
 
-import ru.niktrop.remote_access.Controller;
-import ru.niktrop.remote_access.ControllerListener;
+import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.ControllerListener;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.PseudoFile;
 import ru.niktrop.remote_access.file_system_model.PseudoPath;
+import ru.niktrop.remote_access.gui.ActionListeners.Open;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,10 @@ import java.util.Deque;
  * Date: 25.03.13
  * Time: 14:11
  */
+
+/**
+ * Panel offers different ways to navigate in FSImage and between them.
+ * */
 public class NavigationBar extends JPanel implements ControllerListener{
 
   private PseudoFile directory;
@@ -85,7 +90,7 @@ public class NavigationBar extends JPanel implements ControllerListener{
       name = (name == null ? "root" : name);
       JButton button = new JButton(name);
       button.setMargin(new Insets(1,1,1,1));
-      button.addActionListener(new OpenAction(tempDir, fileTable, controller));
+      button.addActionListener(new Open(tempDir, fileTable, controller));
       add(button);
     }
   }
