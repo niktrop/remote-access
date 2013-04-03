@@ -3,7 +3,6 @@ package ru.niktrop.remote_access.commands.test;
 import org.junit.AfterClass;
 import org.junit.Test;
 import ru.niktrop.remote_access.controller.Controller;
-import ru.niktrop.remote_access.controller.Controllers;
 import ru.niktrop.remote_access.controller.FileSystemWatcher;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
@@ -42,7 +41,7 @@ public class FSChangeExecuteTest {
 
   @Test
   public void testDelete() throws Exception {
-    Controller controller = Controllers.getController();
+    Controller controller = new Controller(null);
     WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
@@ -73,7 +72,7 @@ public class FSChangeExecuteTest {
 
   @Test
   public void testDeleteSeesWhatNeeded() throws Exception {
-    Controller controller = Controllers.getController();
+    Controller controller = new Controller(null);
     WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
@@ -99,7 +98,7 @@ public class FSChangeExecuteTest {
 
   @Test
   public void testCreateFile() throws Exception {
-    Controller controller = Controllers.getController();
+    Controller controller = new Controller(null);
     WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
@@ -125,7 +124,7 @@ public class FSChangeExecuteTest {
 
   @Test
   public void testCreateDir() throws Exception {
-    Controller controller = Controllers.getController();
+    Controller controller = new Controller(null);
     WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
@@ -156,7 +155,7 @@ public class FSChangeExecuteTest {
 
   @Test
   public void testMoveDirectoryInside() throws Exception {
-    Controller controller = Controllers.getController();
+    Controller controller = new Controller(null);
     WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
@@ -184,7 +183,7 @@ public class FSChangeExecuteTest {
 
   @Test
   public void testCopyDirectoryInside() throws Exception {
-    Controller controller = Controllers.getController();
+    Controller controller = new Controller(null);
     WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
@@ -212,7 +211,7 @@ public class FSChangeExecuteTest {
 
   @Test
   public void testMoveDirectoryFromOutside() throws Exception {
-    Controller controller = Controllers.getController();
+    Controller controller = new Controller(null);
     WatchService watcher = controller.getWatchService();
 
     Path tempDir = createTempDir();
