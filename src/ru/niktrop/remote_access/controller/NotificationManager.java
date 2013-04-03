@@ -70,6 +70,12 @@ public class NotificationManager {
     dialog.setVisible(true);
   }
 
+  private void showOperationContinued(String message, String uuid) {
+    PendingOperationDialog dialog = (PendingOperationDialog) dialogs.get(uuid);
+    dialog.setMessage(message);
+    dialog.setTitle("Operation in progress");
+  }
+
   private void showOperationFinished(String message, String uuid) {
     final PendingOperationDialog dialog = (PendingOperationDialog) dialogs.get(uuid);
     dialogs.remove(uuid);
@@ -99,7 +105,7 @@ public class NotificationManager {
 
     PendingOperationDialog(Frame owner, String message) {
       super(owner, false);
-      setTitle("Operation in progress");
+      setTitle("Operation started");
       okButton = new JButton( "OK" );
 
       okButton.addActionListener(new ActionListener() {
@@ -118,7 +124,6 @@ public class NotificationManager {
       setContentPane(optionPane);
       setDefaultCloseOperation(HIDE_ON_CLOSE);
       setLocation(0, 0);
-      //setLocationRelativeTo(null);
       setMinimumSize(getSize());
       pack();
     }
@@ -138,6 +143,10 @@ public class NotificationManager {
       setTitle("Operation failed");
       optionPane.setMessage(message);
       optionPane.setMessageType(JOptionPane.WARNING_MESSAGE);
+    }
+
+    void setMessage(String message) {
+      optionPane.setMessage(message);
     }
   }
 
@@ -169,6 +178,9 @@ public class NotificationManager {
               break;
             case OPERATION_STARTED:
               showOperationStarted(message, notification.getOperationUuid());
+              break;
+            case OPERATION_CONTINUED:
+              showOperationContinued(message, notification.getOperationUuid());
               break;
             case OPERATION_FINISHED:
               showOperationFinished(message, notification.getOperationUuid());

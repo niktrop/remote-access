@@ -73,6 +73,7 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
           tempBuf.readBytes(currentFileChannel, toRead);
           remainingFileLength -= toRead;
           tempBuf.clear();
+          showProgress();
         }
 
         if (remainingFileLength == 0) {
@@ -84,6 +85,12 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
       default:
         throw new Error("Shouldn't reach here.");
     }
+  }
+
+  private void showProgress() {
+    String message = String.format("Copy of %s: \r\n %s bytes remains",
+            target.getFileName().toString(), remainingFileLength);
+    cm.executeCommand(Notification.operationContinued(message, operationUuid));
   }
 
   private void fileReceived() {

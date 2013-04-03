@@ -15,6 +15,7 @@ import java.util.StringTokenizer;
 
 /**
  * Command for showing different kinds of notification dialogs in the GUI.
+ * Execution of
  * Execution of Notification.operationStarted() should be followed by Notification.operationFinished()
  * or Notification.operationFailed().
  * */
@@ -56,6 +57,10 @@ public class Notification implements SerializableCommand{
 
   public static Notification operationStarted(String message, String uuid) {
     return new Notification(NotificationType.OPERATION_STARTED, message, uuid);
+  }
+
+  public static Notification operationContinued(String message, String uuid) {
+    return new Notification(NotificationType.OPERATION_CONTINUED, message, uuid);
   }
 
   public static Notification operationFinished(String message, String uuid) {
@@ -112,6 +117,7 @@ public class Notification implements SerializableCommand{
     WARNING,
     PLAIN,
     OPERATION_STARTED,
+    OPERATION_CONTINUED,
     OPERATION_FINISHED,
     OPERATION_FAILED;
   }
