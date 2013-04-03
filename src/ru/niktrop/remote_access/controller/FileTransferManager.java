@@ -80,25 +80,6 @@ public class FileTransferManager implements ChannelManager{
     waitingUuids.offer(operationUuid);
   }
 
-  public void sendingFileFailed(Throwable cause, String operationUUID) {
-    String message = String.format("Sending file failed: \r\n %s", cause.toString());
-    LOG.log(Level.WARNING, message, cause);
-
-    commandManager.executeCommand(Notification.operationFailed(message, operationUUID));
-
-    try {
-      targetFileChannel.close();
-    } catch (IOException e) {
-      String message_2 = String.format("Couldn't close target file channel",
-              targetFileChannel.toString());
-      LOG.log(Level.WARNING, message_2, e.getCause());
-      commandManager.executeCommand(Notification.warning(message_2));
-    }
-
-    removeSource(operationUUID);
-    removeTarget(operationUUID);
-    return;
-  }
 
   @Override
   public Channel getChannel() {
@@ -186,6 +167,26 @@ public class FileTransferManager implements ChannelManager{
       offset = 0;
       buffer.clear();
       removeSource(operationUuid);
+    }
+
+    private void sendingFileFailed(Throwable cause, String operationUUID) {
+      String message = String.format("Sending file failed: \r\n %s", cause.toString());
+      LOG.log(Level.WARNING, message, cause);
+
+      commandManager.executeCommand(Notification.operationFailed(message, operationUUID));
+
+      try {
+        targetFileChannel.close();
+      } catch (IOException e) {
+        String message_2 = String.format("Couldn't close target file channel",
+                targetFileChannel.toString());
+        LOG.log(Level.WARNING, message_2, e.getCause());
+        commandManager.executeCommand(Notification.warning(message_2));
+      }
+
+      removeSource(operationUUID);
+      removeTarget(operationUUID);
+      return;
     }
   }
 }
