@@ -111,6 +111,7 @@ public class FSChange implements SerializableCommand {
         LOG.log(Level.WARNING, "Unknown type of FSChange");
         break;
     }
+    controller.fireControllerChange();
   }
 
   /**

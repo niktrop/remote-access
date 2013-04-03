@@ -75,7 +75,7 @@ public class CommandManager implements ChannelManager {
         try {
           command.execute(controller);
           LOG.log(Level.FINE, "Command executed: " + command.getClass().getSimpleName());
-          controller.fireControllerChange();
+          //controller.fireControllerChange();
         } catch (Exception e) {
           String message = String.format("%s occured when executing %s",
                   e.toString(), command.getClass().getSimpleName());
