@@ -16,62 +16,66 @@ public class LoggerHandler extends SimpleChannelHandler {
   private static final Logger LOG = Logger.getLogger(LoggerHandler.class.getName());
 
   //Logging level of messageReceived and writeRequested events.
-  private Level level;
+  private Level levelMessages;
+  //Logging level of different connection related events.
+  private Level levelConnections;
 
-  public LoggerHandler(Level level) {
-    this.level = level;
+
+  public LoggerHandler(Level levelMessages, Level levelConnections) {
+    this.levelMessages = levelMessages;
+    this.levelConnections = levelConnections;
   }
 
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     String typeOfMessage = e.getMessage().getClass().getSimpleName();
-    LOG.log(level, "Received: " + typeOfMessage);
+    LOG.log(levelMessages, "Received: " + typeOfMessage);
     ctx.sendUpstream(e);
   }
 
   @Override
   public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
     String typeOfMessage = e.getMessage().getClass().getSimpleName();
-    LOG.log(level, "Sent: " + typeOfMessage);
+    LOG.log(levelMessages, "Sent: " + typeOfMessage);
     ctx.sendDownstream(e);
   }
 
   @Override
   public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    LOG.log(Level.INFO, "Open: " + ctx.getChannel().toString());
+    LOG.log(levelConnections, "Open: " + ctx.getChannel().toString());
     super.channelOpen(ctx, e);
   }
 
   @Override
   public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    LOG.log(Level.INFO, "Bound: " + ctx.getChannel().toString());
+    LOG.log(levelConnections, "Bound: " + ctx.getChannel().toString());
     super.channelBound(ctx, e);
   }
 
   @Override
   public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    LOG.log(Level.INFO, "Connected: " + ctx.getChannel().toString());
+    LOG.log(levelConnections, "Connected: " + ctx.getChannel().toString());
     super.channelConnected(ctx, e);
 
   }
 
   @Override
   public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    LOG.log(Level.INFO, "Closed: " + ctx.getChannel().toString());
+    LOG.log(levelConnections, "Closed: " + ctx.getChannel().toString());
     super.channelClosed(ctx, e);
 
   }
 
   @Override
   public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    LOG.log(Level.INFO, "Disconnected: " + ctx.getChannel().toString());
+    LOG.log(levelConnections, "Disconnected: " + ctx.getChannel().toString());
     super.channelDisconnected(ctx, e);
 
   }
 
   @Override
   public void channelUnbound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    LOG.log(Level.INFO, "Unbound: " + ctx.getChannel().toString());
+    LOG.log(levelConnections, "Unbound: " + ctx.getChannel().toString());
     super.channelUnbound(ctx, e);
 
   }

@@ -160,7 +160,7 @@ public class Server {
         pipeline.addLast("string encoder", new StringEncoder());
         pipeline.addLast("command decoder", new CommandDecoder());
         pipeline.addLast("command encoder", new CommandEncoder());
-        pipeline.addLast("logger",  new LoggerHandler(Level.FINE));
+        pipeline.addLast("logger",  new LoggerHandler(Level.FINE, Level.INFO));
         pipeline.addLast("executor", new CommandExecutor(controller));
 
         return pipeline;
