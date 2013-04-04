@@ -3,8 +3,8 @@ package ru.niktrop.remote_access.controller;
 import org.jboss.netty.channel.Channel;
 import ru.niktrop.remote_access.commands.SerializableCommand;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,16 +22,14 @@ import java.util.logging.Logger;
 public class CommandManager implements ChannelManager {
   private static final Logger LOG = Logger.getLogger(CommandManager.class.getName());
   private final Controller controller;
-  private final BlockingQueue<SerializableCommand> commandsToExecute = new LinkedBlockingQueue<>();
-  private final BlockingQueue<SerializableCommand> commandsToSend = new LinkedBlockingQueue<>();
+
+  private final ExecutorService commandExecutor = Executors.newSingleThreadExecutor();
+  private final ExecutorService commandSender = Executors.newSingleThreadExecutor();
+
   private Channel channel;
 
   public CommandManager(Controller controller) {
     this.controller = controller;
-    Thread commandExecutor = new CommandExecutor("CommandExecutor");
-    Thread commandSender = new CommandSender("CommandSender");
-    commandExecutor.start();
-    commandSender.start();
   }
 
   @Override
@@ -45,33 +43,42 @@ public class CommandManager implements ChannelManager {
   }
 
   public void sendCommand(SerializableCommand command) {
-    commandsToSend.offer(command);
+    commandSender.submit(runnableSend(command));
   }
 
   public void executeCommand(SerializableCommand command){
-    if (command != null)
-      commandsToExecute.offer(command);
+    if (command != null) {
+      commandExecutor.submit(runnableExecute(command));
+    }
+
   }
 
-  private class CommandExecutor extends Thread {
+  private class ExecuteTask implements Runnable {
+    private final SerializableCommand command;
 
-    CommandExecutor(String name) {
-      super(name);
+    private ExecuteTask(SerializableCommand command) {
+      this.command = command;
     }
 
     @Override
     public void run() {
-      while(true) {
-        //get command from the queue
-        SerializableCommand command;
-        try {
-          command = commandsToExecute.take();
-        } catch (InterruptedException e) {
-          LOG.log(Level.WARNING, "CommandExecutor thread waiting was interrupted: ", e);
-          continue;
-        }
-
-        //execute command
+      try {
+        command.execute(controller);
+        LOG.log(Level.FINE, "Command executed: " + command.getClass().getSimpleName());
+        //controller.fireControllerChange();
+      } catch (Exception e) {
+        String message = String.format("%s occured when executing %s",
+                e.toString(), command.getClass().getSimpleName());
+        LOG.log(Level.WARNING, message, e.getCause());
+      }
+    }
+  }
+   
+  
+  private Runnable runnableExecute(final SerializableCommand command) {
+    return new Runnable() {
+      @Override
+      public void run() {
         try {
           command.execute(controller);
           LOG.log(Level.FINE, "Command executed: " + command.getClass().getSimpleName());
@@ -82,53 +89,34 @@ public class CommandManager implements ChannelManager {
           LOG.log(Level.WARNING, message, e.getCause());
         }
       }
-    }
+    };
   }
 
-  private class CommandSender extends Thread {
-    CommandSender(String name) {
-      super(name);
-    }
-    @Override
-    public void run() {
-      SerializableCommand command = null;
-      while(true) {
-
-        //get command from the queue, if previous was sent
-        if (command == null) {
+  private Runnable runnableSend(final SerializableCommand command) {
+    return new Runnable() {
+      @Override
+      public void run() {
+        //check channel and wait connection
+        while (channel == null || !channel.isConnected()) {
+          LOG.fine("Attempt to send command while channel is not connected.");
           try {
-            command = commandsToSend.take();
+            Thread.sleep(3000);
           } catch (InterruptedException e) {
-            LOG.log(Level.WARNING, "CommandSender waiting was interrupted: ", e);
-            continue;
+            LOG.log(Level.WARNING, "Waiting for reconnection was interrupted.");
           }
-        } else {
+          continue;
+        }
 
-          //check channel
-          if (channel == null || !channel.isConnected()) {
-            LOG.fine("Attempt to send command while channel is not connected.");
-            try {
-              Thread.sleep(3000);
-            } catch (InterruptedException e) {
-              LOG.log(Level.WARNING, "Waiting for reconnection was interrupted.");
-            }
-            continue;
-          }
-
-          //send command
-          try {
-            channel.write(command);
-          } catch (Exception e) {
-            String message = String.format("Problem with sending to %s.", channel.getRemoteAddress());
-            LOG.log(Level.WARNING, message, e.getCause());
-            continue;
-          }
-
-          //clear command
-          command = null;
+        //send command
+        try {
+          channel.write(command);
+        } catch (Exception e) {
+          String message = String.format("Problem with sending to %s.", channel.getRemoteAddress());
+          LOG.log(Level.WARNING, message, e.getCause());
         }
       }
-    }
+    };
+
   }
 
 }

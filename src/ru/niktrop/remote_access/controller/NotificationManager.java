@@ -7,9 +7,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,18 +28,15 @@ public class NotificationManager {
 
   private JFrame parentFrame;
   private Map<String, JDialog> dialogs = new ConcurrentHashMap<>();
-  private BlockingQueue<Notification> notifications = new LinkedBlockingQueue<>();
+
+  private final ExecutorService notificationDemonstrator = Executors.newSingleThreadExecutor();
 
   //Time (in milliseconds) to close dialog after operation is finished successfully
   private final long TIME_TO_CLOSE = 100L;
 
-  public NotificationManager() {
-    Thread worker = new NotificationThread("Notification thread");
-    worker.start();
-  }
 
-  public void show(Notification n) {
-    notifications.offer(n);
+  public void show(Notification notification) {
+    notificationDemonstrator.submit(new ShowNotificationTask(notification));
   }
 
   public JFrame getParentFrame() {
@@ -154,49 +151,41 @@ public class NotificationManager {
     }
   }
 
-  private class NotificationThread extends Thread {
-    NotificationThread(String name) {
-      super(name);
+  private class ShowNotificationTask implements Runnable {
+
+    private final Notification notification;
+
+    ShowNotificationTask(Notification notification) {
+      this.notification = notification;
     }
 
     @Override
     public void run() {
-      Notification notification;
-      while(true) {
-        try {
-          notification = notifications.take();
-        } catch (InterruptedException e) {
-          LOG.log(Level.WARNING, "Notification thread waiting was interrupted: ", e);
-          continue;
+      String message = notification.getMessage();
+      try {
+        switch (notification.getType()) {
+          case WARNING:
+            showWarning(message);
+            break;
+          case PLAIN:
+            showPlain(message);
+            break;
+          case OPERATION_STARTED:
+            showOperationStarted(message, notification.getOperationUuid());
+            break;
+          case OPERATION_CONTINUED:
+            showOperationContinued(message, notification.getOperationUuid());
+            break;
+          case OPERATION_FINISHED:
+            showOperationFinished(message, notification.getOperationUuid());
+            break;
+          case OPERATION_FAILED:
+            showOperationFailed(message, notification.getOperationUuid());
+            break;
         }
-
-
-        String message = notification.getMessage();
-        try {
-          switch (notification.getType()) {
-            case WARNING:
-              showWarning(message);
-              break;
-            case PLAIN:
-              showPlain(message);
-              break;
-            case OPERATION_STARTED:
-              showOperationStarted(message, notification.getOperationUuid());
-              break;
-            case OPERATION_CONTINUED:
-              showOperationContinued(message, notification.getOperationUuid());
-              break;
-            case OPERATION_FINISHED:
-              showOperationFinished(message, notification.getOperationUuid());
-              break;
-            case OPERATION_FAILED:
-              showOperationFailed(message, notification.getOperationUuid());
-              break;
-          }
-        } catch (Exception e) {
-          String msg = String.format("Exception while showing notification %s", message);
-          LOG.log(Level.WARNING, msg, e);
-        }
+      } catch (Exception e) {
+        String msg = String.format("Exception while showing notification %s", message);
+        LOG.log(Level.WARNING, msg, e);
       }
     }
   }

@@ -12,9 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,15 +35,14 @@ public class FileTransferManager implements ChannelManager{
 
   private Map<String, Path> targets = new ConcurrentHashMap<>();
   private Map<String, Path> sources = new ConcurrentHashMap<>();
-
   private FileChannel targetFileChannel;
+  
+  private final ExecutorService fileSender = Executors.newSingleThreadExecutor();
 
   private final BlockingQueue<String> waitingUuids = new LinkedBlockingQueue<>();
 
   public FileTransferManager(Controller controller) {
     this.commandManager = controller.getCommandManager();
-    Thread fileSender = new FileSender("FileSender");
-    fileSender.start();
   }
 
   public void setTargetFileChannel(FileChannel targetFileChannel) {
@@ -77,9 +74,8 @@ public class FileTransferManager implements ChannelManager{
   }
 
   public void sendFile(String operationUuid) {
-    waitingUuids.offer(operationUuid);
+    fileSender.submit(new SendFileTask(operationUuid));
   }
-
 
   @Override
   public Channel getChannel() {
@@ -91,31 +87,20 @@ public class FileTransferManager implements ChannelManager{
     this.channel = channel;
   }
 
-  private class FileSender extends Thread {
+  private class SendFileTask implements Runnable {
     private final int BUFFER_SIZE = 4096;
     private final ChannelBuffer buffer = ChannelBuffers.buffer(BUFFER_SIZE);
     private long offset = 0;
-    private String operationUuid;
     private long fileLength;
+    
+    private final String operationUuid;
 
-    private FileSender(String name) {
-      super(name);
+    private SendFileTask(String operationUuid) {
+      this.operationUuid = operationUuid;
     }
 
     @Override
     public void run() {
-      while (true) {
-        try {
-          operationUuid = waitingUuids.take();
-        } catch (InterruptedException e) {
-          LOG.log(Level.WARNING, "File sender thread waiting was interrupted: ", e);
-          continue;
-        }
-        doSending();
-      }
-    }
-
-    private void doSending() {
       Path path = getSource(operationUuid);
 
       try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ)){
