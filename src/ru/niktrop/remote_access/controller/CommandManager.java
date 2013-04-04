@@ -26,6 +26,9 @@ public class CommandManager implements ChannelManager {
   private final ExecutorService commandExecutor = Executors.newSingleThreadExecutor();
   private final ExecutorService commandSender = Executors.newSingleThreadExecutor();
 
+  //Command may need to wait some condition to hold. It can add itself to the queue of this Executor.
+  private final ExecutorService waitingCommandsExecutor = Executors.newSingleThreadExecutor();
+
   private Channel channel;
 
   public CommandManager(Controller controller) {
@@ -52,6 +55,17 @@ public class CommandManager implements ChannelManager {
     }
   }
 
+  public void executeLater(SerializableCommand command) {
+    if (command != null) {
+      try {
+        Thread.sleep(1000L);
+      } catch (InterruptedException e) {
+      } finally {
+        waitingCommandsExecutor.submit(new ExecuteTask(command));
+      }
+    }
+  }
+
   private class SendTask implements Runnable {
     private final SerializableCommand command;
 
@@ -65,7 +79,7 @@ public class CommandManager implements ChannelManager {
       while (channel == null || !channel.isConnected()) {
         LOG.fine("Attempt to send command while channel is not connected.");
         try {
-          Thread.sleep(3000);
+          Thread.sleep(3000L);
         } catch (InterruptedException e) {
           LOG.log(Level.WARNING, "Waiting for reconnection was interrupted.");
         }
