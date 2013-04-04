@@ -1,7 +1,6 @@
 package ru.niktrop.remote_access.handlers;
 
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
@@ -39,7 +38,8 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
   private FileChannel currentFileChannel;
 
   //Buffer for minimize write to file operations for large files
-  private ChannelBuffer tempBuf = ChannelBuffers.buffer(65536);
+  private ChannelBuffer tempBuf;
+  private final int TEMP_BUFFER_MAX_CAPACITY = 64 * 1024;
 
   public FileReceiver(Controller controller) {
     super(DecodingState.OPERATION_UUID);
@@ -66,13 +66,13 @@ public class FileReceiver extends ReplayingDecoder<FileReceiver.DecodingState> {
         int toRead;
         while (remainingFileLength > 0) {
           //attempts to write to temp buffer
-          toRead = (int) Math.min(remainingFileLength, tempBuf.capacity());
+          toRead = (int) Math.min(remainingFileLength, TEMP_BUFFER_MAX_CAPACITY);
           tempBuf = buffer.readBytes(toRead);
           checkpoint();
           //write to file when writing to temp buffer succeeded
           tempBuf.readBytes(currentFileChannel, toRead);
           remainingFileLength -= toRead;
-          tempBuf.clear();
+          tempBuf = null;
           showProgress();
         }
 
