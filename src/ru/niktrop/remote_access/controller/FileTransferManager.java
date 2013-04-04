@@ -12,7 +12,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,8 +40,6 @@ public class FileTransferManager implements ChannelManager{
   private FileChannel targetFileChannel;
   
   private final ExecutorService fileSender = Executors.newSingleThreadExecutor();
-
-  private final BlockingQueue<String> waitingUuids = new LinkedBlockingQueue<>();
 
   public FileTransferManager(Controller controller) {
     this.commandManager = controller.getCommandManager();
@@ -75,6 +75,10 @@ public class FileTransferManager implements ChannelManager{
 
   public void sendFile(String operationUuid) {
     fileSender.submit(new SendFileTask(operationUuid));
+
+    //notification will be made visible again when actual file transfer starts
+    Notification hide = Notification.setVisibility(false, operationUuid);
+    commandManager.executeCommand(hide);
   }
 
   @Override
@@ -102,6 +106,10 @@ public class FileTransferManager implements ChannelManager{
     @Override
     public void run() {
       Path path = getSource(operationUuid);
+
+      //set notification dialog visible again when start transfer file
+      Notification unhide = Notification.setVisibility(true, operationUuid);
+      commandManager.executeCommand(unhide);
 
       try (FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ)){
         ChannelFuture future = sendHeader(fileChannel);
@@ -148,7 +156,7 @@ public class FileTransferManager implements ChannelManager{
       return offset < fileLength;
     }
 
-    private void afterLastChunk() throws IOException {
+    private void afterLastChunk() {
       offset = 0;
       buffer.clear();
       removeSource(operationUuid);
