@@ -73,6 +73,7 @@ public class NotificationManager {
     dialog.setMessage(message);
     dialog.setTitle("Operation in progress");
     dialog.toFront();
+    dialog.pack();
   }
 
   private void showOperationFinished(String message, String uuid) {
@@ -80,6 +81,7 @@ public class NotificationManager {
     dialogs.remove(uuid);
     dialog.operationFinished(message);
     dialog.toFront();
+    dialog.pack();
 
     new Thread() {
       @Override
@@ -98,6 +100,12 @@ public class NotificationManager {
     dialogs.remove(uuid);
     dialog.operationFailed(message);
     dialog.toFront();
+    dialog.pack();
+  }
+
+  private void setVisibility(boolean on, String uuid) {
+    PendingOperationDialog dialog = (PendingOperationDialog) dialogs.get(uuid);
+    dialog.setVisible(on);
   }
 
   static class PendingOperationDialog extends JDialog {
@@ -181,6 +189,9 @@ public class NotificationManager {
             break;
           case OPERATION_FAILED:
             showOperationFailed(message, notification.getOperationUuid());
+            break;
+          case SET_VISIBILITY:
+            setVisibility(Boolean.parseBoolean(message), notification.getOperationUuid());
             break;
         }
       } catch (Exception e) {

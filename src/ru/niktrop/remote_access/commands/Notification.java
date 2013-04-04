@@ -71,6 +71,10 @@ public class Notification implements SerializableCommand{
     return new Notification(NotificationType.OPERATION_FAILED, message, uuid);
   }
 
+  public static Notification setVisibility(boolean on, String uuid) {
+    return new Notification(NotificationType.SET_VISIBILITY, Boolean.toString(on), uuid);
+  }
+
   @Override
   public void execute(Controller controller) {
     if (controller.isClient()) {
@@ -119,6 +123,7 @@ public class Notification implements SerializableCommand{
     OPERATION_STARTED,
     OPERATION_CONTINUED,
     OPERATION_FINISHED,
-    OPERATION_FAILED;
+    OPERATION_FAILED,
+    SET_VISIBILITY;
   }
 }
