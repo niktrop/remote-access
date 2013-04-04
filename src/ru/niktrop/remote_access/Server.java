@@ -194,6 +194,7 @@ public class Server {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
 
+        pipeline.addLast("logger", new LoggerHandler(Level.FINE, Level.INFO));
         pipeline.addLast("channel saver", new ChannelSaver(controller.getFileTransferManager()));
         pipeline.addLast("file receiver", new FileReceiver(controller));
 

@@ -152,6 +152,7 @@ public class Client {
         ChannelPipeline pipeline = Channels.pipeline();
 
         FileTransferManager manager = controller.getFileTransferManager();
+        pipeline.addLast("logger", new LoggerHandler(Level.FINE, Level.INFO));
         pipeline.addLast("reconnector", new Reconnector(fileBootstrap, manager, controller));
         pipeline.addLast("file receiver", new FileReceiver(controller));
 
