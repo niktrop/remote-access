@@ -43,14 +43,43 @@ public class CommandManager implements ChannelManager {
   }
 
   public void sendCommand(SerializableCommand command) {
-    commandSender.submit(runnableSend(command));
+    commandSender.submit(new SendTask(command));
   }
 
   public void executeCommand(SerializableCommand command){
     if (command != null) {
-      commandExecutor.submit(runnableExecute(command));
+      commandExecutor.submit(new ExecuteTask(command));
+    }
+  }
+
+  private class SendTask implements Runnable {
+    private final SerializableCommand command;
+
+    private SendTask(SerializableCommand command) {
+      this.command = command;
     }
 
+    @Override
+    public void run() {
+      //check channel and wait connection
+      while (channel == null || !channel.isConnected()) {
+        LOG.fine("Attempt to send command while channel is not connected.");
+        try {
+          Thread.sleep(3000);
+        } catch (InterruptedException e) {
+          LOG.log(Level.WARNING, "Waiting for reconnection was interrupted.");
+        }
+        continue;
+      }
+
+      //send command
+      try {
+        channel.write(command);
+      } catch (Exception e) {
+        String message = String.format("Problem with sending to %s.", channel.getRemoteAddress());
+        LOG.log(Level.WARNING, message, e.getCause());
+      }
+    }
   }
 
   private class ExecuteTask implements Runnable {
@@ -72,51 +101,6 @@ public class CommandManager implements ChannelManager {
         LOG.log(Level.WARNING, message, e.getCause());
       }
     }
-  }
-   
-  
-  private Runnable runnableExecute(final SerializableCommand command) {
-    return new Runnable() {
-      @Override
-      public void run() {
-        try {
-          command.execute(controller);
-          LOG.log(Level.FINE, "Command executed: " + command.getClass().getSimpleName());
-          //controller.fireControllerChange();
-        } catch (Exception e) {
-          String message = String.format("%s occured when executing %s",
-                  e.toString(), command.getClass().getSimpleName());
-          LOG.log(Level.WARNING, message, e.getCause());
-        }
-      }
-    };
-  }
-
-  private Runnable runnableSend(final SerializableCommand command) {
-    return new Runnable() {
-      @Override
-      public void run() {
-        //check channel and wait connection
-        while (channel == null || !channel.isConnected()) {
-          LOG.fine("Attempt to send command while channel is not connected.");
-          try {
-            Thread.sleep(3000);
-          } catch (InterruptedException e) {
-            LOG.log(Level.WARNING, "Waiting for reconnection was interrupted.");
-          }
-          continue;
-        }
-
-        //send command
-        try {
-          channel.write(command);
-        } catch (Exception e) {
-          String message = String.format("Problem with sending to %s.", channel.getRemoteAddress());
-          LOG.log(Level.WARNING, message, e.getCause());
-        }
-      }
-    };
-
   }
 
 }
