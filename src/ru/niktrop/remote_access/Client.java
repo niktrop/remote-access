@@ -35,9 +35,9 @@ import java.util.logging.Level;
 public class Client {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Client.class.getName());
 
-  //Pause between reconnection attempts in ms
-  private final int RECONNECTION_WAITING = 3000;
-
+  private static final long TIME_BEFORE_EXIT_ON_ERROR = 10000L;
+  private static final long TIME_RECONNECTION_WAITING = 3000L;
+  
   private static int commandPort;
   private static int filePort;
   private static String host;
@@ -88,7 +88,13 @@ public class Client {
       LOG.log(Level.WARNING, message, e.getCause());
       Notification warning = Notification.warning(message);
       commandManager.executeCommand(warning);
-      System.exit(1);
+
+      try {
+        Thread.sleep(TIME_BEFORE_EXIT_ON_ERROR);
+      } catch (InterruptedException ie) {
+      } finally {
+        System.exit(1);
+      }
     }
   }
 
@@ -229,7 +235,7 @@ public class Client {
           commandManager.executeCommand(Notification.operationContinued(message, uuid));
 
           try {
-            Thread.sleep(3000);
+            Thread.sleep(TIME_RECONNECTION_WAITING);
           } catch (InterruptedException e) {
             LOG.log(Level.INFO, "Pause between reconnection attempts was interrupted.", e.getCause());
           }
@@ -270,7 +276,13 @@ public class Client {
       LOG.log(Level.WARNING, message, ex);
       Notification warning = Notification.warning(message);
       commandManager.executeCommand(warning);
-      System.exit(1);
+
+      try {
+        Thread.sleep(TIME_BEFORE_EXIT_ON_ERROR);
+      } catch (InterruptedException e) {
+      } finally {
+        System.exit(1);
+      }
     }
   }
 }

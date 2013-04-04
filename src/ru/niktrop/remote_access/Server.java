@@ -1,7 +1,6 @@
 package ru.niktrop.remote_access;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
@@ -35,6 +34,7 @@ import java.util.logging.Level;
  * */
 public class Server {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Server.class.getName());
+  private static final long TIME_BEFORE_EXIT_ON_ERROR = 10000L;
 
   private static int commandPort;
   private static int filePort;
@@ -60,12 +60,8 @@ public class Server {
 
     startFileSystemWatching();
 
-    Channel commandChannel = setupCommandChannel();
-    Channel fileTransferChannel = setupFileTransferChannel();
-
-    if (commandChannel == null || fileTransferChannel == null) {
-      System.exit(1);
-    }
+    setupCommandChannel();
+    setupFileTransferChannel();
 
     runGUI();
   }
@@ -92,7 +88,13 @@ public class Server {
       LOG.log(Level.WARNING, message, e.getCause());
       Notification warning = Notification.warning(message);
       notificationManager.show(warning);
-      System.exit(1);
+
+      try {
+        Thread.sleep(TIME_BEFORE_EXIT_ON_ERROR);
+      } catch (InterruptedException ie) {
+      } finally {
+        System.exit(1);
+      }
     }
   }
 
@@ -143,7 +145,7 @@ public class Server {
     controller.getFsChangeHandler().runHandler();
   }
 
-  private static Channel setupCommandChannel() {
+  private static void setupCommandChannel() {
     // Configure command server.
     final ServerBootstrap bootstrap = new ServerBootstrap(
             new NioServerSocketChannelFactory(
@@ -169,21 +171,26 @@ public class Server {
 
     // Bind and start to accept incoming connections.
     // ChannelSaver handler will save first connected channel to the CommandManager
-    Channel commandChannel = null;
     try {
-      commandChannel = bootstrap.bind(new InetSocketAddress(host, commandPort));
+      bootstrap.bind(new InetSocketAddress(host, commandPort));
     } catch (Exception e) {
       String message = String.format("Couldn't bind to %s : %s. \r\n " +
               "Probably port is already in use.", host, commandPort);
       LOG.log(Level.INFO, message, e.getCause());
       Notification warning = Notification.warning(message);
       notificationManager.show(warning);
+
+      try {
+        Thread.sleep(TIME_BEFORE_EXIT_ON_ERROR);
+      } catch (InterruptedException ie) {
+      } finally {
+        System.exit(1);
+      }
     }
 
-    return commandChannel;
   }
 
-  private static Channel setupFileTransferChannel() {
+  private static void setupFileTransferChannel() {
     final ServerBootstrap fileBootstrap = new ServerBootstrap(
             new NioServerSocketChannelFactory(
                     Executors.newFixedThreadPool(1),
@@ -204,18 +211,22 @@ public class Server {
 
     // Bind and start to accept incoming connections.
     // ChannelSaver handler will save first connected channel to the FileTransferManager
-    Channel fileTransferChannel = null;
     try {
-      fileTransferChannel = fileBootstrap.bind(new InetSocketAddress(host, filePort));
+      fileBootstrap.bind(new InetSocketAddress(host, filePort));
     } catch (Exception e) {
       String message = String.format("Couldn't bind to %s : %s. \r\n " +
               "Probably port is already in use.", host, filePort);
       LOG.log(Level.INFO, message, e.getCause());
       Notification warning = Notification.warning(message);
       notificationManager.show(warning);
-    }
 
-    return fileTransferChannel;
+      try {
+        Thread.sleep(TIME_BEFORE_EXIT_ON_ERROR);
+      } catch (InterruptedException ie) {
+      } finally {
+        System.exit(1);
+      }
+    }
   }
 
   private static void loadProperties(String filename) {
@@ -241,7 +252,13 @@ public class Server {
       LOG.log(Level.WARNING, message, ex);
       Notification warning = Notification.warning(message);
       notificationManager.show(warning);
-      System.exit(1);
+
+      try {
+        Thread.sleep(TIME_BEFORE_EXIT_ON_ERROR);
+      } catch (InterruptedException ie) {
+      } finally {
+        System.exit(1);
+      }
     }
   }
 }
