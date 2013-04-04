@@ -3,11 +3,10 @@ package ru.niktrop.remote_access;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import ru.niktrop.remote_access.commands.GetFSImages;
 import ru.niktrop.remote_access.commands.Notification;
-import ru.niktrop.remote_access.controller.ChannelManager;
 import ru.niktrop.remote_access.controller.CommandManager;
 import ru.niktrop.remote_access.controller.Controller;
+import ru.niktrop.remote_access.controller.FileTransferManager;
 import ru.niktrop.remote_access.file_system_model.FSImage;
 import ru.niktrop.remote_access.file_system_model.FSImages;
 import ru.niktrop.remote_access.gui.ClientGUI;
@@ -17,11 +16,9 @@ import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 
@@ -38,6 +35,9 @@ import java.util.logging.Level;
 public class Client {
   private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(Client.class.getName());
 
+  //Pause between reconnection attempts in ms
+  private final int RECONNECTION_WAITING = 3000;
+
   private static int commandPort;
   private static int filePort;
   private static String host;
@@ -46,7 +46,6 @@ public class Client {
   private static String propFileName = "client.properties";
   private static Controller controller;
   private static int maxDepth = 2;
-  private static int waitConnection;
 
   private static CommandManager commandManager;
 
@@ -75,9 +74,6 @@ public class Client {
       @Override
       public void run() {
         clientGUI.init(controller);
-
-        //Query to the server for its FSImages
-        commandManager.sendCommand(new GetFSImages());
       }
     });
   }
@@ -155,16 +151,24 @@ public class Client {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
 
-        //pipeline.addLast("logger",  new Logger(Level.PLAIN));
-        pipeline.addLast("reconnector", new Reconnector(fileBootstrap, controller.getFileTransferManager()));
+        FileTransferManager manager = controller.getFileTransferManager();
+        pipeline.addLast("reconnector", new Reconnector(fileBootstrap, manager, controller));
         pipeline.addLast("file receiver", new FileReceiver(controller));
 
         return pipeline;
       }
     });
 
-    ChannelFuture fileFuture = fileBootstrap.connect(new InetSocketAddress(host, filePort));
-    waitAndSetupChannel(fileFuture, controller.getFileTransferManager());
+    InetSocketAddress remoteAddress = new InetSocketAddress(host, filePort);
+
+    //notification and log
+    String uuid = UUID.randomUUID().toString();
+    String message = String.format("Trying to connect to %s", remoteAddress.toString());
+    LOG.log(Level.INFO, message);
+    commandManager.executeCommand(Notification.operationStarted(message, uuid));
+
+    connect(fileBootstrap, remoteAddress, uuid);
+
   }
 
   private static void setupCommandChannel() {
@@ -178,46 +182,66 @@ public class Client {
       public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline = Channels.pipeline();
 
-        pipeline.addLast("reconnector", new Reconnector(bootstrap, controller.getCommandManager()));
+        pipeline.addLast("reconnector", new Reconnector(bootstrap, commandManager, controller));
         pipeline.addLast("string decoder", new StringDecoder());
         pipeline.addLast("string encoder", new StringEncoder());
         pipeline.addLast("command decoder", new CommandDecoder());
         pipeline.addLast("command encoder", new CommandEncoder());
-        pipeline.addLast("logger", new LoggerHandler(Level.FINE));
+        pipeline.addLast("logger", new LoggerHandler(Level.FINE, Level.INFO));
         pipeline.addLast("executor", new CommandExecutor(controller));
 
         return pipeline;
       }
     });
 
-    ChannelFuture commandFuture = bootstrap.connect(new InetSocketAddress(host, commandPort));
-    waitAndSetupChannel(commandFuture, controller.getCommandManager());
+    InetSocketAddress remoteAddress = new InetSocketAddress(host, commandPort);
+
+    //notification and log
+    String uuid = UUID.randomUUID().toString();
+    String message = String.format("Trying to connect to %s", remoteAddress.toString());
+    LOG.log(Level.INFO, message);
+    commandManager.executeCommand(Notification.operationStarted(message, uuid));
+
+    connect(bootstrap, remoteAddress, uuid);
 
   }
 
-  private static void waitAndSetupChannel(ChannelFuture future, ChannelManager manager) {
-    try {
-      future.await(waitConnection, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      String message = "Connection was interrupted";
-      LOG.log(Level.WARNING, message, e.getCause());
-      Notification warning = Notification.warning(message);
-      commandManager.executeCommand(warning);
-      System.exit(1);
-    }
-    Channel channel = future.getChannel();
-    if (channel.isConnected()) {
-      manager.setChannel(channel);
-      SocketAddress address = channel.getRemoteAddress();
-      String message = String.format("Successfull connection to %s", address.toString());
-      LOG.log(Level.INFO, message);
-    } else {
-      String message = "Time to connect is out";
-      LOG.log(Level.WARNING, message);
-      Notification warning = Notification.warning(message);
-      commandManager.executeCommand(warning);
-      System.exit(1);
-    }
+  private static void connect(final ClientBootstrap bootstrap,
+                              final InetSocketAddress remoteAddress,
+                              final String uuid) {
+
+    ChannelFuture future = bootstrap.connect(remoteAddress);
+    future.addListener(new ChannelFutureListener() {
+      @Override
+      public void operationComplete(ChannelFuture future) throws Exception {
+        Channel channel = future.getChannel();
+
+        if (channel.isConnected()) {
+
+          String message = String.format("Successful connection to %s", remoteAddress.toString());
+          commandManager.executeCommand(Notification.operationFinished(message, uuid));
+
+        } else {
+          String message = String.format("Connection to %s failed: \r\n %s",
+                  remoteAddress.toString(), future.getCause().getMessage());
+          LOG.log(Level.INFO, message);
+          commandManager.executeCommand(Notification.operationContinued(message, uuid));
+
+          try {
+            Thread.sleep(3000);
+          } catch (InterruptedException e) {
+            LOG.log(Level.INFO, "Pause between reconnection attempts was interrupted.", e.getCause());
+          }
+
+          message = String.format("Trying to connect to %s again...", remoteAddress.toString());
+          commandManager.executeCommand(Notification.operationContinued(message, uuid));
+
+          //trying to connect again
+          connect(bootstrap, remoteAddress, uuid);
+        }
+      }
+    });
+
   }
 
   private static void loadProperties(String filename) {
@@ -230,7 +254,6 @@ public class Client {
       filePort = Integer.parseInt(prop.getProperty("file_port"));
       commandPort = Integer.parseInt(prop.getProperty("command_port"));
       host = prop.getProperty("host");
-      waitConnection = Integer.parseInt(prop.getProperty("wait_connection"));
       maxDepth = Integer.parseInt(prop.getProperty("max_depth"));
 
       Set<String> propertyNames = prop.stringPropertyNames();
