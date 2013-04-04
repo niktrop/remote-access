@@ -90,4 +90,11 @@ public class FSImageCollection{
     fsImages.addAll(getRemote());
     return new PseudoFile(fsImages.get(0), new PseudoPath());
   }
+
+  public void clearRemoteFSImages() {
+    for (FSImage fsImage : getRemote()) {
+      String uuid = fsImage.getUuid();
+      fsImageMap.remove(uuid);
+    }
+  }
 }
