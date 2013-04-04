@@ -71,7 +71,15 @@ public class FSChange implements SerializableCommand {
   @Override
   public void execute(Controller controller) {
     String fsiUuid = getFsiUuid();
-    FSImage fsi = controller.fsImages.get(fsiUuid);
+    FSImage fsImage = controller.fsImages.get(fsiUuid);
+    ChangeType type = getChangeType();
+
+    if (fsImage == null && type != ChangeType.NEW_IMAGE) {
+      //client does not receive this FSImage yet, need to wait
+      controller.getCommandManager().executeLater(this);
+      return;
+    }
+
     PseudoPath pseudoPath = getPath();
     switch (getChangeType()) {
 
@@ -84,15 +92,15 @@ public class FSChange implements SerializableCommand {
         } catch (IOException e) {
           LOG.log(Level.WARNING, e.getMessage(), e.getCause());
         }
-        fsi.addToDirectory(pseudoPath.getParent(), createdDirFsi);
+        fsImage.addToDirectory(pseudoPath.getParent(), createdDirFsi);
         break;
 
       case CREATE_FILE:
-        fsi.addFile(pseudoPath);
+        fsImage.addFile(pseudoPath);
         break;
 
       case DELETE:
-        fsi.deletePath(pseudoPath);
+        fsImage.deletePath(pseudoPath);
         break;
 
       case NEW_IMAGE:
