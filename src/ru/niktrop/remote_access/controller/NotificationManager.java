@@ -32,7 +32,7 @@ public class NotificationManager {
   private final ExecutorService notificationDemonstrator = Executors.newSingleThreadExecutor();
 
   //Time (in milliseconds) to close dialog after operation is finished successfully
-  private final long TIME_TO_CLOSE = 100L;
+  private final long SHOW_FINISHED_TIME = 0L;
 
 
   public void show(Notification notification) {
@@ -87,7 +87,7 @@ public class NotificationManager {
       @Override
       public void run() {
         try {
-          Thread.sleep(TIME_TO_CLOSE);
+          Thread.sleep(SHOW_FINISHED_TIME);
         } catch (InterruptedException e) {
         }
         dialog.dispose();
